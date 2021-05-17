@@ -4,28 +4,19 @@ use egui::color::*;
 use egui::{pos2, vec2, Image, Rect, ScrollArea, Slider, TextureId, Ui, Vec2};
 use std::collections::HashMap;
 
+#[derive(Default)]
 pub struct ColorPicker {
     pub hex_color: String,
     pub cur_color: Option<Color32>,
+    pub cur_hsva: Option<Hsva>,
     pub r: u8,
     pub g: u8,
     pub b: u8,
+    pub hue: f32,
+    pub sat: f32,
+    pub val: f32,
     pub tex_mngr: TextureManager,
     pub saved_colors: HashMap<String, Color32>,
-}
-
-impl Default for ColorPicker {
-    fn default() -> Self {
-        Self {
-            hex_color: String::new(),
-            cur_color: None,
-            r: 0,
-            g: 0,
-            b: 0,
-            tex_mngr: Default::default(),
-            saved_colors: HashMap::new(),
-        }
-    }
 }
 
 impl epi::App for ColorPicker {
@@ -78,7 +69,12 @@ impl ColorPicker {
         self.r = color.r();
         self.g = color.g();
         self.b = color.b();
+        let hsva = Hsva::from_srgb([self.r, self.g, self.b]);
+        self.hue = hsva.h;
+        self.sat = hsva.s;
+        self.val = hsva.v;
         self.cur_color = Some(color);
+        self.cur_hsva = Some(hsva);
     }
 
     pub fn ui(&mut self, ui: &mut Ui, tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>) {
@@ -104,9 +100,20 @@ impl ColorPicker {
             ui.add(Slider::new(&mut self.r, u8::MIN..=u8::MAX).text("red"));
             ui.add(Slider::new(&mut self.g, u8::MIN..=u8::MAX).text("green"));
             ui.add(Slider::new(&mut self.b, u8::MIN..=u8::MAX).text("blue"));
+            ui.add(Slider::new(&mut self.hue, 0. ..=1.).text("hue"));
+            ui.add(Slider::new(&mut self.sat, 0. ..=1.).text("saturation"));
+            ui.add(Slider::new(&mut self.val, 0. ..=1.).text("value"));
 
             if self.r != color.r() || self.g != color.g() || self.b != color.b() {
-                self.cur_color = Some(Color32::from_rgb(self.r, self.g, self.b));
+                self.set_cur_color(Color32::from_rgb(self.r, self.g, self.b));
+            }
+
+            // its ok to unwrap, cur_hsva is always set when cur_color is set
+            let hsva = self.cur_hsva.unwrap();
+            if self.hue != hsva.h || self.sat != hsva.s || self.val != hsva.v {
+                let new_hsva = Hsva::new(self.hue, self.sat, self.val, 0.);
+                let srgb = new_hsva.to_srgb();
+                self.set_cur_color(Color32::from_rgb(srgb[0], srgb[1], srgb[2]));
             }
 
             ui.scope(|ui| {
