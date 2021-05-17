@@ -9,6 +9,7 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 eframe = "*"
+clipboard = "0.5"
 
 [profile.release]
 opt-level = 2
