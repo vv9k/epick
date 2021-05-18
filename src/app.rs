@@ -4,7 +4,7 @@ use eframe::{
     epi,
 };
 use egui::color::*;
-use egui::{pos2, vec2, CtxRef, Rect, ScrollArea, Slider, TextStyle, TextureId, Ui, Vec2};
+use egui::{pos2, vec2, Rect, ScrollArea, Slider, TextStyle, TextureId, Ui, Vec2};
 use std::collections::HashMap;
 
 use clipboard::ClipboardContext;
@@ -21,7 +21,7 @@ pub struct ColorPicker {
     pub sat: f32,
     pub val: f32,
     pub tex_mngr: TextureManager,
-    pub saved_colors: HashMap<String, Color32>,
+    pub saved_colors: Vec<(String, Color32)>,
 }
 
 impl Default for ColorPicker {
@@ -37,7 +37,7 @@ impl Default for ColorPicker {
             sat: 0.,
             val: 0.,
             tex_mngr: TextureManager::default(),
-            saved_colors: HashMap::new(),
+            saved_colors: vec![],
         }
     }
 }
@@ -49,7 +49,7 @@ fn save_to_clipboard(text: String) -> Result<(), Box<dyn std::error::Error>> {
 
 impl epi::App for ColorPicker {
     fn name(&self) -> &str {
-        "Picked"
+        "epick"
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
@@ -106,14 +106,32 @@ impl ColorPicker {
             ui.label("Right click: copy hex");
             ui.add_space(7.);
 
-            for (hex, color) in self.saved_colors.clone() {
+            for (idx, (hex, color)) in self.saved_colors.clone().iter().enumerate() {
                 ui.horizontal(|ui| {
                     ui.vertical(|ui| {
                         ui.add_space(ui.fonts().row_height(TextStyle::Monospace));
                         ui.monospace(format!("#{}", hex));
-                        if ui.button("❌").clicked() {
-                            self.saved_colors.remove(&hex);
-                        }
+                        ui.horizontal(|ui| {
+                            if ui.button("❌").clicked() {
+                                self.saved_colors
+                                    .iter()
+                                    .position(|(_hex, _)| _hex == hex)
+                                    .map(|i| self.saved_colors.remove(i));
+                            }
+                            ui.vertical(|ui| {
+                                if ui.button("⏶").clicked() {
+                                    if idx > 0 {
+                                        self.saved_colors.swap(idx, idx - 1);
+                                    }
+                                }
+
+                                if ui.button("⏷").clicked() {
+                                    if idx < (self.saved_colors.len() - 1) {
+                                        self.saved_colors.swap(idx, idx + 1);
+                                    }
+                                }
+                            });
+                        });
                     });
                     self.tex_color(
                         ui,
@@ -152,8 +170,10 @@ impl ColorPicker {
             }
             if ui.button("➕ save").clicked() {
                 if let Some(color) = self.cur_color {
-                    self.saved_colors
-                        .insert(color_as_hex(&color).to_uppercase(), color);
+                    let color = (color_as_hex(&color), color);
+                    if !self.saved_colors.contains(&color) {
+                        self.saved_colors.push(color);
+                    }
                 }
             }
         });
@@ -181,14 +201,11 @@ impl ColorPicker {
             }
 
             ui.scope(|ui| {
-                // figure out the sizing here, it automatically scales up in tiled window managers
-                // when in windowed mode
-                //println!("{:?}", ui.max_rect_finite().size());
                 self.tex_color(
                     ui,
                     tex_allocator,
                     color,
-                    ui.max_rect_finite().size(),
+                    vec2(500., 500.),
                     Some(&color_as_hex(&color)),
                 );
             });

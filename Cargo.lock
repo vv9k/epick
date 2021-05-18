@@ -461,6 +461,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "epick"
+version = "0.1.0"
+dependencies = [
+ "clipboard",
+ "eframe",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1209,14 +1217,6 @@ name = "takeable-option"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "36ae8932fcfea38b7d3883ae2ab357b0d57a02caaa18ebb4f5ece08beaec4aa0"
-
-[[package]]
-name = "testgui"
-version = "0.1.0"
-dependencies = [
- "clipboard",
- "eframe",
-]
 
 [[package]]
 name = "thiserror"

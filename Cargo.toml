@@ -1,5 +1,5 @@
 [package]
-name = "testgui"
+name = "epick"
 version = "0.1.0"
 authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
 edition = "2018"
