@@ -1,10 +1,10 @@
 use crate::color::{color_as_hex, parse_color, Cmyk, Gradient};
 use eframe::{
-    egui::{self, ImageButton},
+    egui::{self},
     epi,
 };
 use egui::color::*;
-use egui::{pos2, vec2, Rect, ScrollArea, Slider, TextStyle, TextureId, Ui, Vec2};
+use egui::{pos2, vec2, ImageButton, Rect, ScrollArea, Slider, TextStyle, TextureId, Ui, Vec2};
 use std::collections::HashMap;
 
 use clipboard::ClipboardContext;
@@ -180,7 +180,7 @@ impl ColorPicker {
             if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
                 || ui.button("▶ go").clicked()
             {
-                if let Some(color) = parse_color(&self.hex_color) {
+                if let Some(color) = parse_color(self.hex_color.trim_start_matches("#")) {
                     self.set_cur_color(color);
                 }
             }
