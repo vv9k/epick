@@ -1,6 +1,48 @@
 use eframe::egui;
 use egui::color::*;
 use egui::lerp;
+use std::cmp::Ordering;
+
+#[derive(Clone, Copy, Default, Debug)]
+pub struct Cmyk {
+    pub c: f32,
+    pub m: f32,
+    pub y: f32,
+    pub k: f32,
+}
+
+impl Cmyk {
+    pub fn new(c: f32, m: f32, y: f32, k: f32) -> Self {
+        Self { c, m, y, k }
+    }
+}
+
+impl From<Cmyk> for Color32 {
+    fn from(cmyk: Cmyk) -> Self {
+        let r = (255. * (1. - cmyk.c) * (1. - cmyk.k)) as u8;
+        let g = (255. * (1. - cmyk.m) * (1. - cmyk.k)) as u8;
+        let b = (255. * (1. - cmyk.y) * (1. - cmyk.k)) as u8;
+        Color32::from_rgb(r, g, b)
+    }
+}
+
+impl From<Color32> for Cmyk {
+    fn from(color: Color32) -> Self {
+        let _r: f32 = color.r() as f32 / 255.;
+        let _g: f32 = color.g() as f32 / 255.;
+        let _b: f32 = color.b() as f32 / 255.;
+        let k = 1.
+            - [_r, _g, _b]
+                .iter()
+                .max_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+                .unwrap();
+        let c = (1. - _r - k) / (1. - k);
+        let m = (1. - _g - k) / (1. - k);
+        let y = (1. - _b - k) / (1. - k);
+
+        Cmyk::new(c, m, y, k)
+    }
+}
 
 #[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Gradient(pub Vec<Color32>);

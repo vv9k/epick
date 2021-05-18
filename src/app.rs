@@ -1,4 +1,4 @@
-use crate::color::{color_as_hex, parse_color, Gradient};
+use crate::color::{color_as_hex, parse_color, Cmyk, Gradient};
 use eframe::{
     egui::{self, ImageButton},
     epi,
@@ -14,12 +14,17 @@ pub struct ColorPicker {
     pub hex_color: String,
     pub cur_color: Option<Color32>,
     pub cur_hsva: Option<Hsva>,
+    pub cur_cmyk: Option<Cmyk>,
     pub r: u8,
     pub g: u8,
     pub b: u8,
     pub hue: f32,
     pub sat: f32,
     pub val: f32,
+    pub c: f32,
+    pub m: f32,
+    pub y: f32,
+    pub k: f32,
     pub tex_mngr: TextureManager,
     pub saved_colors: Vec<(String, Color32)>,
 }
@@ -30,12 +35,17 @@ impl Default for ColorPicker {
             hex_color: "".to_string(),
             cur_color: Some(Color32::BLACK),
             cur_hsva: Some(Hsva::new(0., 0., 0., 1.)),
+            cur_cmyk: Some(Cmyk::from(Color32::BLACK)),
             r: 0,
             g: 0,
             b: 0,
             hue: 0.,
             sat: 0.,
             val: 0.,
+            c: 0.,
+            m: 0.,
+            y: 0.,
+            k: 0.,
             tex_mngr: TextureManager::default(),
             saved_colors: vec![],
         }
@@ -153,8 +163,14 @@ impl ColorPicker {
         self.hue = hsva.h;
         self.sat = hsva.s;
         self.val = hsva.v;
+        let cmyk = Cmyk::from(color);
+        self.c = cmyk.c;
+        self.m = cmyk.m;
+        self.y = cmyk.y;
+        self.k = cmyk.k;
         self.cur_color = Some(color);
         self.cur_hsva = Some(hsva);
+        self.cur_cmyk = Some(cmyk);
     }
 
     pub fn ui(&mut self, ui: &mut Ui, tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>) {
@@ -200,6 +216,12 @@ impl ColorPicker {
                 self.set_cur_color(Color32::from_rgb(srgb[0], srgb[1], srgb[2]));
             }
 
+            let cmyk = self.cur_cmyk.clone().unwrap();
+            if self.c != cmyk.c || self.m != cmyk.m || self.y != cmyk.y || self.k != cmyk.k {
+                let new_cmyk = Cmyk::new(self.c, self.m, self.y, self.k);
+                self.set_cur_color(Color32::from(new_cmyk));
+            }
+
             ui.scope(|ui| {
                 self.tex_color(
                     ui,
@@ -229,6 +251,16 @@ impl ColorPicker {
                 ui.add(Slider::new(&mut self.sat, 0. ..=1.).text("saturation"));
                 ui.add_space(7.);
                 ui.add(Slider::new(&mut self.val, 0. ..=1.).text("value"));
+            });
+            ui.vertical(|ui| {
+                ui.add_space(7.);
+                ui.add(Slider::new(&mut self.c, 0. ..=1.).text("cyan"));
+                ui.add_space(7.);
+                ui.add(Slider::new(&mut self.m, 0. ..=1.).text("magenta"));
+                ui.add_space(7.);
+                ui.add(Slider::new(&mut self.y, 0. ..=1.).text("yellow"));
+                ui.add_space(7.);
+                ui.add(Slider::new(&mut self.k, 0. ..=1.).text("key"));
             });
         });
     }
