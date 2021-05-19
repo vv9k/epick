@@ -1,14 +1,31 @@
 use crate::color::{color_as_hex, parse_color, Cmyk, Gradient};
-use eframe::{
-    egui::{self},
-    epi,
-};
 use egui::color::*;
-use egui::{pos2, vec2, ImageButton, Rect, ScrollArea, Slider, TextStyle, TextureId, Ui, Vec2};
+use egui::{
+    pos2, vec2, Button, ImageButton, Rect, Response, ScrollArea, Slider, TextStyle, TextureId, Ui,
+    Vec2,
+};
 use std::collections::HashMap;
 
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
+
+#[derive(Default)]
+pub struct Epick {
+    pub tab: EpickApp,
+    pub picker: ColorPicker,
+    pub saved_colors: Vec<(String, Color32)>,
+}
+
+pub enum EpickApp {
+    ColorPicker,
+    GradientView,
+}
+
+impl Default for EpickApp {
+    fn default() -> Self {
+        Self::ColorPicker
+    }
+}
 
 pub struct ColorPicker {
     pub hex_color: String,
@@ -26,7 +43,6 @@ pub struct ColorPicker {
     pub y: f32,
     pub k: f32,
     pub tex_mngr: TextureManager,
-    pub saved_colors: Vec<(String, Color32)>,
 }
 
 impl Default for ColorPicker {
@@ -47,7 +63,6 @@ impl Default for ColorPicker {
             y: 0.,
             k: 0.,
             tex_mngr: TextureManager::default(),
-            saved_colors: vec![],
         }
     }
 }
@@ -57,35 +72,110 @@ fn save_to_clipboard(text: String) -> Result<(), Box<dyn std::error::Error>> {
     ctx.set_contents(text)
 }
 
-impl epi::App for ColorPicker {
+impl epi::App for Epick {
     fn name(&self) -> &str {
         "epick"
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
-        egui::TopPanel::top("top panel").show(ctx, |ui| {
-            self.top_ui(ui);
-        });
+        let _frame = egui::Frame {
+            fill: Color32::from_rgb(22, 28, 35),
+            ..Default::default()
+        };
 
-        egui::SidePanel::left("colors", 150.).show(ctx, |ui| {
-            ScrollArea::auto_sized().show(ui, |ui| {
-                self.side_ui(ui, &mut Some(frame.tex_allocator()));
-            })
-        });
+        let _dark_frame = egui::Frame {
+            fill: Color32::from_rgb(17, 22, 27),
+            ..Default::default()
+        };
 
-        egui::CentralPanel::default().show(ctx, |ui| {
-            self.ui(ui, &mut Some(frame.tex_allocator()));
-        });
+        egui::TopPanel::top("top panel")
+            .frame(_dark_frame.clone())
+            .show(ctx, |ui| {
+                self.top_ui(ui);
+            });
+
+        egui::SidePanel::left("colors", 150.)
+            .frame(_dark_frame)
+            .show(ctx, |ui| {
+                ScrollArea::auto_sized().show(ui, |ui| {
+                    self.side_ui(ui, &mut Some(frame.tex_allocator()));
+                })
+            });
+
+        egui::CentralPanel::default()
+            .frame(_frame)
+            .show(ctx, |ui| match self.tab {
+                EpickApp::ColorPicker => {
+                    self.picker
+                        .ui(ui, &mut Some(frame.tex_allocator()), &mut self.saved_colors);
+                }
+                EpickApp::GradientView => {}
+            });
 
         frame.set_window_size(ctx.used_size());
     }
 }
 
-impl ColorPicker {
+enum ButtonColor {
+    Active,
+    Inactive,
+}
+
+impl ButtonColor {
+    fn text_color() -> Color32 {
+        Color32::from_rgb(229, 222, 214)
+    }
+}
+
+impl From<ButtonColor> for Color32 {
+    fn from(color: ButtonColor) -> Self {
+        match color {
+            ButtonColor::Active => Color32::from_rgb(49, 63, 78),
+            ButtonColor::Inactive => Color32::from_rgb(35, 45, 56),
+        }
+    }
+}
+
+impl Epick {
     pub fn top_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             self.dark_light_switch(ui);
             ui.label("switch ui color");
+            ui.add_space(50.);
+            let mut picker_tab = Button::new("picker");
+            match self.tab {
+                EpickApp::ColorPicker => {
+                    picker_tab = picker_tab
+                        .fill(Some(Color32::from(ButtonColor::Active)))
+                        .text_color(ButtonColor::text_color())
+                }
+                EpickApp::GradientView => {
+                    picker_tab = picker_tab
+                        .fill(Some(Color32::from(ButtonColor::Inactive)))
+                        .text_color(ButtonColor::text_color())
+                }
+            }
+            let picker_resp = ui.add(picker_tab);
+            if picker_resp.clicked() {
+                self.tab = EpickApp::ColorPicker;
+            }
+            let mut gradient_tab = Button::new("gradient");
+            match self.tab {
+                EpickApp::GradientView => {
+                    gradient_tab = gradient_tab
+                        .fill(Some(Color32::from(ButtonColor::Active)))
+                        .text_color(ButtonColor::text_color())
+                }
+                EpickApp::ColorPicker => {
+                    gradient_tab = gradient_tab
+                        .fill(Some(Color32::from(ButtonColor::Inactive)))
+                        .text_color(ButtonColor::text_color())
+                }
+            }
+            let gradient_resp = ui.add(gradient_tab);
+            if gradient_resp.clicked() {
+                self.tab = EpickApp::GradientView;
+            }
         });
     }
 
@@ -143,18 +233,38 @@ impl ColorPicker {
                             });
                         });
                     });
-                    self.tex_color(
+
+                    let resp = tex_color(
                         ui,
                         tex_allocator,
+                        &mut self.picker.tex_mngr,
                         color.clone(),
                         vec2(100., 50.),
                         Some(&hex),
                     );
+
+                    if let Some(resp) = resp {
+                        match self.tab {
+                            EpickApp::ColorPicker => {
+                                let hex = color_as_hex(&color);
+                                if resp.clicked() {
+                                    self.picker.set_cur_color(color.clone());
+                                }
+
+                                if resp.secondary_clicked() {
+                                    let _ = save_to_clipboard(format!("#{}", hex));
+                                }
+                            }
+                            EpickApp::GradientView => {}
+                        };
+                    }
                 });
             }
         });
     }
+}
 
+impl ColorPicker {
     fn set_cur_color(&mut self, color: Color32) {
         self.r = color.r();
         self.g = color.g();
@@ -173,7 +283,12 @@ impl ColorPicker {
         self.cur_cmyk = Some(cmyk);
     }
 
-    pub fn ui(&mut self, ui: &mut Ui, tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>) {
+    pub fn ui(
+        &mut self,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        saved_colors: &mut Vec<(String, Color32)>,
+    ) {
         ui.horizontal(|ui| {
             ui.label("Enter a hex color: ");
             let resp = ui.text_edit_singleline(&mut self.hex_color);
@@ -187,8 +302,8 @@ impl ColorPicker {
             if ui.button("➕ save").clicked() {
                 if let Some(color) = self.cur_color {
                     let color = (color_as_hex(&color), color);
-                    if !self.saved_colors.contains(&color) {
-                        self.saved_colors.push(color);
+                    if !saved_colors.contains(&color) {
+                        saved_colors.push(color);
                     }
                 }
             }
@@ -223,13 +338,24 @@ impl ColorPicker {
             }
 
             ui.scope(|ui| {
-                self.tex_color(
+                let resp = tex_color(
                     ui,
                     tex_allocator,
+                    &mut self.tex_mngr,
                     color,
                     vec2(500., 500.),
                     Some(&color_as_hex(&color)),
                 );
+                if let Some(resp) = resp {
+                    let hex = color_as_hex(&color);
+                    if resp.clicked() {
+                        self.set_cur_color(color);
+                    }
+
+                    if resp.secondary_clicked() {
+                        let _ = save_to_clipboard(format!("#{}", hex));
+                    }
+                }
             });
         }
     }
@@ -264,52 +390,47 @@ impl ColorPicker {
             });
         });
     }
+}
+fn tex_color(
+    ui: &mut Ui,
+    tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+    tex_mngr: &mut TextureManager,
+    color: Color32,
+    size: Vec2,
+    on_hover: Option<&str>,
+) -> Option<Response> {
+    let gradient = Gradient::one_color(color);
+    let resp = tex_gradient(ui, tex_allocator, tex_mngr, &gradient, size, on_hover);
 
-    fn tex_color(
-        &mut self,
-        ui: &mut Ui,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-        color: Color32,
-        size: Vec2,
-        on_hover: Option<&str>,
-    ) {
-        let gradient = Gradient::one_color(color);
-        self.tex_gradient(ui, tex_allocator, &gradient, size, on_hover);
+    resp
+}
+
+//self.set_cur_color(parse_color(&color).unwrap());
+fn tex_gradient(
+    ui: &mut Ui,
+    tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+    tex_mngr: &mut TextureManager,
+    gradient: &Gradient,
+    size: Vec2,
+    on_hover: Option<&str>,
+) -> Option<Response> {
+    if let Some(tex_allocator) = tex_allocator {
+        let resp = ui.horizontal(|ui| {
+            let tex = tex_mngr.get(*tex_allocator, &gradient);
+            let texel_offset = 0.5 / (gradient.0.len() as f32);
+            let uv = Rect::from_min_max(pos2(texel_offset, 0.0), pos2(1.0 - texel_offset, 1.0));
+            let image = ImageButton::new(tex, size).uv(uv);
+            let mut resp = ui.add(image);
+
+            if let Some(on_hover) = on_hover {
+                resp = resp.on_hover_text(on_hover);
+            }
+
+            resp
+        });
+        return Some(resp.inner);
     }
-
-    fn tex_gradient(
-        &mut self,
-        ui: &mut Ui,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-        gradient: &Gradient,
-        size: Vec2,
-        on_hover: Option<&str>,
-    ) {
-        if let Some(tex_allocator) = tex_allocator {
-            ui.horizontal(|ui| {
-                let tex = self.tex_mngr.get(*tex_allocator, &gradient);
-                let texel_offset = 0.5 / (gradient.0.len() as f32);
-                let uv = Rect::from_min_max(pos2(texel_offset, 0.0), pos2(1.0 - texel_offset, 1.0));
-                let image = ImageButton::new(tex, size).uv(uv);
-                let resp = ui.add(image);
-                if resp.clicked() {
-                    if let Some(color) = gradient.as_hex() {
-                        self.set_cur_color(parse_color(&color).unwrap());
-                    }
-                }
-
-                if resp.secondary_clicked() {
-                    if let Some(color) = gradient.as_hex() {
-                        let _ = save_to_clipboard(format!("#{}", &color));
-                    }
-                }
-
-                if let Some(on_hover) = on_hover {
-                    resp.on_hover_text(on_hover);
-                }
-            });
-        }
-    }
+    None
 }
 
 #[derive(Default)]

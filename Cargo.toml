@@ -8,7 +8,12 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+#eframe = { path = "/home/wojtek/dev/egui/eframe" }
+#egui = { path = "/home/wojtek/dev/egui/egui" }
+#epi = { path = "/home/wojtek/dev/egui/epi" }
 eframe = "*"
+egui = "0.12"
+epi = "0.12"
 clipboard = "0.5"
 
 [profile.release]
