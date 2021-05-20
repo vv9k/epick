@@ -36,53 +36,70 @@ impl epi::App for Epick {
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
-        let _frame = egui::Frame {
-            fill: Color32::from_rgb(22, 28, 35),
-            margin: vec2(20., 20.),
-            ..Default::default()
-        };
+        let tex_allocator = &mut Some(frame.tex_allocator());
 
-        let _dark_frame_side = egui::Frame {
-            fill: Color32::from_rgb(17, 22, 27),
-            margin: vec2(15., 10.),
-            ..Default::default()
-        };
-
-        let _dark_frame_top = egui::Frame {
-            fill: Color32::from_rgb(17, 22, 27),
-            margin: vec2(5., 5.),
-            ..Default::default()
-        };
-
-        egui::TopPanel::top("top panel")
-            .frame(_dark_frame_top.clone())
-            .show(ctx, |ui| {
-                self.top_ui(ui);
-            });
-
-        egui::SidePanel::left("colors", 150.)
-            .frame(_dark_frame_side)
-            .show(ctx, |ui| {
-                ScrollArea::auto_sized().show(ui, |ui| {
-                    self.side_ui(ui, &mut Some(frame.tex_allocator()));
-                })
-            });
-
-        egui::CentralPanel::default()
-            .frame(_frame)
-            .show(ctx, |ui| match self.tab {
-                EpickApp::ColorPicker => {
-                    self.picker
-                        .ui(ui, &mut Some(frame.tex_allocator()), &mut self.saved_colors);
-                }
-                EpickApp::GradientView => {}
-            });
+        self.top_panel(ctx);
+        self.side_panel(ctx, tex_allocator);
+        self.central_panel(ctx, tex_allocator);
 
         frame.set_window_size(ctx.used_size());
     }
 }
 
 impl Epick {
+    pub fn top_panel(&mut self, ctx: &egui::CtxRef) {
+        let frame = egui::Frame {
+            fill: Color32::from_rgb(17, 22, 27),
+            margin: vec2(5., 5.),
+            ..Default::default()
+        };
+        egui::TopPanel::top("top panel")
+            .frame(frame)
+            .show(ctx, |ui| {
+                self.top_ui(ui);
+            });
+    }
+
+    pub fn side_panel(
+        &mut self,
+        ctx: &egui::CtxRef,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+    ) {
+        let frame = egui::Frame {
+            fill: Color32::from_rgb(17, 22, 27),
+            margin: vec2(15., 10.),
+            ..Default::default()
+        };
+
+        egui::SidePanel::left("colors", 150.)
+            .frame(frame)
+            .show(ctx, |ui| {
+                ScrollArea::auto_sized().show(ui, |ui| {
+                    self.side_ui(ui, tex_allocator);
+                })
+            });
+    }
+
+    pub fn central_panel(
+        &mut self,
+        ctx: &egui::CtxRef,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+    ) {
+        let _frame = egui::Frame {
+            fill: Color32::from_rgb(22, 28, 35),
+            margin: vec2(20., 20.),
+            ..Default::default()
+        };
+        egui::CentralPanel::default()
+            .frame(_frame)
+            .show(ctx, |ui| match self.tab {
+                EpickApp::ColorPicker => {
+                    self.picker.ui(ui, tex_allocator, &mut self.saved_colors);
+                }
+                EpickApp::GradientView => {}
+            });
+    }
+
     pub fn top_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             self.dark_light_switch(ui);
