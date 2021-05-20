@@ -2,6 +2,14 @@ mod app;
 mod color;
 pub use app::Epick;
 
+use clipboard::ClipboardContext;
+use clipboard::ClipboardProvider;
+
+fn save_to_clipboard(text: String) -> Result<(), Box<dyn std::error::Error>> {
+    let mut ctx: ClipboardContext = ClipboardProvider::new()?;
+    ctx.set_contents(text)
+}
+
 #[cfg(target_arch = "wasm32")]
 use eframe::wasm_bindgen::{self, prelude::*};
 
