@@ -80,22 +80,30 @@ impl epi::App for Epick {
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
         let _frame = egui::Frame {
             fill: Color32::from_rgb(22, 28, 35),
+            margin: vec2(20., 20.),
             ..Default::default()
         };
 
-        let _dark_frame = egui::Frame {
+        let _dark_frame_side = egui::Frame {
             fill: Color32::from_rgb(17, 22, 27),
+            margin: vec2(15., 10.),
+            ..Default::default()
+        };
+
+        let _dark_frame_top = egui::Frame {
+            fill: Color32::from_rgb(17, 22, 27),
+            margin: vec2(5., 5.),
             ..Default::default()
         };
 
         egui::TopPanel::top("top panel")
-            .frame(_dark_frame.clone())
+            .frame(_dark_frame_top.clone())
             .show(ctx, |ui| {
                 self.top_ui(ui);
             });
 
         egui::SidePanel::left("colors", 150.)
-            .frame(_dark_frame)
+            .frame(_dark_frame_side)
             .show(ctx, |ui| {
                 ScrollArea::auto_sized().show(ui, |ui| {
                     self.side_ui(ui, &mut Some(frame.tex_allocator()));
@@ -116,23 +124,27 @@ impl epi::App for Epick {
     }
 }
 
-enum ButtonColor {
+enum EpickButton {
     Active,
     Inactive,
 }
 
-impl ButtonColor {
+impl EpickButton {
     fn text_color() -> Color32 {
         Color32::from_rgb(229, 222, 214)
     }
-}
 
-impl From<ButtonColor> for Color32 {
-    fn from(color: ButtonColor) -> Self {
-        match color {
-            ButtonColor::Active => Color32::from_rgb(49, 63, 78),
-            ButtonColor::Inactive => Color32::from_rgb(35, 45, 56),
+    fn bg_color(&self) -> Color32 {
+        match self {
+            EpickButton::Active => Color32::from_rgb(49, 63, 78),
+            EpickButton::Inactive => Color32::from_rgb(35, 45, 56),
         }
+    }
+
+    fn btn<T: AsRef<str>>(&self, text: T) -> Button {
+        Button::new(text.as_ref())
+            .text_color(Self::text_color())
+            .fill(Some(self.bg_color()))
     }
 }
 
@@ -142,34 +154,29 @@ impl Epick {
             self.dark_light_switch(ui);
             ui.label("switch ui color");
             ui.add_space(50.);
-            let mut picker_tab = Button::new("picker");
+            let picker_tab;
+            const PICKER_TITLE: &str = "picker";
             match self.tab {
                 EpickApp::ColorPicker => {
-                    picker_tab = picker_tab
-                        .fill(Some(Color32::from(ButtonColor::Active)))
-                        .text_color(ButtonColor::text_color())
+                    picker_tab = EpickButton::Active.btn(PICKER_TITLE);
                 }
                 EpickApp::GradientView => {
-                    picker_tab = picker_tab
-                        .fill(Some(Color32::from(ButtonColor::Inactive)))
-                        .text_color(ButtonColor::text_color())
+                    picker_tab = EpickButton::Inactive.btn(PICKER_TITLE);
                 }
             }
             let picker_resp = ui.add(picker_tab);
             if picker_resp.clicked() {
                 self.tab = EpickApp::ColorPicker;
             }
-            let mut gradient_tab = Button::new("gradient");
+
+            let gradient_tab;
+            const GRADIENT_TITLE: &str = "gradient";
             match self.tab {
                 EpickApp::GradientView => {
-                    gradient_tab = gradient_tab
-                        .fill(Some(Color32::from(ButtonColor::Active)))
-                        .text_color(ButtonColor::text_color())
+                    gradient_tab = EpickButton::Active.btn(GRADIENT_TITLE);
                 }
                 EpickApp::ColorPicker => {
-                    gradient_tab = gradient_tab
-                        .fill(Some(Color32::from(ButtonColor::Inactive)))
-                        .text_color(ButtonColor::text_color())
+                    gradient_tab = EpickButton::Inactive.btn(GRADIENT_TITLE);
                 }
             }
             let gradient_resp = ui.add(gradient_tab);
@@ -196,7 +203,8 @@ impl Epick {
             ui.horizontal(|ui| {
                 ui.heading("Saved colors");
                 ui.add_space(7.);
-                if ui.button("clear").clicked() {
+                let clear_btn = ui.add(EpickButton::Inactive.btn("clear"));
+                if clear_btn.clicked() {
                     self.saved_colors.clear();
                 }
             });
