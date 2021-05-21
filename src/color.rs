@@ -135,3 +135,30 @@ pub fn parse_color(hex: &str) -> Option<Color32> {
 pub fn color_as_hex(color: &Color32) -> String {
     format!("{:02x}{:02x}{:02x}", color.r(), color.g(), color.b())
 }
+
+pub fn create_shades(base: &Color32, total: u8) -> Vec<Color32> {
+    if total == 0 {
+        return vec![base.clone()];
+    }
+    let mut step_total = total.saturating_sub(1);
+    if step_total == 0 {
+        step_total = 1;
+    }
+    let mut base_r = base.r();
+    let mut base_g = base.g();
+    let mut base_b = base.b();
+    let step_r = base_r / step_total;
+    let step_g = base_g / step_total;
+    let step_b = base_b / step_total;
+
+    (0..total)
+        .into_iter()
+        .map(|_| {
+            let c = Color32::from_rgb(base_r, base_g, base_b);
+            base_r = base_r.saturating_sub(step_r);
+            base_g = base_g.saturating_sub(step_g);
+            base_b = base_b.saturating_sub(step_b);
+            c
+        })
+        .collect()
+}

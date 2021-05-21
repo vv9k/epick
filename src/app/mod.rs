@@ -1,9 +1,11 @@
 mod picker;
 mod render;
+mod scheme;
 mod ui;
 
 use picker::ColorPicker;
 use render::tex_color;
+use scheme::SchemeGenerator;
 use ui::Tab;
 
 use crate::color::color_as_hex;
@@ -16,12 +18,14 @@ use egui::{vec2, ScrollArea, TextStyle, Ui};
 pub struct Epick {
     pub tab: EpickApp,
     pub picker: ColorPicker,
+    pub generator: SchemeGenerator,
     pub saved_colors: Vec<(String, Color32)>,
 }
 
 pub enum EpickApp {
     ColorPicker,
     GradientView,
+    SchemeGenerator,
 }
 
 impl Default for EpickApp {
@@ -97,6 +101,9 @@ impl Epick {
                     self.picker.ui(ui, tex_allocator, &mut self.saved_colors);
                 }
                 EpickApp::GradientView => {}
+                EpickApp::SchemeGenerator => {
+                    self.generator.ui(ui, tex_allocator, &mut self.saved_colors);
+                }
             });
     }
 
@@ -114,6 +121,9 @@ impl Epick {
                 EpickApp::GradientView => {
                     picker_tab = Tab::Inactive.btn(PICKER_TITLE);
                 }
+                EpickApp::SchemeGenerator => {
+                    picker_tab = Tab::Inactive.btn(PICKER_TITLE);
+                }
             }
             let picker_resp = ui.add(picker_tab);
             if picker_resp.clicked() {
@@ -129,10 +139,31 @@ impl Epick {
                 EpickApp::ColorPicker => {
                     gradient_tab = Tab::Inactive.btn(GRADIENT_TITLE);
                 }
+                EpickApp::SchemeGenerator => {
+                    gradient_tab = Tab::Inactive.btn(GRADIENT_TITLE);
+                }
             }
             let gradient_resp = ui.add(gradient_tab);
             if gradient_resp.clicked() {
                 self.tab = EpickApp::GradientView;
+            }
+
+            let scheme_tab;
+            const SCHEME_TITLE: &str = "scheme";
+            match self.tab {
+                EpickApp::GradientView => {
+                    scheme_tab = Tab::Active.btn(SCHEME_TITLE);
+                }
+                EpickApp::ColorPicker => {
+                    scheme_tab = Tab::Inactive.btn(SCHEME_TITLE);
+                }
+                EpickApp::SchemeGenerator => {
+                    scheme_tab = Tab::Inactive.btn(SCHEME_TITLE);
+                }
+            }
+            let scheme_resp = ui.add(scheme_tab);
+            if scheme_resp.clicked() {
+                self.tab = EpickApp::SchemeGenerator;
             }
         });
     }
@@ -214,6 +245,11 @@ impl Epick {
                                 }
                             }
                             EpickApp::GradientView => {}
+                            EpickApp::SchemeGenerator => {
+                                if resp.clicked() {
+                                    self.generator.set_cur_color(color.clone());
+                                }
+                            }
                         };
                     }
                 });
