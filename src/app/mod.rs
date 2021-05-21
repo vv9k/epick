@@ -184,13 +184,13 @@ impl Epick {
             let scheme_tab;
             const SCHEME_TITLE: &str = "scheme";
             match self.tab {
-                EpickApp::GradientView => {
+                EpickApp::SchemeGenerator => {
                     scheme_tab = Tab::Active.btn(SCHEME_TITLE);
                 }
                 EpickApp::ColorPicker => {
                     scheme_tab = Tab::Inactive.btn(SCHEME_TITLE);
                 }
-                EpickApp::SchemeGenerator => {
+                EpickApp::GradientView => {
                     scheme_tab = Tab::Inactive.btn(SCHEME_TITLE);
                 }
             }
