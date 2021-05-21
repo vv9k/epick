@@ -1,4 +1,5 @@
 use crate::app::render::{tex_color, TextureManager};
+use crate::app::SavedColors;
 use crate::color::{color_as_hex, parse_color, Cmyk};
 use crate::save_to_clipboard;
 use egui::color::{Color32, Hsva};
@@ -67,7 +68,7 @@ impl ColorPicker {
         &mut self,
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-        saved_colors: &mut Vec<(String, Color32)>,
+        saved_colors: &mut SavedColors,
     ) {
         ui.horizontal(|ui| {
             ui.label("Enter a hex color: ");
@@ -81,10 +82,7 @@ impl ColorPicker {
             }
             if ui.button("➕ save").clicked() {
                 if let Some(color) = self.cur_color {
-                    let color = (color_as_hex(&color), color);
-                    if !saved_colors.contains(&color) {
-                        saved_colors.push(color);
-                    }
+                    saved_colors.add(color);
                 }
             }
         });

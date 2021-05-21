@@ -1,4 +1,5 @@
 use crate::app::render::{tex_color, TextureManager};
+use crate::app::SavedColors;
 use crate::color::{color_as_hex, create_shades};
 use crate::save_to_clipboard;
 
@@ -32,7 +33,7 @@ impl SchemeGenerator {
         &mut self,
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-        saved_colors: &mut Vec<(String, Color32)>,
+        saved_colors: &mut SavedColors,
     ) {
         if let Some(color) = self.base_color {
             ui.vertical(|ui| {
@@ -64,7 +65,7 @@ impl SchemeGenerator {
                                     }
 
                                     if color_box.middle_clicked() {
-                                        saved_colors.push((hex.clone(), shade.clone()));
+                                        saved_colors.add(shade.clone());
                                     }
 
                                     if color_box.secondary_clicked() {
@@ -82,7 +83,7 @@ impl SchemeGenerator {
         &mut self,
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-        saved_colors: &mut Vec<(String, Color32)>,
+        saved_colors: &mut SavedColors,
     ) {
         ui.vertical(|ui| {
             self.shades(ui, tex_allocator, saved_colors);

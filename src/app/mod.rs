@@ -14,12 +14,45 @@ use crate::save_to_clipboard;
 use egui::color::Color32;
 use egui::{vec2, ScrollArea, TextStyle, Ui};
 
+#[derive(Default, Debug)]
+pub struct SavedColors(Vec<(String, Color32)>);
+
+impl SavedColors {
+    pub fn add(&mut self, color: Color32) {
+        let color = (color_as_hex(&color), color);
+        if !self.0.contains(&color) {
+            self.0.push(color);
+        }
+    }
+
+    pub fn remove(&mut self, color: &Color32) -> Option<(String, Color32)> {
+        self.0
+            .iter()
+            .position(|(_, col)| col == color)
+            .map(|i| self.0.remove(i))
+    }
+
+    pub fn clear(&mut self) {
+        self.0.clear()
+    }
+
+    pub fn swap(&mut self, a: usize, b: usize) {
+        self.0.swap(a, b);
+    }
+}
+
+impl AsRef<[(String, Color32)]> for SavedColors {
+    fn as_ref(&self) -> &[(String, Color32)] {
+        self.0.as_ref()
+    }
+}
+
 #[derive(Default)]
 pub struct Epick {
     pub tab: EpickApp,
     pub picker: ColorPicker,
     pub generator: SchemeGenerator,
-    pub saved_colors: Vec<(String, Color32)>,
+    pub saved_colors: SavedColors,
 }
 
 pub enum EpickApp {
@@ -195,17 +228,14 @@ impl Epick {
             ui.label("Right click: copy hex");
             ui.add_space(7.);
 
-            for (idx, (hex, color)) in self.saved_colors.clone().iter().enumerate() {
+            for (idx, (hex, color)) in self.saved_colors.as_ref().to_vec().iter().enumerate() {
                 ui.horizontal(|ui| {
                     ui.vertical(|ui| {
                         ui.add_space(ui.fonts().row_height(TextStyle::Monospace));
                         ui.monospace(format!("#{}", hex));
                         ui.horizontal(|ui| {
                             if ui.button("❌").clicked() {
-                                self.saved_colors
-                                    .iter()
-                                    .position(|(_hex, _)| _hex == hex)
-                                    .map(|i| self.saved_colors.remove(i));
+                                self.saved_colors.remove(color);
                             }
                             ui.vertical(|ui| {
                                 if ui.button("⏶").clicked() {
@@ -215,7 +245,7 @@ impl Epick {
                                 }
 
                                 if ui.button("⏷").clicked() {
-                                    if idx < (self.saved_colors.len() - 1) {
+                                    if idx < (self.saved_colors.as_ref().len() - 1) {
                                         self.saved_colors.swap(idx, idx + 1);
                                     }
                                 }
