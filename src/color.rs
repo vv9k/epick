@@ -189,3 +189,17 @@ pub fn create_tints(base: &Color32, total: u8) -> Vec<Color32> {
         })
         .collect()
 }
+
+pub fn complementary(color: &Color32) -> Color32 {
+    let mut hsv = Hsva::from_srgb([color.r(), color.g(), color.b()]);
+    dbg!(&hsv);
+    if hsv.v == 0. {
+        return Color32::WHITE;
+    } else if hsv.s == 0. && hsv.v == 1. {
+        return Color32::BLACK;
+    }
+
+    hsv.h = (hsv.h + 0.5) % 1.;
+    let rgb = hsv.to_srgb();
+    Color32::from_rgb(rgb[0], rgb[1], rgb[2])
+}

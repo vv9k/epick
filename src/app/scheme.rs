@@ -1,10 +1,22 @@
 use crate::app::render::{tex_color, TextureManager};
 use crate::app::SavedColors;
-use crate::color::{color_as_hex, create_shades, create_tints};
+use crate::color::{color_as_hex, complementary, create_shades, create_tints};
 use crate::save_to_clipboard;
 
-use egui::{color::Color32, Vec2};
+use egui::{color::Color32, ComboBox, Vec2};
 use egui::{vec2, ScrollArea, Slider, Ui};
+
+fn color_tooltip(color: &Color32) -> String {
+    format!(
+        "#{}\n\nPrimary click: set current\nMiddle click: save color\nSecondary click: copy hex",
+        color_as_hex(&color)
+    )
+}
+
+#[derive(Debug, PartialEq)]
+pub enum SchemeType {
+    Complementary,
+}
 
 pub struct SchemeGenerator {
     pub numof_shades: u8,
@@ -13,6 +25,7 @@ pub struct SchemeGenerator {
     pub tint_color_size: f32,
     pub base_color: Option<Color32>,
     pub tex_mngr: TextureManager,
+    pub scheme_ty: SchemeType,
 }
 
 impl Default for SchemeGenerator {
@@ -24,6 +37,7 @@ impl Default for SchemeGenerator {
             tint_color_size: 100.,
             base_color: None,
             tex_mngr: TextureManager::default(),
+            scheme_ty: SchemeType::Complementary,
         }
     }
 }
@@ -40,35 +54,37 @@ impl SchemeGenerator {
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
+        with_label: bool,
     ) {
         let hex = color_as_hex(&color);
         ui.add_space(7.);
         ui.horizontal(|ui| {
-                                let help = format!("#{}\n\nPrimary click: set current\nMiddle click: save color\nSecondary click: copy hex", hex);
-                                let color_box = tex_color(
-                                    ui,
-                                    tex_allocator,
-                                    &mut self.tex_mngr,
-                                    color.clone(),
-                                    size,
-                                    Some(&help),
-                                );
-                                if let Some(color_box) = color_box {
-                                    ui.monospace(format!("#{}", hex));
+            let color_box = tex_color(
+                ui,
+                tex_allocator,
+                &mut self.tex_mngr,
+                color.clone(),
+                size,
+                Some(&color_tooltip(&color)),
+            );
+            if let Some(color_box) = color_box {
+                if with_label {
+                    ui.monospace(format!("#{}", hex));
+                }
 
-                                    if color_box.clicked() {
-                                        self.set_cur_color(color.clone());
-                                    }
+                if color_box.clicked() {
+                    self.set_cur_color(color.clone());
+                }
 
-                                    if color_box.middle_clicked() {
-                                        saved_colors.add(color.clone());
-                                    }
+                if color_box.middle_clicked() {
+                    saved_colors.add(color.clone());
+                }
 
-                                    if color_box.secondary_clicked() {
-                                        let _ = save_to_clipboard(hex);
-                                    }
-                                }
-                            });
+                if color_box.secondary_clicked() {
+                    let _ = save_to_clipboard(hex);
+                }
+            }
+        });
     }
 
     pub fn tints(
@@ -89,7 +105,7 @@ impl SchemeGenerator {
                     .id_source("tints scroll")
                     .show(ui, |ui| {
                         tints.iter().for_each(|tint| {
-                            self.color_box(tint, size, ui, tex_allocator, saved_colors);
+                            self.color_box(tint, size, ui, tex_allocator, saved_colors, true);
                         });
                     });
             } else {
@@ -115,7 +131,7 @@ impl SchemeGenerator {
                     .id_source("shades scroll")
                     .show(ui, |ui| {
                         shades.iter().for_each(|shade| {
-                            self.color_box(shade, size, ui, tex_allocator, saved_colors);
+                            self.color_box(shade, size, ui, tex_allocator, saved_colors, true);
                         });
                     });
             } else {
@@ -124,15 +140,63 @@ impl SchemeGenerator {
         });
     }
 
+    pub fn schemes(
+        &mut self,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        saved_colors: &mut SavedColors,
+    ) {
+        let _ = 0. % 1.;
+        ui.heading("Schemes");
+        ComboBox::from_label("Choose a type").show_ui(ui, |ui| {
+            ui.selectable_value(
+                &mut self.scheme_ty,
+                SchemeType::Complementary,
+                "Complementary",
+            );
+        });
+
+        if let Some(color) = self.base_color {
+            match self.scheme_ty {
+                SchemeType::Complementary => {
+                    let compl = complementary(&color);
+                    ui.columns(2, |cols| {
+                        cols[0].scope(|mut ui| {
+                            self.color_box(
+                                &color,
+                                vec2(160., 300.),
+                                &mut ui,
+                                tex_allocator,
+                                saved_colors,
+                                false,
+                            );
+                        });
+                        cols[1].scope(|mut ui| {
+                            self.color_box(
+                                &compl,
+                                vec2(160., 300.),
+                                &mut ui,
+                                tex_allocator,
+                                saved_colors,
+                                false,
+                            );
+                        });
+                    });
+                }
+            }
+        }
+    }
+
     pub fn ui(
         &mut self,
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
     ) {
-        ui.columns(2, |columns| {
+        ui.columns(3, |columns| {
             self.shades(&mut columns[0], tex_allocator, saved_colors);
             self.tints(&mut columns[1], tex_allocator, saved_colors);
+            self.schemes(&mut columns[2], tex_allocator, saved_colors);
         });
     }
 }
