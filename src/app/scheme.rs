@@ -1,7 +1,8 @@
 use crate::app::render::{tex_color, TextureManager};
 use crate::app::SavedColors;
 use crate::color::{
-    analogous, color_as_hex, complementary, create_shades, create_tints, tetradic, triadic,
+    analogous, color_as_hex, complementary, create_shades, create_tints, split_complementary,
+    tetradic, triadic,
 };
 use crate::save_to_clipboard;
 
@@ -21,6 +22,7 @@ pub enum SchemeType {
     Triadic,
     Tetradic,
     Analogous,
+    SplitComplementary,
 }
 
 pub struct SchemeGenerator {
@@ -161,6 +163,11 @@ impl SchemeGenerator {
             ui.selectable_value(&mut self.scheme_ty, SchemeType::Triadic, "Triadic");
             ui.selectable_value(&mut self.scheme_ty, SchemeType::Tetradic, "Tetradic");
             ui.selectable_value(&mut self.scheme_ty, SchemeType::Analogous, "Analogous");
+            ui.selectable_value(
+                &mut self.scheme_ty,
+                SchemeType::SplitComplementary,
+                "Split complementary",
+            );
         });
 
         macro_rules! cb {
@@ -214,6 +221,16 @@ impl SchemeGenerator {
                     ui.vertical(|ui| {
                         let c1 = an.0;
                         let c2 = an.1;
+                        cb!(color, ui);
+                        cb!(c1, ui);
+                        cb!(c2, ui);
+                    });
+                }
+                SchemeType::SplitComplementary => {
+                    let sc = split_complementary(&color);
+                    ui.vertical(|ui| {
+                        let c1 = sc.0;
+                        let c2 = sc.1;
                         cb!(color, ui);
                         cb!(c1, ui);
                         cb!(c2, ui);

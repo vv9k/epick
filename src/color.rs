@@ -229,3 +229,10 @@ pub fn analogous(color: &Color32) -> (Color32, Color32) {
         color_with_hue_offset(color, 1. / 12.),
     )
 }
+
+pub fn split_complementary(color: &Color32) -> (Color32, Color32) {
+    (
+        color_with_hue_offset(color, 150. / 360.),
+        color_with_hue_offset(color, 240. / 360.),
+    )
+}
