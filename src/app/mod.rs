@@ -13,6 +13,7 @@ use crate::save_to_clipboard;
 
 use egui::color::Color32;
 use egui::{vec2, ScrollArea, TextStyle, Ui};
+use std::borrow::Cow;
 
 #[derive(Default, Debug)]
 pub struct SavedColors(Vec<(String, Color32)>);
@@ -70,6 +71,28 @@ impl Default for EpickApp {
 impl epi::App for Epick {
     fn name(&self) -> &str {
         "epick"
+    }
+
+    fn setup(&mut self, _ctx: &egui::CtxRef) {
+        let mut fonts = egui::FontDefinitions::default();
+        fonts.font_data.insert(
+            "Firacode".to_string(),
+            Cow::Borrowed(include_bytes!("../../assets/FiraCode-Regular.ttf")),
+        );
+        let mut def = fonts
+            .fonts_for_family
+            .get_mut(&egui::FontFamily::Monospace)
+            .map(|v| v.clone())
+            .unwrap_or_default();
+        def.push("Firacode".to_string());
+        fonts
+            .fonts_for_family
+            .insert(egui::FontFamily::Monospace, def);
+        fonts.family_and_size.insert(
+            egui::TextStyle::Monospace,
+            (egui::FontFamily::Monospace, 16.),
+        );
+        _ctx.set_fonts(fonts);
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
