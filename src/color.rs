@@ -222,3 +222,10 @@ pub fn tetradic(color: &Color32) -> (Color32, Color32, Color32) {
         color_with_hue_offset(color, 0.75),
     )
 }
+
+pub fn analogous(color: &Color32) -> (Color32, Color32) {
+    (
+        color_with_hue_offset(color, -1. / 12.),
+        color_with_hue_offset(color, 1. / 12.),
+    )
+}

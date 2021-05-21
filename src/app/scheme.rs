@@ -1,6 +1,8 @@
 use crate::app::render::{tex_color, TextureManager};
 use crate::app::SavedColors;
-use crate::color::{color_as_hex, complementary, create_shades, create_tints, tetradic, triadic};
+use crate::color::{
+    analogous, color_as_hex, complementary, create_shades, create_tints, tetradic, triadic,
+};
 use crate::save_to_clipboard;
 
 use egui::{color::Color32, ComboBox, Vec2};
@@ -18,6 +20,7 @@ pub enum SchemeType {
     Complementary,
     Triadic,
     Tetradic,
+    Analogous,
 }
 
 pub struct SchemeGenerator {
@@ -157,6 +160,7 @@ impl SchemeGenerator {
             );
             ui.selectable_value(&mut self.scheme_ty, SchemeType::Triadic, "Triadic");
             ui.selectable_value(&mut self.scheme_ty, SchemeType::Tetradic, "Tetradic");
+            ui.selectable_value(&mut self.scheme_ty, SchemeType::Analogous, "Analogous");
         });
 
         macro_rules! cb {
@@ -203,6 +207,16 @@ impl SchemeGenerator {
                         cb!(c1, ui);
                         cb!(c2, ui);
                         cb!(c3, ui);
+                    });
+                }
+                SchemeType::Analogous => {
+                    let an = analogous(&color);
+                    ui.vertical(|ui| {
+                        let c1 = an.0;
+                        let c2 = an.1;
+                        cb!(color, ui);
+                        cb!(c1, ui);
+                        cb!(c2, ui);
                     });
                 }
             }
