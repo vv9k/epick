@@ -159,111 +159,50 @@ impl SchemeGenerator {
             ui.selectable_value(&mut self.scheme_ty, SchemeType::Tetradic, "Tetradic");
         });
 
+        macro_rules! cb {
+            ($color:ident, $ui:ident) => {
+                $ui.scope(|mut ui| {
+                    self.color_box(
+                        &$color,
+                        vec2(250., 250.),
+                        &mut ui,
+                        tex_allocator,
+                        saved_colors,
+                        false,
+                    );
+                });
+            };
+        }
+
         if let Some(color) = self.base_color {
             match self.scheme_ty {
                 SchemeType::Complementary => {
                     let compl = complementary(&color);
                     ui.vertical(|ui| {
-                        ui.scope(|mut ui| {
-                            self.color_box(
-                                &color,
-                                vec2(250., 250.),
-                                &mut ui,
-                                tex_allocator,
-                                saved_colors,
-                                false,
-                            );
-                        });
-                        ui.scope(|mut ui| {
-                            self.color_box(
-                                &compl,
-                                vec2(250., 250.),
-                                &mut ui,
-                                tex_allocator,
-                                saved_colors,
-                                false,
-                            );
-                        });
+                        cb!(color, ui);
+                        cb!(compl, ui);
                     });
                 }
                 SchemeType::Triadic => {
                     let tri = triadic(&color);
                     ui.vertical(|ui| {
-                        ui.scope(|mut ui| {
-                            self.color_box(
-                                &color,
-                                vec2(250., 250.),
-                                &mut ui,
-                                tex_allocator,
-                                saved_colors,
-                                false,
-                            )
-                        });
-                        ui.scope(|mut ui| {
-                            self.color_box(
-                                &tri.0,
-                                vec2(250., 250.),
-                                &mut ui,
-                                tex_allocator,
-                                saved_colors,
-                                false,
-                            );
-                        });
-                        ui.scope(|mut ui| {
-                            self.color_box(
-                                &tri.1,
-                                vec2(250., 250.),
-                                &mut ui,
-                                tex_allocator,
-                                saved_colors,
-                                false,
-                            );
-                        });
+                        let c1 = tri.0;
+                        let c2 = tri.1;
+                        cb!(color, ui);
+                        cb!(c1, ui);
+                        cb!(c2, ui);
                     });
                 }
                 SchemeType::Tetradic => {
                     let tetr = tetradic(&color);
                     ui.vertical(|ui| {
-                        ui.scope(|mut ui| {
-                            self.color_box(
-                                &color,
-                                vec2(250., 250.),
-                                &mut ui,
-                                tex_allocator,
-                                saved_colors,
-                                false,
-                            )
-                        });
-                        ui.scope(|mut ui| {
-                            self.color_box(
-                                &tetr.0,
-                                vec2(250., 250.),
-                                &mut ui,
-                                tex_allocator,
-                                saved_colors,
-                                false,
-                            );
-                        });
-                        ui.scope(|mut ui| {
-                            self.color_box(
-                                &tetr.1,
-                                vec2(250., 250.),
-                                &mut ui,
-                                tex_allocator,
-                                saved_colors,
-                                false,
-                            );
-                        });
-                        ui.scope(|mut ui| {
-                            self.color_box(
-                                &tetr.2,
-                                vec2(250., 250.),
-                                &mut ui,
-                                tex_allocator,
-                                saved_colors,
-                                false,
-                            )
-                        });
+                        let c1 = &tetr.0;
+                        let c2 = &tetr.1;
+                        let c3 = &tetr.2;
+                        cb!(color, ui);
+                        cb!(c1, ui);
+                        cb!(c2, ui);
+                        cb!(c3, ui);
                     });
                 }
             }
