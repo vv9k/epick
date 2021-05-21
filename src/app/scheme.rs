@@ -1,6 +1,6 @@
 use crate::app::render::{tex_color, TextureManager};
 use crate::app::SavedColors;
-use crate::color::{color_as_hex, complementary, create_shades, create_tints, triadic};
+use crate::color::{color_as_hex, complementary, create_shades, create_tints, tetradic, triadic};
 use crate::save_to_clipboard;
 
 use egui::{color::Color32, ComboBox, Vec2};
@@ -17,6 +17,7 @@ fn color_tooltip(color: &Color32) -> String {
 pub enum SchemeType {
     Complementary,
     Triadic,
+    Tetradic,
 }
 
 pub struct SchemeGenerator {
@@ -155,6 +156,7 @@ impl SchemeGenerator {
                 "Complementary",
             );
             ui.selectable_value(&mut self.scheme_ty, SchemeType::Triadic, "Triadic");
+            ui.selectable_value(&mut self.scheme_ty, SchemeType::Tetradic, "Tetradic");
         });
 
         if let Some(color) = self.base_color {
@@ -189,6 +191,16 @@ impl SchemeGenerator {
                     ui.vertical(|ui| {
                         ui.scope(|mut ui| {
                             self.color_box(
+                                &color,
+                                vec2(250., 250.),
+                                &mut ui,
+                                tex_allocator,
+                                saved_colors,
+                                false,
+                            )
+                        });
+                        ui.scope(|mut ui| {
+                            self.color_box(
                                 &tri.0,
                                 vec2(250., 250.),
                                 &mut ui,
@@ -207,9 +219,44 @@ impl SchemeGenerator {
                                 false,
                             );
                         });
+                    });
+                }
+                SchemeType::Tetradic => {
+                    let tetr = tetradic(&color);
+                    ui.vertical(|ui| {
                         ui.scope(|mut ui| {
                             self.color_box(
                                 &color,
+                                vec2(250., 250.),
+                                &mut ui,
+                                tex_allocator,
+                                saved_colors,
+                                false,
+                            )
+                        });
+                        ui.scope(|mut ui| {
+                            self.color_box(
+                                &tetr.0,
+                                vec2(250., 250.),
+                                &mut ui,
+                                tex_allocator,
+                                saved_colors,
+                                false,
+                            );
+                        });
+                        ui.scope(|mut ui| {
+                            self.color_box(
+                                &tetr.1,
+                                vec2(250., 250.),
+                                &mut ui,
+                                tex_allocator,
+                                saved_colors,
+                                false,
+                            );
+                        });
+                        ui.scope(|mut ui| {
+                            self.color_box(
+                                &tetr.2,
                                 vec2(250., 250.),
                                 &mut ui,
                                 tex_allocator,

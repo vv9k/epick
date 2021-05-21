@@ -214,3 +214,11 @@ pub fn triadic(color: &Color32) -> (Color32, Color32) {
         color_with_hue_offset(color, 240. / 360.),
     )
 }
+
+pub fn tetradic(color: &Color32) -> (Color32, Color32, Color32) {
+    (
+        color_with_hue_offset(color, 0.25),
+        complementary(color),
+        color_with_hue_offset(color, 0.75),
+    )
+}
