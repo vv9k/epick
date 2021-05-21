@@ -248,7 +248,7 @@ impl Epick {
                         });
                     });
                     let help = format!(
-                        "#{}\n\nLeft click: set current\nsecondary click: copy hex",
+                        "#{}\n\nPrimary click: set current\nSecondary click: copy hex",
                         hex
                     );
 
