@@ -190,16 +190,27 @@ pub fn create_tints(base: &Color32, total: u8) -> Vec<Color32> {
         .collect()
 }
 
-pub fn complementary(color: &Color32) -> Color32 {
+fn color_with_hue_offset(color: &Color32, offset: f32) -> Color32 {
     let mut hsv = Hsva::from_srgb([color.r(), color.g(), color.b()]);
-    dbg!(&hsv);
-    if hsv.v == 0. {
+
+    hsv.h = (hsv.h + offset) % 1.;
+    let rgb = hsv.to_srgb();
+    Color32::from_rgb(rgb[0], rgb[1], rgb[2])
+}
+
+pub fn complementary(color: &Color32) -> Color32 {
+    if color == &Color32::BLACK {
         return Color32::WHITE;
-    } else if hsv.s == 0. && hsv.v == 1. {
+    } else if color == &Color32::WHITE {
         return Color32::BLACK;
     }
 
-    hsv.h = (hsv.h + 0.5) % 1.;
-    let rgb = hsv.to_srgb();
-    Color32::from_rgb(rgb[0], rgb[1], rgb[2])
+    color_with_hue_offset(color, 0.5)
+}
+
+pub fn triadic(color: &Color32) -> (Color32, Color32) {
+    (
+        color_with_hue_offset(color, 120. / 360.),
+        color_with_hue_offset(color, 240. / 360.),
+    )
 }

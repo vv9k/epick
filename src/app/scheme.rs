@@ -1,6 +1,6 @@
 use crate::app::render::{tex_color, TextureManager};
 use crate::app::SavedColors;
-use crate::color::{color_as_hex, complementary, create_shades, create_tints};
+use crate::color::{color_as_hex, complementary, create_shades, create_tints, triadic};
 use crate::save_to_clipboard;
 
 use egui::{color::Color32, ComboBox, Vec2};
@@ -16,6 +16,7 @@ fn color_tooltip(color: &Color32) -> String {
 #[derive(Debug, PartialEq)]
 pub enum SchemeType {
     Complementary,
+    Triadic,
 }
 
 pub struct SchemeGenerator {
@@ -146,7 +147,6 @@ impl SchemeGenerator {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
     ) {
-        let _ = 0. % 1.;
         ui.heading("Schemes");
         ComboBox::from_label("Choose a type").show_ui(ui, |ui| {
             ui.selectable_value(
@@ -154,32 +154,68 @@ impl SchemeGenerator {
                 SchemeType::Complementary,
                 "Complementary",
             );
+            ui.selectable_value(&mut self.scheme_ty, SchemeType::Triadic, "Triadic");
         });
 
         if let Some(color) = self.base_color {
             match self.scheme_ty {
                 SchemeType::Complementary => {
                     let compl = complementary(&color);
-                    ui.columns(2, |cols| {
-                        cols[0].scope(|mut ui| {
+                    ui.vertical(|ui| {
+                        ui.scope(|mut ui| {
                             self.color_box(
                                 &color,
-                                vec2(160., 300.),
+                                vec2(250., 250.),
                                 &mut ui,
                                 tex_allocator,
                                 saved_colors,
                                 false,
                             );
                         });
-                        cols[1].scope(|mut ui| {
+                        ui.scope(|mut ui| {
                             self.color_box(
                                 &compl,
-                                vec2(160., 300.),
+                                vec2(250., 250.),
                                 &mut ui,
                                 tex_allocator,
                                 saved_colors,
                                 false,
                             );
+                        });
+                    });
+                }
+                SchemeType::Triadic => {
+                    let tri = triadic(&color);
+                    ui.vertical(|ui| {
+                        ui.scope(|mut ui| {
+                            self.color_box(
+                                &tri.0,
+                                vec2(250., 250.),
+                                &mut ui,
+                                tex_allocator,
+                                saved_colors,
+                                false,
+                            );
+                        });
+                        ui.scope(|mut ui| {
+                            self.color_box(
+                                &tri.1,
+                                vec2(250., 250.),
+                                &mut ui,
+                                tex_allocator,
+                                saved_colors,
+                                false,
+                            );
+                        });
+                        ui.scope(|mut ui| {
+                            self.color_box(
+                                &color,
+                                vec2(250., 250.),
+                                &mut ui,
+                                tex_allocator,
+                                saved_colors,
+                                false,
+                            )
                         });
                     });
                 }
