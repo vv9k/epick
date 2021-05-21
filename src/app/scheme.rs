@@ -30,6 +30,7 @@ pub struct SchemeGenerator {
     pub numof_tints: u8,
     pub shade_color_size: f32,
     pub tint_color_size: f32,
+    pub scheme_color_size: f32,
     pub base_color: Option<Color32>,
     pub tex_mngr: TextureManager,
     pub scheme_ty: SchemeType,
@@ -42,6 +43,7 @@ impl Default for SchemeGenerator {
             numof_tints: 6,
             shade_color_size: 100.,
             tint_color_size: 100.,
+            scheme_color_size: 200.,
             base_color: None,
             tex_mngr: TextureManager::default(),
             scheme_ty: SchemeType::Complementary,
@@ -54,7 +56,45 @@ impl SchemeGenerator {
         self.base_color = Some(color);
     }
 
-    fn color_box(
+    fn color_box_label_under(
+        &mut self,
+        color: &Color32,
+        size: Vec2,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        saved_colors: &mut SavedColors,
+    ) {
+        ui.vertical(|ui| {
+            self._color_box(color, size, ui, tex_allocator, saved_colors, true);
+        });
+    }
+
+    fn color_box_label_side(
+        &mut self,
+        color: &Color32,
+        size: Vec2,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        saved_colors: &mut SavedColors,
+    ) {
+        ui.horizontal(|ui| {
+            self._color_box(color, size, ui, tex_allocator, saved_colors, true);
+        });
+    }
+
+    #[allow(dead_code)]
+    fn color_box_no_label(
+        &mut self,
+        color: &Color32,
+        size: Vec2,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        saved_colors: &mut SavedColors,
+    ) {
+        self._color_box(color, size, ui, tex_allocator, saved_colors, false);
+    }
+
+    fn _color_box(
         &mut self,
         color: &Color32,
         size: Vec2,
@@ -64,34 +104,31 @@ impl SchemeGenerator {
         with_label: bool,
     ) {
         let hex = color_as_hex(&color);
-        ui.add_space(7.);
-        ui.horizontal(|ui| {
-            let color_box = tex_color(
-                ui,
-                tex_allocator,
-                &mut self.tex_mngr,
-                color.clone(),
-                size,
-                Some(&color_tooltip(&color)),
-            );
-            if let Some(color_box) = color_box {
-                if with_label {
-                    ui.monospace(format!("#{}", hex));
-                }
-
-                if color_box.clicked() {
-                    self.set_cur_color(color.clone());
-                }
-
-                if color_box.middle_clicked() {
-                    saved_colors.add(color.clone());
-                }
-
-                if color_box.secondary_clicked() {
-                    let _ = save_to_clipboard(hex);
-                }
+        let color_box = tex_color(
+            ui,
+            tex_allocator,
+            &mut self.tex_mngr,
+            color.clone(),
+            size,
+            Some(&color_tooltip(&color)),
+        );
+        if let Some(color_box) = color_box {
+            if with_label {
+                ui.monospace(format!("#{}", hex));
             }
-        });
+
+            if color_box.clicked() {
+                self.set_cur_color(color.clone());
+            }
+
+            if color_box.middle_clicked() {
+                saved_colors.add(color.clone());
+            }
+
+            if color_box.secondary_clicked() {
+                let _ = save_to_clipboard(hex);
+            }
+        }
     }
 
     pub fn tints(
@@ -112,7 +149,7 @@ impl SchemeGenerator {
                     .id_source("tints scroll")
                     .show(ui, |ui| {
                         tints.iter().for_each(|tint| {
-                            self.color_box(tint, size, ui, tex_allocator, saved_colors, true);
+                            self.color_box_label_side(tint, size, ui, tex_allocator, saved_colors);
                         });
                     });
             } else {
@@ -138,7 +175,7 @@ impl SchemeGenerator {
                     .id_source("shades scroll")
                     .show(ui, |ui| {
                         shades.iter().for_each(|shade| {
-                            self.color_box(shade, size, ui, tex_allocator, saved_colors, true);
+                            self.color_box_label_side(shade, size, ui, tex_allocator, saved_colors);
                         });
                     });
             } else {
@@ -169,18 +206,13 @@ impl SchemeGenerator {
                 "Split complementary",
             );
         });
+        ui.add(Slider::new(&mut self.scheme_color_size, 100.0..=250.).text("color size"));
+        let size = vec2(self.scheme_color_size, self.scheme_color_size);
 
         macro_rules! cb {
             ($color:ident, $ui:ident) => {
                 $ui.scope(|mut ui| {
-                    self.color_box(
-                        &$color,
-                        vec2(250., 250.),
-                        &mut ui,
-                        tex_allocator,
-                        saved_colors,
-                        false,
-                    );
+                    self.color_box_label_under(&$color, size, &mut ui, tex_allocator, saved_colors);
                 });
             };
         }
