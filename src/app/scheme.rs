@@ -81,8 +81,8 @@ impl SchemeGenerator {
             ui.heading("Tints");
             if let Some(color) = self.base_color {
                 let tints = create_tints(&color, self.numof_tints);
-                ui.add(Slider::new(&mut self.numof_tints, u8::MIN..=50).text("# of tints"));
-                ui.add(Slider::new(&mut self.tint_color_size, 20.0..=100.).text("color size"));
+                ui.add(Slider::new(&mut self.numof_tints, u8::MIN..=25).text("# of tints"));
+                ui.add(Slider::new(&mut self.tint_color_size, 20.0..=200.).text("color size"));
 
                 let size = vec2(self.tint_color_size, self.tint_color_size);
                 ScrollArea::auto_sized()
@@ -107,8 +107,8 @@ impl SchemeGenerator {
             ui.heading("Shades");
             if let Some(color) = self.base_color {
                 let shades = create_shades(&color, self.numof_shades);
-                ui.add(Slider::new(&mut self.numof_shades, u8::MIN..=50).text("# of shades"));
-                ui.add(Slider::new(&mut self.shade_color_size, 20.0..=100.).text("color size"));
+                ui.add(Slider::new(&mut self.numof_shades, u8::MIN..=25).text("# of shades"));
+                ui.add(Slider::new(&mut self.shade_color_size, 20.0..=200.).text("color size"));
 
                 let size = vec2(self.shade_color_size, self.shade_color_size);
                 ScrollArea::auto_sized()
