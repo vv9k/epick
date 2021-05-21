@@ -35,9 +35,9 @@ impl SchemeGenerator {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
     ) {
-        if let Some(color) = self.base_color {
-            ui.vertical(|ui| {
-                ui.heading("Shades");
+        ui.vertical(|ui| {
+            ui.heading("Shades");
+            if let Some(color) = self.base_color {
                 ui.add(Slider::new(&mut self.numof_shades, u8::MIN..=50).text("# of shades"));
                 ui.add(Slider::new(&mut self.color_size, 20.0..=100.).text("color size"));
 
@@ -49,13 +49,14 @@ impl SchemeGenerator {
                             let hex = color_as_hex(&shade);
                             ui.add_space(7.);
                             ui.horizontal(|ui| {
+                                let help = format!("#{}\n\nPrimary click: set current\nMiddle click: save color\nSecondary click: copy hex", hex);
                                 let color_box = tex_color(
                                     ui,
                                     tex_allocator,
                                     &mut self.tex_mngr,
                                     shade.clone(),
                                     size,
-                                    Some(&hex),
+                                    Some(&help),
                                 );
                                 if let Some(color_box) = color_box {
                                     ui.monospace(format!("#{}", hex));
@@ -75,8 +76,10 @@ impl SchemeGenerator {
                             });
                         });
                 });
-            });
-        }
+            } else {
+                ui.label("Select a color from saved colors");
+            }
+        });
     }
 
     pub fn ui(

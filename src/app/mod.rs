@@ -222,11 +222,6 @@ impl Epick {
                     self.saved_colors.clear();
                 }
             });
-            ui.add_space(7.);
-            ui.label("Left click: set current");
-            ui.add_space(3.5);
-            ui.label("Right click: copy hex");
-            ui.add_space(7.);
 
             for (idx, (hex, color)) in self.saved_colors.as_ref().to_vec().iter().enumerate() {
                 ui.horizontal(|ui| {
@@ -252,6 +247,10 @@ impl Epick {
                             });
                         });
                     });
+                    let help = format!(
+                        "#{}\n\nLeft click: set current\nsecondary click: copy hex",
+                        hex
+                    );
 
                     let resp = tex_color(
                         ui,
@@ -259,7 +258,7 @@ impl Epick {
                         &mut self.picker.tex_mngr,
                         color.clone(),
                         vec2(100., 50.),
-                        Some(&hex),
+                        Some(&help),
                     );
 
                     if let Some(resp) = resp {
