@@ -1,5 +1,5 @@
 use crate::app::render::{tex_color, TextureManager};
-use crate::app::SavedColors;
+use crate::app::{color_tooltip, SavedColors};
 use crate::color::{color_as_hex, parse_color, Cmyk};
 use crate::save_to_clipboard;
 use egui::color::{Color32, Hsva};
@@ -74,13 +74,17 @@ impl ColorPicker {
             ui.label("Enter a hex color: ");
             let resp = ui.text_edit_singleline(&mut self.hex_color);
             if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
-                || ui.button("▶ go").clicked()
+                || ui.button("▶").on_hover_text("Use this color").clicked()
             {
                 if let Some(color) = parse_color(self.hex_color.trim_start_matches("#")) {
                     self.set_cur_color(color);
                 }
             }
-            if ui.button("➕ save").clicked() {
+            if ui
+                .button("➕")
+                .on_hover_text("Add this color to saved colors")
+                .clicked()
+            {
                 if let Some(color) = self.cur_color {
                     saved_colors.add(color);
                 }
@@ -122,12 +126,16 @@ impl ColorPicker {
                     &mut self.tex_mngr,
                     color,
                     vec2(500., 500.),
-                    Some(&color_as_hex(&color)),
+                    Some(&color_tooltip(&color)),
                 );
                 if let Some(resp) = resp {
                     let hex = color_as_hex(&color);
                     if resp.clicked() {
                         self.set_cur_color(color);
+                    }
+
+                    if resp.middle_clicked() {
+                        saved_colors.add(color);
                     }
 
                     if resp.secondary_clicked() {

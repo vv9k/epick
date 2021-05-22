@@ -1,16 +1,18 @@
 mod picker;
 mod render;
 mod scheme;
+mod ui;
 
 use picker::ColorPicker;
 use render::tex_color;
 use scheme::SchemeGenerator;
+use ui::{color_tooltip, drag_source, drop_target};
 
 use crate::color::color_as_hex;
 use crate::save_to_clipboard;
 
-use egui::{color::Color32, Visuals};
-use egui::{vec2, ScrollArea, Stroke, TextStyle, Ui};
+use egui::color::Color32;
+use egui::{vec2, Id, ScrollArea, Stroke, Ui, Visuals};
 use lazy_static::lazy_static;
 use std::borrow::Cow;
 
@@ -41,11 +43,26 @@ impl SavedColors {
         }
     }
 
+    pub fn insert(&mut self, i: usize, color: Color32) {
+        let color = (color_as_hex(&color), color);
+        if !self.0.contains(&color) {
+            self.0.insert(i, color);
+        }
+    }
+
     pub fn remove(&mut self, color: &Color32) -> Option<(String, Color32)> {
         self.0
             .iter()
             .position(|(_, col)| col == color)
             .map(|i| self.0.remove(i))
+    }
+
+    pub fn remove_pos(&mut self, i: usize) -> Option<(String, Color32)> {
+        if i < self.0.len() {
+            Some(self.0.remove(i))
+        } else {
+            None
+        }
     }
 
     pub fn clear(&mut self) {
@@ -202,7 +219,7 @@ impl Epick {
             ..Default::default()
         };
 
-        egui::SidePanel::left("colors", 150.)
+        egui::SidePanel::left("colors", 200.)
             .frame(frame)
             .show(ctx, |ui| {
                 ScrollArea::auto_sized().show(ui, |ui| {
@@ -241,7 +258,6 @@ impl Epick {
     pub fn top_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             self.dark_light_switch(ui);
-            ui.label("switch ui color");
             ui.add_space(50.);
 
             ui.selectable_value(&mut self.current_tab, EpickApp::ColorPicker, "picker");
@@ -253,7 +269,11 @@ impl Epick {
         let is_dark = ui.style().visuals.dark_mode;
         let btn = if is_dark { "☀" } else { "🌙" };
 
-        if ui.button(btn).clicked() {
+        if ui
+            .button(btn)
+            .on_hover_text("Switch ui color theme")
+            .clicked()
+        {
             if is_dark {
                 ui.ctx().set_visuals(self.light_theme.clone());
             } else {
@@ -276,65 +296,66 @@ impl Epick {
                 }
             });
 
-            for (idx, (hex, color)) in self.saved_colors.as_ref().to_vec().iter().enumerate() {
-                ui.horizontal(|ui| {
-                    ui.vertical(|ui| {
-                        ui.add_space(ui.fonts().row_height(TextStyle::Monospace));
-                        ui.monospace(format!("#{}", hex));
-                        ui.horizontal(|ui| {
-                            if ui.button("❌").clicked() {
-                                self.saved_colors.remove(color);
-                            }
-                            ui.vertical(|ui| {
-                                if ui.button("⏶").clicked() {
-                                    if idx > 0 {
-                                        self.saved_colors.swap(idx, idx - 1);
-                                    }
-                                }
+            let mut src_row = None;
+            let mut dst_row = None;
 
-                                if ui.button("⏷").clicked() {
-                                    if idx < (self.saved_colors.as_ref().len() - 1) {
-                                        self.saved_colors.swap(idx, idx + 1);
+            for (idx, (hex, color)) in self.saved_colors.as_ref().to_vec().iter().enumerate() {
+                let resp = drop_target(ui, true, |ui| {
+                    let color_id = Id::new("side-color").with(idx);
+                    ui.columns(2, |cols| {
+                        cols[0].vertical(|ui| {
+                            ui.monospace(format!("#{}", hex));
+                            ui.horizontal(|ui| {
+                                ui.vertical(|ui| {
+                                    if ui.button("❌").on_hover_text("Delete this color").clicked()
+                                    {
+                                        self.saved_colors.remove(color);
                                     }
-                                }
+                                    if ui.button("▶").on_hover_text("Use this color").clicked() {
+                                        self.picker.set_cur_color(color.clone());
+                                        self.generator.set_cur_color(color.clone());
+                                    }
+                                });
+                                ui.vertical(|ui| {
+                                    if ui.button("📋").on_hover_text("Copy hex color").clicked() {
+                                        let _ = save_to_clipboard(hex.clone());
+                                    }
+                                });
                             });
                         });
+                        let help =
+                            format!("#{}\n\nDrag and drop to change the order of colors", hex);
+
+                        drag_source(&mut cols[1], color_id, |ui| {
+                            tex_color(
+                                ui,
+                                tex_allocator,
+                                &mut self.picker.tex_mngr,
+                                color.clone(),
+                                vec2(80., 50.),
+                                Some(&help),
+                            );
+                        });
                     });
-                    let help = format!(
-                        "#{}\n\nPrimary click: set current\nSecondary click: copy hex",
-                        hex
-                    );
-
-                    let resp = tex_color(
-                        ui,
-                        tex_allocator,
-                        &mut self.picker.tex_mngr,
-                        color.clone(),
-                        vec2(100., 50.),
-                        Some(&help),
-                    );
-
-                    if let Some(resp) = resp {
-                        match self.current_tab {
-                            EpickApp::ColorPicker => {
-                                let hex = color_as_hex(&color);
-                                if resp.clicked() {
-                                    self.picker.set_cur_color(color.clone());
-                                }
-
-                                if resp.secondary_clicked() {
-                                    let _ = save_to_clipboard(format!("#{}", hex));
-                                }
-                            }
-                            EpickApp::GradientView => {}
-                            EpickApp::SchemeGenerator => {
-                                if resp.clicked() {
-                                    self.generator.set_cur_color(color.clone());
-                                }
-                            }
-                        };
+                    if ui.memory().is_being_dragged(color_id) {
+                        src_row = Some(idx);
                     }
-                });
+                })
+                .response;
+                let is_being_dragged = ui.memory().is_anything_being_dragged();
+                if is_being_dragged && resp.hovered() {
+                    dst_row = Some(idx);
+                }
+            }
+
+            if let Some(src_row) = src_row {
+                if let Some(dst_row) = dst_row {
+                    if ui.input().pointer.any_released() {
+                        if let Some(it) = self.saved_colors.remove_pos(src_row) {
+                            self.saved_colors.insert(dst_row, it.1);
+                        }
+                    }
+                }
             }
         });
     }

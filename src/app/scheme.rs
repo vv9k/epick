@@ -1,5 +1,5 @@
 use crate::app::render::{tex_color, TextureManager};
-use crate::app::SavedColors;
+use crate::app::{color_tooltip, SavedColors};
 use crate::color::{
     analogous, color_as_hex, complementary, create_shades, create_tints, split_complementary,
     tetradic, triadic,
@@ -9,13 +9,6 @@ use crate::save_to_clipboard;
 use egui::{color::Color32, ComboBox, Vec2};
 use egui::{vec2, ScrollArea, Slider, Ui};
 use std::convert::AsRef;
-
-fn color_tooltip(color: &Color32) -> String {
-    format!(
-        "#{}\n\nPrimary click: set current\nMiddle click: save color\nSecondary click: copy hex",
-        color_as_hex(&color)
-    )
-}
 
 #[derive(Debug, PartialEq)]
 pub enum SchemeType {
