@@ -61,10 +61,10 @@ impl ColorPicker {
         self.sat = hsva.s;
         self.val = hsva.v;
         let cmyk = Cmyk::from(color);
-        self.c = if cmyk.c.is_nan() { 0. } else { cmyk.c };
-        self.m = if cmyk.m.is_nan() { 0. } else { cmyk.m };
-        self.y = if cmyk.y.is_nan() { 0. } else { cmyk.y };
-        self.k = if cmyk.k.is_nan() { 0. } else { cmyk.k };
+        self.c = cmyk.c;
+        self.m = cmyk.m;
+        self.y = cmyk.y;
+        self.k = cmyk.k;
         self.cur_color = color;
     }
 
@@ -74,7 +74,8 @@ impl ColorPicker {
         let g = self.green.round() as u8;
         let b = self.blue.round() as u8;
         if r != rgb.r() || g != rgb.g() || b != rgb.b() {
-            self.set_cur_color(Color32::from_rgb(r, g, b))
+            self.set_cur_color(Color32::from_rgb(r, g, b));
+            return;
         }
 
         // its ok to unwrap, cur_hsva is always set when cur_color is set
@@ -83,6 +84,7 @@ impl ColorPicker {
             let new_hsva = Hsva::new(self.hue, self.sat, self.val, 0.);
             let srgb = new_hsva.to_srgb();
             self.set_cur_color(Color32::from_rgb(srgb[0], srgb[1], srgb[2]));
+            return;
         }
 
         let cmyk = Cmyk::from(self.cur_color);

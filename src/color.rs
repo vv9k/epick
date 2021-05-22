@@ -30,16 +30,22 @@ impl From<Color32> for Cmyk {
         let _r: f32 = color.r() as f32 / 255.;
         let _g: f32 = color.g() as f32 / 255.;
         let _b: f32 = color.b() as f32 / 255.;
+        let rgb = [_r, _g, _b];
         let k = 1.
-            - [_r, _g, _b]
+            - rgb
                 .iter()
                 .max_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
                 .unwrap();
-        let c = (1. - _r - k) / (1. - k);
-        let m = (1. - _g - k) / (1. - k);
-        let y = (1. - _b - k) / (1. - k);
+        let c = 1. - (_r / (1. - k));
+        let m = 1. - (_g / (1. - k));
+        let y = 1. - (_b / (1. - k));
 
-        Cmyk::new(c, m, y, k)
+        Cmyk::new(
+            if c.is_nan() { 0. } else { c },
+            if m.is_nan() { 0. } else { m },
+            if y.is_nan() { 0. } else { y },
+            if k.is_nan() { 0. } else { k },
+        )
     }
 }
 
