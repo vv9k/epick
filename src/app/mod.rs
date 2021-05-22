@@ -6,31 +6,15 @@ mod ui;
 use picker::ColorPicker;
 use render::tex_color;
 use scheme::SchemeGenerator;
-use ui::{color_tooltip, drag_source, drop_target};
+use ui::colors::*;
+use ui::{color_tooltip, dark_visuals, drag_source, drop_target, light_visuals};
 
 use crate::color::color_as_hex;
 use crate::save_to_clipboard;
 
 use egui::color::Color32;
-use egui::{vec2, Id, ScrollArea, Stroke, Ui, Visuals};
-use lazy_static::lazy_static;
+use egui::{vec2, Id, ScrollArea, Ui, Visuals};
 use std::borrow::Cow;
-
-lazy_static! {
-    static ref D_BG_00: Color32 = Color32::from_rgb(0x11, 0x16, 0x1b);
-    static ref D_BG_0: Color32 = Color32::from_rgb(0x16, 0x1c, 0x23);
-    static ref D_BG_1: Color32 = Color32::from_rgb(0x23, 0x2d, 0x38);
-    static ref D_BG_2: Color32 = Color32::from_rgb(0x31, 0x3f, 0x4e);
-    static ref D_BG_3: Color32 = Color32::from_rgb(0x41, 0x53, 0x67);
-    static ref D_FG_0: Color32 = Color32::from_rgb(0xe5, 0xde, 0xd6);
-    static ref L_BG_0: Color32 = Color32::from_rgb(0xa7, 0xa6, 0xa7);
-    static ref L_BG_1: Color32 = Color32::from_rgb(0xb6, 0xb5, 0xb6);
-    static ref L_BG_2: Color32 = Color32::from_rgb(0xc5, 0xc4, 0xc5);
-    static ref L_BG_3: Color32 = Color32::from_rgb(0xd4, 0xd3, 0xd4);
-    static ref L_BG_4: Color32 = Color32::from_rgb(0xf2, 0xf1, 0xf2);
-    static ref L_BG_5: Color32 = Color32::from_rgb(0xff, 0xff, 0xff);
-    static ref L_FG_0: Color32 = *D_BG_0;
-}
 
 #[derive(Default, Debug)]
 pub struct SavedColors(Vec<(String, Color32)>);
@@ -109,8 +93,8 @@ impl Default for Epick {
             picker: ColorPicker::default(),
             generator: SchemeGenerator::default(),
             saved_colors: SavedColors::default(),
-            light_theme: Self::light_visuals(),
-            dark_theme: Self::dark_visuals(),
+            light_theme: light_visuals(),
+            dark_theme: dark_visuals(),
         }
     }
 }
@@ -140,7 +124,7 @@ impl epi::App for Epick {
             (egui::FontFamily::Monospace, 16.),
         );
         _ctx.set_fonts(fonts);
-        _ctx.set_visuals(Self::dark_visuals());
+        _ctx.set_visuals(dark_visuals());
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
@@ -155,38 +139,6 @@ impl epi::App for Epick {
 }
 
 impl Epick {
-    fn light_visuals() -> Visuals {
-        let mut vis = Visuals::default();
-        vis.dark_mode = false;
-        vis.override_text_color = Some(*L_FG_0);
-        vis.extreme_bg_color = Color32::WHITE;
-        vis.widgets.noninteractive.fg_stroke = Stroke::new(0., *L_FG_0);
-        vis.widgets.noninteractive.bg_fill = *L_BG_5;
-        vis.widgets.inactive.bg_fill = *L_BG_4;
-        vis.widgets.inactive.bg_stroke = Stroke::new(0.7, *D_BG_3);
-        vis.widgets.inactive.fg_stroke = Stroke::new(0.7, *D_BG_3);
-        vis.widgets.hovered.bg_fill = *L_BG_5;
-        vis.widgets.hovered.bg_stroke = Stroke::new(1., *D_BG_1);
-        vis.widgets.hovered.fg_stroke = Stroke::new(1., *D_BG_1);
-        vis.widgets.active.bg_fill = *L_BG_5;
-        vis.widgets.active.fg_stroke = Stroke::new(0., *D_BG_0);
-        vis.selection.bg_fill = *L_BG_5;
-        vis.selection.stroke = Stroke::new(0.7, *D_BG_0);
-        vis
-    }
-
-    fn dark_visuals() -> Visuals {
-        let mut vis = Visuals::default();
-        vis.dark_mode = true;
-        vis.override_text_color = Some(*D_FG_0);
-        vis.widgets.inactive.bg_fill = *D_BG_1;
-        vis.widgets.hovered.bg_fill = *D_BG_2;
-        vis.widgets.active.bg_fill = *D_BG_3;
-        vis.selection.bg_fill = *D_BG_3;
-        vis.selection.stroke = Stroke::new(0.7, *D_FG_0);
-        vis
-    }
-
     pub fn top_panel(&mut self, ctx: &egui::CtxRef) {
         let frame = egui::Frame {
             fill: if ctx.style().visuals.dark_mode {

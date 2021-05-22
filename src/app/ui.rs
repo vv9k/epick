@@ -1,9 +1,30 @@
 use crate::color::color_as_hex;
 
 use egui::{
-    color, color::Color32, CursorIcon, Id, InnerResponse, LayerId, Order, Rect, Sense, Shape, Ui,
-    Vec2,
+    color, color::Color32, CursorIcon, Id, InnerResponse, LayerId, Order, Rect, Sense, Shape,
+    Stroke, Ui, Vec2, Visuals,
 };
+
+pub mod colors {
+    use egui::Color32;
+    use lazy_static::lazy_static;
+    lazy_static! {
+        pub static ref D_BG_00: Color32 = Color32::from_rgb(0x11, 0x16, 0x1b);
+        pub static ref D_BG_0: Color32 = Color32::from_rgb(0x16, 0x1c, 0x23);
+        pub static ref D_BG_1: Color32 = Color32::from_rgb(0x23, 0x2d, 0x38);
+        pub static ref D_BG_2: Color32 = Color32::from_rgb(0x31, 0x3f, 0x4e);
+        pub static ref D_BG_3: Color32 = Color32::from_rgb(0x41, 0x53, 0x67);
+        pub static ref D_FG_0: Color32 = Color32::from_rgb(0xe5, 0xde, 0xd6);
+        pub static ref L_BG_0: Color32 = Color32::from_rgb(0xa7, 0xa6, 0xa7);
+        pub static ref L_BG_1: Color32 = Color32::from_rgb(0xb6, 0xb5, 0xb6);
+        pub static ref L_BG_2: Color32 = Color32::from_rgb(0xc5, 0xc4, 0xc5);
+        pub static ref L_BG_3: Color32 = Color32::from_rgb(0xd4, 0xd3, 0xd4);
+        pub static ref L_BG_4: Color32 = Color32::from_rgb(0xf2, 0xf1, 0xf2);
+        pub static ref L_BG_5: Color32 = Color32::from_rgb(0xff, 0xff, 0xff);
+        pub static ref L_FG_0: Color32 = *D_BG_0;
+    }
+}
+use colors::*;
 
 pub fn drag_source(ui: &mut Ui, id: Id, body: impl FnOnce(&mut Ui)) {
     let is_being_dragged = ui.memory().is_being_dragged(id);
@@ -86,4 +107,36 @@ pub fn color_tooltip(color: &Color32) -> String {
         "#{}\n\nPrimary click: set current\nMiddle click: save color\nSecondary click: copy hex",
         color_as_hex(&color)
     )
+}
+
+pub fn light_visuals() -> Visuals {
+    let mut vis = Visuals::default();
+    vis.dark_mode = false;
+    vis.override_text_color = Some(*L_FG_0);
+    vis.extreme_bg_color = Color32::WHITE;
+    vis.widgets.noninteractive.fg_stroke = Stroke::new(0., *L_FG_0);
+    vis.widgets.noninteractive.bg_fill = *L_BG_5;
+    vis.widgets.inactive.bg_fill = *L_BG_4;
+    vis.widgets.inactive.bg_stroke = Stroke::new(0.7, *D_BG_3);
+    vis.widgets.inactive.fg_stroke = Stroke::new(0.7, *D_BG_3);
+    vis.widgets.hovered.bg_fill = *L_BG_5;
+    vis.widgets.hovered.bg_stroke = Stroke::new(1., *D_BG_1);
+    vis.widgets.hovered.fg_stroke = Stroke::new(1., *D_BG_1);
+    vis.widgets.active.bg_fill = *L_BG_5;
+    vis.widgets.active.fg_stroke = Stroke::new(0., *D_BG_0);
+    vis.selection.bg_fill = *L_BG_5;
+    vis.selection.stroke = Stroke::new(0.7, *D_BG_0);
+    vis
+}
+
+pub fn dark_visuals() -> Visuals {
+    let mut vis = Visuals::default();
+    vis.dark_mode = true;
+    vis.override_text_color = Some(*D_FG_0);
+    vis.widgets.inactive.bg_fill = *D_BG_1;
+    vis.widgets.hovered.bg_fill = *D_BG_2;
+    vis.widgets.active.bg_fill = *D_BG_3;
+    vis.selection.bg_fill = *D_BG_3;
+    vis.selection.stroke = Stroke::new(0.7, *D_FG_0);
+    vis
 }
