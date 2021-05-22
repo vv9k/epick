@@ -138,7 +138,7 @@ pub fn color_slider_1d(
     response
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct TextureManager(HashMap<Gradient, TextureId>);
 
 impl TextureManager {

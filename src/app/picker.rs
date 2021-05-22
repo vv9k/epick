@@ -10,12 +10,11 @@ use egui::{vec2, Slider, Ui};
 
 static MIN_COL_SIZE: f32 = 450.;
 
+#[derive(Debug)]
 pub struct ColorPicker {
     pub color_size: f32,
     pub hex_color: String,
-    pub cur_color: Option<Color32>,
-    pub cur_hsva: Option<Hsva>,
-    pub cur_cmyk: Option<Cmyk>,
+    pub cur_color: Color32,
     pub r: f32,
     pub g: f32,
     pub b: f32,
@@ -35,9 +34,7 @@ impl Default for ColorPicker {
         Self {
             color_size: 600.,
             hex_color: "".to_string(),
-            cur_color: Some(Color32::BLACK),
-            cur_hsva: Some(Hsva::from_srgb([0, 0, 0])),
-            cur_cmyk: Some(Cmyk::from(Color32::BLACK)),
+            cur_color: Color32::BLACK,
             r: 0.,
             g: 0.,
             b: 0.,
@@ -65,30 +62,28 @@ impl ColorPicker {
         self.sat = hsva.s;
         self.val = hsva.v;
         let cmyk = Cmyk::from(color);
-        self.c = cmyk.c;
-        self.m = cmyk.m;
-        self.y = cmyk.y;
-        self.k = cmyk.k;
-        self.cur_color = Some(color);
-        self.cur_hsva = Some(hsva);
-        self.cur_cmyk = Some(cmyk);
+        self.c = if cmyk.c.is_nan() { 0. } else { cmyk.c };
+        self.m = if cmyk.m.is_nan() { 0. } else { cmyk.m };
+        self.y = if cmyk.y.is_nan() { 0. } else { cmyk.y };
+        self.k = if cmyk.k.is_nan() { 0. } else { cmyk.k };
+        self.cur_color = color;
     }
 
-    fn check_color_change(&mut self, color: &Color32) {
-        let c = Rgba::from(*color);
+    fn check_color_change(&mut self) {
+        let c = Rgba::from(self.cur_color);
         if self.r != c.r() || self.g != c.g() || self.b != c.b() {
             self.set_cur_color(Rgba::from_rgb(self.r, self.g, self.b).into());
         }
 
         // its ok to unwrap, cur_hsva is always set when cur_color is set
-        let hsva = self.cur_hsva.unwrap();
+        let hsva = Hsva::from(c);
         if self.hue != hsva.h || self.sat != hsva.s || self.val != hsva.v {
             let new_hsva = Hsva::new(self.hue, self.sat, self.val, 0.);
             let srgb = new_hsva.to_srgb();
             self.set_cur_color(Color32::from_rgb(srgb[0], srgb[1], srgb[2]));
         }
 
-        let cmyk = self.cur_cmyk.clone().unwrap();
+        let cmyk = Cmyk::from(self.cur_color);
         if self.c != cmyk.c || self.m != cmyk.m || self.y != cmyk.y || self.k != cmyk.k {
             let new_cmyk = Cmyk::new(self.c, self.m, self.y, self.k);
             self.set_cur_color(Color32::from(new_cmyk));
@@ -125,45 +120,44 @@ impl ColorPicker {
 
         ui.add_space(20.);
 
-        if let Some(color) = self.cur_color {
-            ui.horizontal(|ui| {
-                ui.label("Current color: ");
-                ui.monospace(format!("#{}", color_as_hex(&color).to_uppercase()));
-                ui.add_space(7.);
-                ui.add(Slider::new(&mut self.color_size, MIN_COL_SIZE..=1000.).text("color size"));
-            });
+        let hex = color_as_hex(&self.cur_color);
 
-            self.check_color_change(&color);
+        ui.horizontal(|ui| {
+            ui.label("Current color: ");
+            ui.monospace(format!("#{}", hex.to_uppercase()));
+            ui.add_space(7.);
+            ui.add(Slider::new(&mut self.color_size, MIN_COL_SIZE..=1000.).text("color size"));
+        });
 
-            ui.horizontal(|ui| {
-                ui.scope(|ui| {
-                    let resp = tex_color(
-                        ui,
-                        tex_allocator,
-                        &mut self.tex_mngr,
-                        color,
-                        vec2(self.color_size / 2., self.color_size),
-                        Some(&color_tooltip(&color)),
-                    );
-                    if let Some(resp) = resp {
-                        let hex = color_as_hex(&color);
-                        if resp.clicked() {
-                            self.set_cur_color(color);
-                        }
+        self.check_color_change();
 
-                        if resp.middle_clicked() {
-                            saved_colors.add(color);
-                        }
-
-                        if resp.secondary_clicked() {
-                            let _ = save_to_clipboard(format!("#{}", hex));
-                        }
+        ui.horizontal(|ui| {
+            ui.scope(|ui| {
+                let resp = tex_color(
+                    ui,
+                    tex_allocator,
+                    &mut self.tex_mngr,
+                    self.cur_color,
+                    vec2(self.color_size / 2., self.color_size),
+                    Some(&color_tooltip(&self.cur_color)),
+                );
+                if let Some(resp) = resp {
+                    if resp.clicked() {
+                        self.set_cur_color(self.cur_color);
                     }
-                });
-                ui.add_space(20.);
-                self.sliders(ui);
+
+                    if resp.middle_clicked() {
+                        saved_colors.add(self.cur_color);
+                    }
+
+                    if resp.secondary_clicked() {
+                        let _ = save_to_clipboard(format!("#{}", hex));
+                    }
+                }
             });
-        }
+            ui.add_space(20.);
+            self.sliders(ui);
+        });
     }
 
     fn sliders(&mut self, ui: &mut Ui) {
@@ -190,16 +184,14 @@ impl ColorPicker {
             slider!(ui, y, "yellow", |y| Cmyk::new(0., 0., y, 0.).into());
             slider!(ui, k, "key", |k| Cmyk::new(0., 0., 0., k).into());
 
-            if let Some(hsva) = self.cur_hsva {
-                let mut opaque = HsvaGamma::from(hsva);
-                opaque.a = 1.;
+            let mut opaque = HsvaGamma::from(self.cur_color);
+            opaque.a = 1.;
 
-                ui.add_space(7.);
-                ui.heading("HSV");
-                slider!(ui, hue, "hue", |h| HsvaGamma { h, ..opaque }.into());
-                slider!(ui, sat, "saturation", |s| HsvaGamma { s, ..opaque }.into());
-                slider!(ui, val, "value", |v| HsvaGamma { v, ..opaque }.into());
-            }
+            ui.add_space(7.);
+            ui.heading("HSV");
+            slider!(ui, hue, "hue", |h| HsvaGamma { h, ..opaque }.into());
+            slider!(ui, sat, "saturation", |s| HsvaGamma { s, ..opaque }.into());
+            slider!(ui, val, "value", |v| HsvaGamma { v, ..opaque }.into());
         });
     }
 }

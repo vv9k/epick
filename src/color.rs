@@ -43,7 +43,7 @@ impl From<Color32> for Cmyk {
     }
 }
 
-#[derive(Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Gradient(pub Vec<Color32>);
 
 #[allow(dead_code)]
