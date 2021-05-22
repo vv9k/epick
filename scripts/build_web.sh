@@ -22,7 +22,7 @@ cargo build --release -p ${CRATE_NAME} --lib --target wasm32-unknown-unknown
 echo "Generating JS bindings for wasm…"
 TARGET_NAME="${CRATE_NAME_SNAKE_CASE}.wasm"
 wasm-bindgen "target/wasm32-unknown-unknown/${BUILD}/${TARGET_NAME}" \
-  --out-dir docs --no-modules --no-typescript
+  --out-dir docs --target no-modules --no-typescript --omit-imports
 
 # to get wasm-opt:  apt/brew/dnf install binaryen
 # echo "Optimizing wasm…"

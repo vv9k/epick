@@ -133,6 +133,7 @@ pub fn dark_visuals() -> Visuals {
     let mut vis = Visuals::default();
     vis.dark_mode = true;
     vis.override_text_color = Some(*D_FG_0);
+    vis.widgets.noninteractive.bg_fill = *D_BG_2;
     vis.widgets.inactive.bg_fill = *D_BG_1;
     vis.widgets.hovered.bg_fill = *D_BG_2;
     vis.widgets.active.bg_fill = *D_BG_3;
