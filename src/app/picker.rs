@@ -9,6 +9,8 @@ use egui::{
 use egui::{vec2, Slider, Ui};
 
 static MIN_COL_SIZE: f32 = 450.;
+static ADD_ICON: &str = "➕";
+static ADD_DESCR: &str = "Add this color to saved colors";
 
 #[derive(Debug)]
 pub struct ColorPicker {
@@ -109,11 +111,7 @@ impl ColorPicker {
                     self.set_cur_color(color);
                 }
             }
-            if ui
-                .button("➕")
-                .on_hover_text("Add this color to saved colors")
-                .clicked()
-            {
+            if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
                 if let Some(color) = parse_color(self.hex_color.trim_start_matches("#")) {
                     saved_colors.add(color);
                 }
@@ -131,6 +129,18 @@ impl ColorPicker {
             ui.monospace(format!("#{}", hex.to_uppercase()));
             ui.add_space(7.);
             ui.add(Slider::new(&mut self.color_size, MIN_COL_SIZE..=1000.).text("color size"));
+        });
+        ui.horizontal(|ui| {
+            if ui
+                .button("📋")
+                .on_hover_text("Copy hex color to clipboard")
+                .clicked()
+            {
+                let _ = save_to_clipboard(hex.clone());
+            }
+            if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
+                saved_colors.add(self.cur_color);
+            }
         });
 
         self.check_color_change();
