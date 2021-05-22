@@ -165,8 +165,6 @@ impl SchemeGenerator {
                             self.color_box_label_side(tint, size, ui, tex_allocator, saved_colors);
                         });
                     });
-            } else {
-                ui.label("Select a color from saved colors");
             }
         });
     }
@@ -191,8 +189,6 @@ impl SchemeGenerator {
                             self.color_box_label_side(shade, size, ui, tex_allocator, saved_colors);
                         });
                     });
-            } else {
-                ui.label("Select a color from saved colors");
             }
         });
     }
@@ -204,24 +200,6 @@ impl SchemeGenerator {
         saved_colors: &mut SavedColors,
     ) {
         ui.heading("Schemes");
-        ComboBox::from_label("Choose a type")
-            .selected_text(self.scheme_ty.as_ref())
-            .show_ui(ui, |ui| {
-                ui.selectable_value(
-                    &mut self.scheme_ty,
-                    SchemeType::Complementary,
-                    "Complementary",
-                );
-                ui.selectable_value(&mut self.scheme_ty, SchemeType::Triadic, "Triadic");
-                ui.selectable_value(&mut self.scheme_ty, SchemeType::Tetradic, "Tetradic");
-                ui.selectable_value(&mut self.scheme_ty, SchemeType::Analogous, "Analogous");
-                ui.selectable_value(
-                    &mut self.scheme_ty,
-                    SchemeType::SplitComplementary,
-                    "Split complementary",
-                );
-            });
-        ui.add(Slider::new(&mut self.scheme_color_size, 100.0..=250.).text("color size"));
         let size = vec2(self.scheme_color_size, self.scheme_color_size);
 
         macro_rules! cb {
@@ -233,6 +211,24 @@ impl SchemeGenerator {
         }
 
         if let Some(color) = self.base_color {
+            ComboBox::from_label("Choose a type")
+                .selected_text(self.scheme_ty.as_ref())
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(
+                        &mut self.scheme_ty,
+                        SchemeType::Complementary,
+                        "Complementary",
+                    );
+                    ui.selectable_value(&mut self.scheme_ty, SchemeType::Triadic, "Triadic");
+                    ui.selectable_value(&mut self.scheme_ty, SchemeType::Tetradic, "Tetradic");
+                    ui.selectable_value(&mut self.scheme_ty, SchemeType::Analogous, "Analogous");
+                    ui.selectable_value(
+                        &mut self.scheme_ty,
+                        SchemeType::SplitComplementary,
+                        "Split complementary",
+                    );
+                });
+            ui.add(Slider::new(&mut self.scheme_color_size, 100.0..=250.).text("color size"));
             match self.scheme_ty {
                 SchemeType::Complementary => {
                     let compl = complementary(&color);
@@ -293,10 +289,14 @@ impl SchemeGenerator {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
     ) {
-        ui.columns(3, |columns| {
-            self.shades(&mut columns[0], tex_allocator, saved_colors);
-            self.tints(&mut columns[1], tex_allocator, saved_colors);
-            self.schemes(&mut columns[2], tex_allocator, saved_colors);
-        });
+        if self.base_color.is_none() {
+            ui.heading("Select a color from saved colors to continue");
+        } else {
+            ui.columns(3, |columns| {
+                self.shades(&mut columns[0], tex_allocator, saved_colors);
+                self.tints(&mut columns[1], tex_allocator, saved_colors);
+                self.schemes(&mut columns[2], tex_allocator, saved_colors);
+            });
+        }
     }
 }

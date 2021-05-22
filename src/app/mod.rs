@@ -246,7 +246,6 @@ impl Epick {
 
             ui.selectable_value(&mut self.current_tab, EpickApp::ColorPicker, "picker");
             ui.selectable_value(&mut self.current_tab, EpickApp::SchemeGenerator, "scheme");
-            ui.selectable_value(&mut self.current_tab, EpickApp::GradientView, "gradient");
         });
     }
 
