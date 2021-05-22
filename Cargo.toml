@@ -8,13 +8,10 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-eframe = { path = "/home/wojtek/dev/egui/eframe" }
-egui = { path = "/home/wojtek/dev/egui/egui" }
-epi = { path = "/home/wojtek/dev/egui/epi" }
-epaint = { path = "/home/wojtek/dev/egui/epaint" }
-#eframe = "*"
-#egui = "0.12"
-#epi = "0.12"
+eframe = { git = "https://github.com/emilk/egui" }
+egui = { git = "https://github.com/emilk/egui" }
+epi = { git = "https://github.com/emilk/egui" }
+epaint = { git = "https://github.com/emilk/egui" }
 clipboard = "0.5"
 lazy_static = "1"
 
