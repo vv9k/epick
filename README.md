@@ -4,9 +4,9 @@
 
 Simple color picker that lets the user create harmonic palettes with ease.
 
-
 ## Get it
-Get the latest release binaries from the [GitHub release page](https://github.com/wojciechkepka/epick/releases)
+
+You can checkout the web demo over [here](https://wojciechkepka.github.io/epick/) or get a native binary from the [GitHub release page](https://github.com/wojciechkepka/epick/releases).
 
 ## Build
 
