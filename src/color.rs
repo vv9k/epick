@@ -236,3 +236,11 @@ pub fn split_complementary(color: &Color32) -> (Color32, Color32) {
         color_with_hue_offset(color, 240. / 360.),
     )
 }
+
+pub fn contrast_color(color: impl Into<Rgba>) -> Color32 {
+    if color.into().intensity() < 0.5 {
+        Color32::WHITE
+    } else {
+        Color32::BLACK
+    }
+}

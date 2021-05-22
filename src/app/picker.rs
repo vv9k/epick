@@ -1,11 +1,14 @@
-use crate::app::render::{tex_color, TextureManager};
+use crate::app::render::{color_slider_1d, tex_color, TextureManager};
 use crate::app::{color_tooltip, SavedColors};
 use crate::color::{color_as_hex, parse_color, Cmyk};
 use crate::save_to_clipboard;
-use egui::color::{Color32, Hsva};
+use egui::{
+    color::{Color32, Hsva, HsvaGamma},
+    Rgba,
+};
 use egui::{vec2, Slider, Ui};
 
-static MIN_COL_SIZE: f32 = 380.;
+static MIN_COL_SIZE: f32 = 450.;
 
 pub struct ColorPicker {
     pub color_size: f32,
@@ -13,9 +16,9 @@ pub struct ColorPicker {
     pub cur_color: Option<Color32>,
     pub cur_hsva: Option<Hsva>,
     pub cur_cmyk: Option<Cmyk>,
-    pub r: u8,
-    pub g: u8,
-    pub b: u8,
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
     pub hue: f32,
     pub sat: f32,
     pub val: f32,
@@ -24,37 +27,40 @@ pub struct ColorPicker {
     pub y: f32,
     pub k: f32,
     pub tex_mngr: TextureManager,
+    pub main_width: f32,
 }
 
 impl Default for ColorPicker {
     fn default() -> Self {
         Self {
-            color_size: 500.,
+            color_size: 600.,
             hex_color: "".to_string(),
             cur_color: Some(Color32::BLACK),
             cur_hsva: Some(Hsva::from_srgb([0, 0, 0])),
             cur_cmyk: Some(Cmyk::from(Color32::BLACK)),
-            r: 0,
-            g: 0,
-            b: 0,
+            r: 0.,
+            g: 0.,
+            b: 0.,
             hue: 0.,
             sat: 0.,
             val: 0.,
             c: 0.,
             m: 0.,
             y: 0.,
-            k: 0.,
+            k: 1.,
             tex_mngr: TextureManager::default(),
+            main_width: 0.,
         }
     }
 }
 
 impl ColorPicker {
     pub fn set_cur_color(&mut self, color: Color32) {
-        self.r = color.r();
-        self.g = color.g();
-        self.b = color.b();
-        let hsva = Hsva::from_srgb([self.r, self.g, self.b]);
+        let c = egui::Rgba::from(color);
+        self.r = c[0];
+        self.g = c[1];
+        self.b = c[2];
+        let hsva = Hsva::from(c);
         self.hue = hsva.h;
         self.sat = hsva.s;
         self.val = hsva.v;
@@ -68,13 +74,33 @@ impl ColorPicker {
         self.cur_cmyk = Some(cmyk);
     }
 
+    fn check_color_change(&mut self, color: &Color32) {
+        let c = Rgba::from(*color);
+        if self.r != c.r() || self.g != c.g() || self.b != c.b() {
+            self.set_cur_color(Rgba::from_rgb(self.r, self.g, self.b).into());
+        }
+
+        // its ok to unwrap, cur_hsva is always set when cur_color is set
+        let hsva = self.cur_hsva.unwrap();
+        if self.hue != hsva.h || self.sat != hsva.s || self.val != hsva.v {
+            let new_hsva = Hsva::new(self.hue, self.sat, self.val, 0.);
+            let srgb = new_hsva.to_srgb();
+            self.set_cur_color(Color32::from_rgb(srgb[0], srgb[1], srgb[2]));
+        }
+
+        let cmyk = self.cur_cmyk.clone().unwrap();
+        if self.c != cmyk.c || self.m != cmyk.m || self.y != cmyk.y || self.k != cmyk.k {
+            let new_cmyk = Cmyk::new(self.c, self.m, self.y, self.k);
+            self.set_cur_color(Color32::from(new_cmyk));
+        }
+    }
     pub fn ui(
         &mut self,
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
     ) {
-        ui.horizontal(|ui| {
+        let enter_bar = ui.horizontal(|ui| {
             ui.label("Enter a hex color: ");
             let resp = ui.text_edit_singleline(&mut self.hex_color);
             if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
@@ -95,6 +121,8 @@ impl ColorPicker {
             }
         });
 
+        self.main_width = enter_bar.response.rect.width();
+
         ui.add_space(20.);
 
         if let Some(color) = self.cur_color {
@@ -104,85 +132,74 @@ impl ColorPicker {
                 ui.add_space(7.);
                 ui.add(Slider::new(&mut self.color_size, MIN_COL_SIZE..=1000.).text("color size"));
             });
-            self.sliders(ui);
-            ui.add_space(15.);
 
-            if self.r != color.r() || self.g != color.g() || self.b != color.b() {
-                self.set_cur_color(Color32::from_rgb(self.r, self.g, self.b));
-            }
+            self.check_color_change(&color);
 
-            // its ok to unwrap, cur_hsva is always set when cur_color is set
-            let hsva = self.cur_hsva.unwrap();
-            if self.hue != hsva.h || self.sat != hsva.s || self.val != hsva.v {
-                let new_hsva = Hsva::new(self.hue, self.sat, self.val, 0.);
-                let srgb = new_hsva.to_srgb();
-                self.set_cur_color(Color32::from_rgb(srgb[0], srgb[1], srgb[2]));
-            }
+            ui.horizontal(|ui| {
+                ui.scope(|ui| {
+                    let resp = tex_color(
+                        ui,
+                        tex_allocator,
+                        &mut self.tex_mngr,
+                        color,
+                        vec2(self.color_size / 2., self.color_size),
+                        Some(&color_tooltip(&color)),
+                    );
+                    if let Some(resp) = resp {
+                        let hex = color_as_hex(&color);
+                        if resp.clicked() {
+                            self.set_cur_color(color);
+                        }
 
-            let cmyk = self.cur_cmyk.clone().unwrap();
-            if self.c != cmyk.c || self.m != cmyk.m || self.y != cmyk.y || self.k != cmyk.k {
-                let new_cmyk = Cmyk::new(self.c, self.m, self.y, self.k);
-                self.set_cur_color(Color32::from(new_cmyk));
-            }
+                        if resp.middle_clicked() {
+                            saved_colors.add(color);
+                        }
 
-            ui.scope(|ui| {
-                let resp = tex_color(
-                    ui,
-                    tex_allocator,
-                    &mut self.tex_mngr,
-                    color,
-                    vec2(self.color_size, self.color_size),
-                    Some(&color_tooltip(&color)),
-                );
-                if let Some(resp) = resp {
-                    let hex = color_as_hex(&color);
-                    if resp.clicked() {
-                        self.set_cur_color(color);
+                        if resp.secondary_clicked() {
+                            let _ = save_to_clipboard(format!("#{}", hex));
+                        }
                     }
-
-                    if resp.middle_clicked() {
-                        saved_colors.add(color);
-                    }
-
-                    if resp.secondary_clicked() {
-                        let _ = save_to_clipboard(format!("#{}", hex));
-                    }
-                }
+                });
+                ui.add_space(20.);
+                self.sliders(ui);
             });
         }
     }
 
     fn sliders(&mut self, ui: &mut Ui) {
+        macro_rules! slider {
+            ($ui:ident, $it:ident, $label:literal, $($tt:tt)+) => {
+                $ui.add_space(7.);
+                $ui.horizontal(|mut ui| {
+                    color_slider_1d(&mut ui, &mut self.$it, $($tt)+).on_hover_text($label);
+                    ui.label($label);
+                });
+            };
+        }
         ui.vertical(|ui| {
-            ui.set_min_width(MIN_COL_SIZE);
-            ui.set_max_width(self.color_size);
-            ui.columns(2, |cols| {
-                cols[0].vertical(|ui| {
-                    ui.add_space(7.);
-                    ui.add(Slider::new(&mut self.r, u8::MIN..=u8::MAX).text("red"));
-                    ui.add_space(7.);
-                    ui.add(Slider::new(&mut self.g, u8::MIN..=u8::MAX).text("green"));
-                    ui.add_space(7.);
-                    ui.add(Slider::new(&mut self.b, u8::MIN..=u8::MAX).text("blue"));
-                });
-                cols[1].vertical(|ui| {
-                    ui.add_space(7.);
-                    ui.add(Slider::new(&mut self.hue, 0. ..=1.).text("hue"));
-                    ui.add_space(7.);
-                    ui.add(Slider::new(&mut self.sat, 0. ..=1.).text("saturation"));
-                    ui.add_space(7.);
-                    ui.add(Slider::new(&mut self.val, 0. ..=1.).text("value"));
-                });
-            });
-            ui.add_space(15.);
             ui.add_space(7.);
-            ui.add(Slider::new(&mut self.c, 0. ..=1.).text("cyan"));
+            ui.heading("RGB");
+            slider!(ui, r, "red", |r| Rgba::from_rgb(r, 0., 0.).into());
+            slider!(ui, g, "green", |g| Rgba::from_rgb(0., g, 0.).into());
+            slider!(ui, b, "blue", |b| Rgba::from_rgb(0., 0., b).into());
+
             ui.add_space(7.);
-            ui.add(Slider::new(&mut self.m, 0. ..=1.).text("magenta"));
-            ui.add_space(7.);
-            ui.add(Slider::new(&mut self.y, 0. ..=1.).text("yellow"));
-            ui.add_space(7.);
-            ui.add(Slider::new(&mut self.k, 0. ..=1.).text("key"));
+            ui.heading("CMYK");
+            slider!(ui, c, "cyan", |c| Cmyk::new(c, 0., 0., 0.).into());
+            slider!(ui, m, "magenta", |m| Cmyk::new(0., m, 0., 0.).into());
+            slider!(ui, y, "yellow", |y| Cmyk::new(0., 0., y, 0.).into());
+            slider!(ui, k, "key", |k| Cmyk::new(0., 0., 0., k).into());
+
+            if let Some(hsva) = self.cur_hsva {
+                let mut opaque = HsvaGamma::from(hsva);
+                opaque.a = 1.;
+
+                ui.add_space(7.);
+                ui.heading("HSV");
+                slider!(ui, hue, "hue", |h| HsvaGamma { h, ..opaque }.into());
+                slider!(ui, sat, "saturation", |s| HsvaGamma { s, ..opaque }.into());
+                slider!(ui, val, "value", |v| HsvaGamma { v, ..opaque }.into());
+            }
         });
     }
 }

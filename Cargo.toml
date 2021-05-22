@@ -11,6 +11,7 @@ crate-type = ["cdylib", "rlib"]
 eframe = { path = "/home/wojtek/dev/egui/eframe" }
 egui = { path = "/home/wojtek/dev/egui/egui" }
 epi = { path = "/home/wojtek/dev/egui/epi" }
+epaint = { path = "/home/wojtek/dev/egui/epaint" }
 #eframe = "*"
 #egui = "0.12"
 #epi = "0.12"

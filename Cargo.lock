@@ -436,6 +436,7 @@ dependencies = [
  "atomic_refcell",
  "emath",
  "ordered-float",
+ "parking_lot",
  "rusttype",
 ]
 
@@ -453,6 +454,7 @@ dependencies = [
  "clipboard",
  "eframe",
  "egui",
+ "epaint",
  "epi",
  "lazy_static",
 ]
