@@ -6,7 +6,7 @@ use egui::{
     TextureId, Ui, Vec2,
 };
 use epaint::Mesh;
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::RangeInclusive};
 
 /// Number of vertices per dimension in the color sliders.
 /// We need at least 6 for hues, and more for smooth 2D areas.
@@ -82,6 +82,7 @@ fn background_checkers(painter: &Painter, rect: Rect) {
 pub fn color_slider_1d(
     ui: &mut Ui,
     value: &mut f32,
+    range: RangeInclusive<f32>,
     color_at: impl Fn(f32) -> Color32,
 ) -> Response {
     #![allow(clippy::identity_op)]
@@ -93,7 +94,7 @@ pub fn color_slider_1d(
     let (rect, response) = ui.allocate_at_least(desired_size, Sense::click_and_drag());
 
     if let Some(mpos) = response.interact_pointer_pos() {
-        *value = remap_clamp(mpos.x, rect.left()..=rect.right(), 0.0..=1.0);
+        *value = remap_clamp(mpos.x, rect.left()..=rect.right(), range);
     }
 
     let visuals = ui.style().interact(&response);
@@ -121,7 +122,11 @@ pub fn color_slider_1d(
 
     {
         // Show where the slider is at:
-        let x = lerp(rect.left()..=rect.right(), *value);
+        let x = if *value >= 0. && *value <= 1.0 {
+            lerp(rect.left()..=rect.right(), *value)
+        } else {
+            rect.left() + *value
+        };
         let r = rect.height() / 4.0;
         let picked_color = color_at(*value);
         ui.painter().add(Shape::polygon(
