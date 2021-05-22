@@ -8,6 +8,7 @@ use crate::save_to_clipboard;
 
 use egui::{color::Color32, ComboBox, Vec2};
 use egui::{vec2, ScrollArea, Slider, Ui};
+use std::convert::AsRef;
 
 fn color_tooltip(color: &Color32) -> String {
     format!(
@@ -23,6 +24,18 @@ pub enum SchemeType {
     Tetradic,
     Analogous,
     SplitComplementary,
+}
+
+impl AsRef<str> for SchemeType {
+    fn as_ref(&self) -> &str {
+        match &self {
+            SchemeType::Complementary => "complementary",
+            SchemeType::Triadic => "triadic",
+            SchemeType::Tetradic => "tetradic",
+            SchemeType::Analogous => "analogous",
+            SchemeType::SplitComplementary => "split complementary",
+        }
+    }
 }
 
 pub struct SchemeGenerator {
@@ -191,21 +204,23 @@ impl SchemeGenerator {
         saved_colors: &mut SavedColors,
     ) {
         ui.heading("Schemes");
-        ComboBox::from_label("Choose a type").show_ui(ui, |ui| {
-            ui.selectable_value(
-                &mut self.scheme_ty,
-                SchemeType::Complementary,
-                "Complementary",
-            );
-            ui.selectable_value(&mut self.scheme_ty, SchemeType::Triadic, "Triadic");
-            ui.selectable_value(&mut self.scheme_ty, SchemeType::Tetradic, "Tetradic");
-            ui.selectable_value(&mut self.scheme_ty, SchemeType::Analogous, "Analogous");
-            ui.selectable_value(
-                &mut self.scheme_ty,
-                SchemeType::SplitComplementary,
-                "Split complementary",
-            );
-        });
+        ComboBox::from_label("Choose a type")
+            .selected_text(self.scheme_ty.as_ref())
+            .show_ui(ui, |ui| {
+                ui.selectable_value(
+                    &mut self.scheme_ty,
+                    SchemeType::Complementary,
+                    "Complementary",
+                );
+                ui.selectable_value(&mut self.scheme_ty, SchemeType::Triadic, "Triadic");
+                ui.selectable_value(&mut self.scheme_ty, SchemeType::Tetradic, "Tetradic");
+                ui.selectable_value(&mut self.scheme_ty, SchemeType::Analogous, "Analogous");
+                ui.selectable_value(
+                    &mut self.scheme_ty,
+                    SchemeType::SplitComplementary,
+                    "Split complementary",
+                );
+            });
         ui.add(Slider::new(&mut self.scheme_color_size, 100.0..=250.).text("color size"));
         let size = vec2(self.scheme_color_size, self.scheme_color_size);
 
