@@ -178,40 +178,43 @@ impl ColorPicker {
         }
         ui.vertical(|ui| {
             ui.add_space(7.);
-            ui.heading("RGB");
-            slider!(ui, red, "red", u8::MIN as f32..=u8::MAX as f32, |r| {
-                Rgba::from_rgb(r, 0., 0.).into()
-            });
-            slider!(ui, green, "green", u8::MIN as f32..=u8::MAX as f32, |g| {
-                Rgba::from_rgb(0., g, 0.).into()
-            });
-            slider!(ui, blue, "blue", u8::MIN as f32..=u8::MAX as f32, |b| {
-                Rgba::from_rgb(0., 0., b).into()
+            ui.collapsing("RGB", |ui| {
+                slider!(ui, red, "red", u8::MIN as f32..=u8::MAX as f32, |r| {
+                    Rgba::from_rgb(r, 0., 0.).into()
+                });
+                slider!(ui, green, "green", u8::MIN as f32..=u8::MAX as f32, |g| {
+                    Rgba::from_rgb(0., g, 0.).into()
+                });
+                slider!(ui, blue, "blue", u8::MIN as f32..=u8::MAX as f32, |b| {
+                    Rgba::from_rgb(0., 0., b).into()
+                });
             });
 
             ui.add_space(7.);
-            ui.heading("CMYK");
-            slider!(ui, c, "cyan", 0. ..=1., |c| Cmyk::new(c, 0., 0., 0.).into());
-            slider!(ui, m, "magenta", 0. ..=1., |m| Cmyk::new(0., m, 0., 0.)
-                .into());
-            slider!(ui, y, "yellow", 0. ..=1., |y| Cmyk::new(0., 0., y, 0.)
-                .into());
-            slider!(ui, k, "key", 0. ..=1., |k| Cmyk::new(0., 0., 0., k).into());
+            ui.collapsing("CMYK", |ui| {
+                slider!(ui, c, "cyan", 0. ..=1., |c| Cmyk::new(c, 0., 0., 0.).into());
+                slider!(ui, m, "magenta", 0. ..=1., |m| Cmyk::new(0., m, 0., 0.)
+                    .into());
+                slider!(ui, y, "yellow", 0. ..=1., |y| Cmyk::new(0., 0., y, 0.)
+                    .into());
+                slider!(ui, k, "key", 0. ..=1., |k| Cmyk::new(0., 0., 0., k).into());
+            });
 
             let mut opaque = HsvaGamma::from(self.cur_color);
             opaque.a = 1.;
 
             ui.add_space(7.);
-            ui.heading("HSV");
-            slider!(ui, hue, "hue", 0. ..=1., |h| HsvaGamma { h, ..opaque }
+            ui.collapsing("HSV", |ui| {
+                slider!(ui, hue, "hue", 0. ..=1., |h| HsvaGamma { h, ..opaque }
+                    .into());
+                slider!(ui, sat, "saturation", 0. ..=1., |s| HsvaGamma {
+                    s,
+                    ..opaque
+                }
                 .into());
-            slider!(ui, sat, "saturation", 0. ..=1., |s| HsvaGamma {
-                s,
-                ..opaque
-            }
-            .into());
-            slider!(ui, val, "value", 0. ..=1., |v| HsvaGamma { v, ..opaque }
-                .into());
+                slider!(ui, val, "value", 0. ..=1., |v| HsvaGamma { v, ..opaque }
+                    .into());
+            });
         });
     }
 }
