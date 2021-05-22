@@ -1,0 +1,121 @@
+name: release
+
+on:
+  push:
+    branches:
+      - "!*"
+    tags:
+      - "**"
+jobs:
+  codestyle:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Set up Rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          components: rustfmt
+          rust-version: stable
+      - uses: actions/checkout@v1
+      - run: cargo fmt --all -- --check
+
+  lint:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Set up Rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          components: clippy
+      - uses: actions/checkout@v1
+      - run: cargo clippy --all-targets -- -D clippy::all
+
+  compile:
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Set up Rust
+        uses: hecrj/setup-rust-action@v1
+      - uses: actions/checkout@master
+      - run: cargo check --all
+
+  test:
+    needs: [codestyle, lint, compile]
+    strategy:
+      matrix:
+        os:
+          - ubuntu-latest
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Setup Rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: ${{ matrix.rust }}
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Test
+        run: cargo test
+
+  build_and_upload_artifacts:
+    name: Upload Artifacts
+    needs: [test]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        build: [linux]
+        include:
+        - build: linux
+          os: ubuntu-latest
+          target: x86_64-unknown-linux
+
+    steps:
+      - name: Set up Rust
+        uses: hecrj/setup-rust-action@v1
+      - uses: actions/checkout@master
+      - name: Set version
+        id: set_version
+        run: echo ::set-output name=EPICK_VERSION::${GITHUB_REF/refs\/tags\//}
+      - name: Set archive name
+        id: set_name
+        run: echo ::set-output name=EPICK_ARCHIVE::epick-${{steps.set_version.outputs.EPICK_VERSION}}-${{ matrix.target}}
+      - run: cargo build --release
+        name: Release build
+      - name: Prepare archive directory
+        run: mkdir epick
+      - name: Move release files
+        run: |
+          mv target/release/epick epick/
+          mv README.md epick/
+          mv LICENSE epick/
+      - name: Create archives
+        run: |
+          tar -zcvf ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.gz epick
+          tar -Jcvf ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.xz epick
+      - name: Upload gz
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_name: wojciechkepka/epick
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.gz
+          asset_name: ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.gz
+          tag: ${{ steps.set_version.outputs.EPICK_VERSION }}
+          overwrite: true
+      - name: Upload xz
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_name: wojciechkepka/epick
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.xz
+          asset_name: ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.xz
+          tag: ${{ steps.set_version.outputs.EPICK_VERSION }}
+          overwrite: true
