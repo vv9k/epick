@@ -1,19 +1,34 @@
 mod picker;
 mod render;
 mod scheme;
-mod ui;
 
 use picker::ColorPicker;
 use render::tex_color;
 use scheme::SchemeGenerator;
-use ui::Tab;
 
 use crate::color::color_as_hex;
 use crate::save_to_clipboard;
 
-use egui::color::Color32;
-use egui::{vec2, ScrollArea, TextStyle, Ui};
+use egui::{color::Color32, Visuals};
+use egui::{vec2, ScrollArea, Stroke, TextStyle, Ui};
+use lazy_static::lazy_static;
 use std::borrow::Cow;
+
+lazy_static! {
+    static ref D_BG_00: Color32 = Color32::from_rgb(0x11, 0x16, 0x1b);
+    static ref D_BG_0: Color32 = Color32::from_rgb(0x16, 0x1c, 0x23);
+    static ref D_BG_1: Color32 = Color32::from_rgb(0x23, 0x2d, 0x38);
+    static ref D_BG_2: Color32 = Color32::from_rgb(0x31, 0x3f, 0x4e);
+    static ref D_BG_3: Color32 = Color32::from_rgb(0x41, 0x53, 0x67);
+    static ref D_FG_0: Color32 = Color32::from_rgb(0xe5, 0xde, 0xd6);
+    static ref L_BG_0: Color32 = Color32::from_rgb(0xa7, 0xa6, 0xa7);
+    static ref L_BG_1: Color32 = Color32::from_rgb(0xb6, 0xb5, 0xb6);
+    static ref L_BG_2: Color32 = Color32::from_rgb(0xc5, 0xc4, 0xc5);
+    static ref L_BG_3: Color32 = Color32::from_rgb(0xd4, 0xd3, 0xd4);
+    static ref L_BG_4: Color32 = Color32::from_rgb(0xf2, 0xf1, 0xf2);
+    static ref L_BG_5: Color32 = Color32::from_rgb(0xff, 0xff, 0xff);
+    static ref L_FG_0: Color32 = *D_BG_0;
+}
 
 #[derive(Default, Debug)]
 pub struct SavedColors(Vec<(String, Color32)>);
@@ -48,14 +63,7 @@ impl AsRef<[(String, Color32)]> for SavedColors {
     }
 }
 
-#[derive(Default)]
-pub struct Epick {
-    pub tab: EpickApp,
-    pub picker: ColorPicker,
-    pub generator: SchemeGenerator,
-    pub saved_colors: SavedColors,
-}
-
+#[derive(Debug, PartialEq)]
 pub enum EpickApp {
     ColorPicker,
     GradientView,
@@ -65,6 +73,28 @@ pub enum EpickApp {
 impl Default for EpickApp {
     fn default() -> Self {
         Self::ColorPicker
+    }
+}
+
+pub struct Epick {
+    pub current_tab: EpickApp,
+    pub picker: ColorPicker,
+    pub generator: SchemeGenerator,
+    pub saved_colors: SavedColors,
+    pub light_theme: Visuals,
+    pub dark_theme: Visuals,
+}
+
+impl Default for Epick {
+    fn default() -> Self {
+        Self {
+            current_tab: EpickApp::default(),
+            picker: ColorPicker::default(),
+            generator: SchemeGenerator::default(),
+            saved_colors: SavedColors::default(),
+            light_theme: Self::light_visuals(),
+            dark_theme: Self::dark_visuals(),
+        }
     }
 }
 
@@ -93,6 +123,7 @@ impl epi::App for Epick {
             (egui::FontFamily::Monospace, 16.),
         );
         _ctx.set_fonts(fonts);
+        _ctx.set_visuals(Self::dark_visuals());
     }
 
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
@@ -107,9 +138,45 @@ impl epi::App for Epick {
 }
 
 impl Epick {
+    fn light_visuals() -> Visuals {
+        let mut vis = Visuals::default();
+        vis.dark_mode = false;
+        vis.override_text_color = Some(*L_FG_0);
+        vis.extreme_bg_color = Color32::WHITE;
+        vis.widgets.noninteractive.fg_stroke = Stroke::new(0., *L_FG_0);
+        vis.widgets.noninteractive.bg_fill = *L_BG_5;
+        vis.widgets.inactive.bg_fill = *L_BG_4;
+        vis.widgets.inactive.bg_stroke = Stroke::new(0.7, *D_BG_3);
+        vis.widgets.inactive.fg_stroke = Stroke::new(0.7, *D_BG_3);
+        vis.widgets.hovered.bg_fill = *L_BG_5;
+        vis.widgets.hovered.bg_stroke = Stroke::new(1., *D_BG_1);
+        vis.widgets.hovered.fg_stroke = Stroke::new(1., *D_BG_1);
+        vis.widgets.active.bg_fill = *L_BG_5;
+        vis.widgets.active.fg_stroke = Stroke::new(0., *D_BG_0);
+        vis.selection.bg_fill = *L_BG_5;
+        vis.selection.stroke = Stroke::new(0.7, *D_BG_0);
+        vis
+    }
+
+    fn dark_visuals() -> Visuals {
+        let mut vis = Visuals::default();
+        vis.dark_mode = true;
+        vis.override_text_color = Some(*D_FG_0);
+        vis.widgets.inactive.bg_fill = *D_BG_1;
+        vis.widgets.hovered.bg_fill = *D_BG_2;
+        vis.widgets.active.bg_fill = *D_BG_3;
+        vis.selection.bg_fill = *D_BG_3;
+        vis.selection.stroke = Stroke::new(0.7, *D_FG_0);
+        vis
+    }
+
     pub fn top_panel(&mut self, ctx: &egui::CtxRef) {
         let frame = egui::Frame {
-            fill: Color32::from_rgb(17, 22, 27),
+            fill: if ctx.style().visuals.dark_mode {
+                *D_BG_00
+            } else {
+                *L_BG_0
+            },
             margin: vec2(5., 5.),
             ..Default::default()
         };
@@ -126,7 +193,11 @@ impl Epick {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
         let frame = egui::Frame {
-            fill: Color32::from_rgb(17, 22, 27),
+            fill: if ctx.style().visuals.dark_mode {
+                *D_BG_00
+            } else {
+                *L_BG_0
+            },
             margin: vec2(15., 10.),
             ..Default::default()
         };
@@ -146,13 +217,17 @@ impl Epick {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
         let _frame = egui::Frame {
-            fill: Color32::from_rgb(22, 28, 35),
+            fill: if ctx.style().visuals.dark_mode {
+                *D_BG_0
+            } else {
+                *L_BG_2
+            },
             margin: vec2(20., 20.),
             ..Default::default()
         };
         egui::CentralPanel::default()
             .frame(_frame)
-            .show(ctx, |ui| match self.tab {
+            .show(ctx, |ui| match self.current_tab {
                 EpickApp::ColorPicker => {
                     self.picker.ui(ui, tex_allocator, &mut self.saved_colors);
                 }
@@ -168,67 +243,23 @@ impl Epick {
             self.dark_light_switch(ui);
             ui.label("switch ui color");
             ui.add_space(50.);
-            let picker_tab;
-            const PICKER_TITLE: &str = "picker";
-            match self.tab {
-                EpickApp::ColorPicker => {
-                    picker_tab = Tab::Active.btn(PICKER_TITLE);
-                }
-                EpickApp::GradientView => {
-                    picker_tab = Tab::Inactive.btn(PICKER_TITLE);
-                }
-                EpickApp::SchemeGenerator => {
-                    picker_tab = Tab::Inactive.btn(PICKER_TITLE);
-                }
-            }
-            let picker_resp = ui.add(picker_tab);
-            if picker_resp.clicked() {
-                self.tab = EpickApp::ColorPicker;
-            }
 
-            let gradient_tab;
-            const GRADIENT_TITLE: &str = "gradient";
-            match self.tab {
-                EpickApp::GradientView => {
-                    gradient_tab = Tab::Active.btn(GRADIENT_TITLE);
-                }
-                EpickApp::ColorPicker => {
-                    gradient_tab = Tab::Inactive.btn(GRADIENT_TITLE);
-                }
-                EpickApp::SchemeGenerator => {
-                    gradient_tab = Tab::Inactive.btn(GRADIENT_TITLE);
-                }
-            }
-            let gradient_resp = ui.add(gradient_tab);
-            if gradient_resp.clicked() {
-                self.tab = EpickApp::GradientView;
-            }
-
-            let scheme_tab;
-            const SCHEME_TITLE: &str = "scheme";
-            match self.tab {
-                EpickApp::SchemeGenerator => {
-                    scheme_tab = Tab::Active.btn(SCHEME_TITLE);
-                }
-                EpickApp::ColorPicker => {
-                    scheme_tab = Tab::Inactive.btn(SCHEME_TITLE);
-                }
-                EpickApp::GradientView => {
-                    scheme_tab = Tab::Inactive.btn(SCHEME_TITLE);
-                }
-            }
-            let scheme_resp = ui.add(scheme_tab);
-            if scheme_resp.clicked() {
-                self.tab = EpickApp::SchemeGenerator;
-            }
+            ui.selectable_value(&mut self.current_tab, EpickApp::ColorPicker, "picker");
+            ui.selectable_value(&mut self.current_tab, EpickApp::SchemeGenerator, "scheme");
+            ui.selectable_value(&mut self.current_tab, EpickApp::GradientView, "gradient");
         });
     }
 
     pub fn dark_light_switch(&mut self, ui: &mut Ui) {
-        let style = (*ui.ctx().style()).clone();
-        let new_visuals = style.visuals.light_dark_small_toggle_button(ui);
-        if let Some(visuals) = new_visuals {
-            ui.ctx().set_visuals(visuals);
+        let is_dark = ui.style().visuals.dark_mode;
+        let btn = if is_dark { "☀" } else { "🌙" };
+
+        if ui.button(btn).clicked() {
+            if is_dark {
+                ui.ctx().set_visuals(self.light_theme.clone());
+            } else {
+                ui.ctx().set_visuals(self.dark_theme.clone());
+            }
         }
     }
 
@@ -285,7 +316,7 @@ impl Epick {
                     );
 
                     if let Some(resp) = resp {
-                        match self.tab {
+                        match self.current_tab {
                             EpickApp::ColorPicker => {
                                 let hex = color_as_hex(&color);
                                 if resp.clicked() {

@@ -28,7 +28,7 @@ impl Default for ColorPicker {
         Self {
             hex_color: "".to_string(),
             cur_color: Some(Color32::BLACK),
-            cur_hsva: Some(Hsva::new(0., 0., 0., 1.)),
+            cur_hsva: Some(Hsva::from_srgb([0, 0, 0])),
             cur_cmyk: Some(Cmyk::from(Color32::BLACK)),
             r: 0,
             g: 0,

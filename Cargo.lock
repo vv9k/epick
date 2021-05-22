@@ -454,6 +454,7 @@ dependencies = [
  "eframe",
  "egui",
  "epi",
+ "lazy_static",
 ]
 
 [[package]]

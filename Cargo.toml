@@ -15,6 +15,7 @@ epi = { path = "/home/wojtek/dev/egui/epi" }
 #egui = "0.12"
 #epi = "0.12"
 clipboard = "0.5"
+lazy_static = "1"
 
 [profile.release]
 opt-level = 2
