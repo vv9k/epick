@@ -260,37 +260,32 @@ impl Epick {
             for (idx, (hex, color)) in self.saved_colors.as_ref().to_vec().iter().enumerate() {
                 let resp = drop_target(ui, true, |ui| {
                     let color_id = Id::new("side-color").with(idx);
-                    ui.columns(2, |cols| {
-                        cols[0].vertical(|ui| {
+                    ui.vertical(|mut ui| {
+                        let fst = ui.horizontal(|ui| {
                             ui.monospace(format!("#{}", hex));
-                            ui.horizontal(|ui| {
-                                ui.vertical(|ui| {
-                                    if ui.button("❌").on_hover_text("Delete this color").clicked()
-                                    {
-                                        self.saved_colors.remove(color);
-                                    }
-                                    if ui.button("▶").on_hover_text("Use this color").clicked() {
-                                        self.picker.set_cur_color(color.clone());
-                                        self.generator.set_cur_color(color.clone());
-                                    }
-                                });
-                                ui.vertical(|ui| {
-                                    if ui.button("📋").on_hover_text("Copy hex color").clicked() {
-                                        let _ = save_to_clipboard(hex.clone());
-                                    }
-                                });
-                            });
+                            if ui.button("❌").on_hover_text("Delete this color").clicked() {
+                                self.saved_colors.remove(color);
+                            }
+                            if ui.button("📋").on_hover_text("Copy hex color").clicked() {
+                                let _ = save_to_clipboard(hex.clone());
+                            }
+                            if ui.button("▶").on_hover_text("Use this color").clicked() {
+                                self.picker.set_cur_color(color.clone());
+                                self.generator.set_cur_color(color.clone());
+                            }
                         });
                         let help =
                             format!("#{}\n\nDrag and drop to change the order of colors", hex);
 
-                        drag_source(&mut cols[1], color_id, |ui| {
+                        let w = fst.response.rect.width();
+                        let size = vec2(w, w / 2.);
+                        drag_source(&mut ui, color_id, |ui| {
                             tex_color(
                                 ui,
                                 tex_allocator,
                                 &mut self.picker.tex_mngr,
                                 color.clone(),
-                                vec2(80., 50.),
+                                size,
                                 Some(&help),
                             );
                         });

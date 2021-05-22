@@ -5,7 +5,10 @@ use crate::save_to_clipboard;
 use egui::color::{Color32, Hsva};
 use egui::{vec2, Slider, Ui};
 
+static MIN_COL_SIZE: f32 = 380.;
+
 pub struct ColorPicker {
+    pub color_size: f32,
     pub hex_color: String,
     pub cur_color: Option<Color32>,
     pub cur_hsva: Option<Hsva>,
@@ -26,6 +29,7 @@ pub struct ColorPicker {
 impl Default for ColorPicker {
     fn default() -> Self {
         Self {
+            color_size: 500.,
             hex_color: "".to_string(),
             cur_color: Some(Color32::BLACK),
             cur_hsva: Some(Hsva::from_srgb([0, 0, 0])),
@@ -85,18 +89,20 @@ impl ColorPicker {
                 .on_hover_text("Add this color to saved colors")
                 .clicked()
             {
-                if let Some(color) = self.cur_color {
+                if let Some(color) = parse_color(self.hex_color.trim_start_matches("#")) {
                     saved_colors.add(color);
                 }
             }
         });
 
-        ui.add_space(15.);
+        ui.add_space(20.);
 
         if let Some(color) = self.cur_color {
             ui.horizontal(|ui| {
                 ui.label("Current color: ");
                 ui.monospace(format!("#{}", color_as_hex(&color).to_uppercase()));
+                ui.add_space(7.);
+                ui.add(Slider::new(&mut self.color_size, MIN_COL_SIZE..=1000.).text("color size"));
             });
             self.sliders(ui);
             ui.add_space(15.);
@@ -125,7 +131,7 @@ impl ColorPicker {
                     tex_allocator,
                     &mut self.tex_mngr,
                     color,
-                    vec2(500., 500.),
+                    vec2(self.color_size, self.color_size),
                     Some(&color_tooltip(&color)),
                 );
                 if let Some(resp) = resp {
@@ -147,33 +153,36 @@ impl ColorPicker {
     }
 
     fn sliders(&mut self, ui: &mut Ui) {
-        ui.horizontal(|ui| {
-            ui.vertical(|ui| {
-                ui.add_space(7.);
-                ui.add(Slider::new(&mut self.r, u8::MIN..=u8::MAX).text("red"));
-                ui.add_space(7.);
-                ui.add(Slider::new(&mut self.g, u8::MIN..=u8::MAX).text("green"));
-                ui.add_space(7.);
-                ui.add(Slider::new(&mut self.b, u8::MIN..=u8::MAX).text("blue"));
+        ui.vertical(|ui| {
+            ui.set_min_width(MIN_COL_SIZE);
+            ui.set_max_width(self.color_size);
+            ui.columns(2, |cols| {
+                cols[0].vertical(|ui| {
+                    ui.add_space(7.);
+                    ui.add(Slider::new(&mut self.r, u8::MIN..=u8::MAX).text("red"));
+                    ui.add_space(7.);
+                    ui.add(Slider::new(&mut self.g, u8::MIN..=u8::MAX).text("green"));
+                    ui.add_space(7.);
+                    ui.add(Slider::new(&mut self.b, u8::MIN..=u8::MAX).text("blue"));
+                });
+                cols[1].vertical(|ui| {
+                    ui.add_space(7.);
+                    ui.add(Slider::new(&mut self.hue, 0. ..=1.).text("hue"));
+                    ui.add_space(7.);
+                    ui.add(Slider::new(&mut self.sat, 0. ..=1.).text("saturation"));
+                    ui.add_space(7.);
+                    ui.add(Slider::new(&mut self.val, 0. ..=1.).text("value"));
+                });
             });
-            ui.vertical(|ui| {
-                ui.add_space(7.);
-                ui.add(Slider::new(&mut self.hue, 0. ..=1.).text("hue"));
-                ui.add_space(7.);
-                ui.add(Slider::new(&mut self.sat, 0. ..=1.).text("saturation"));
-                ui.add_space(7.);
-                ui.add(Slider::new(&mut self.val, 0. ..=1.).text("value"));
-            });
-            ui.vertical(|ui| {
-                ui.add_space(7.);
-                ui.add(Slider::new(&mut self.c, 0. ..=1.).text("cyan"));
-                ui.add_space(7.);
-                ui.add(Slider::new(&mut self.m, 0. ..=1.).text("magenta"));
-                ui.add_space(7.);
-                ui.add(Slider::new(&mut self.y, 0. ..=1.).text("yellow"));
-                ui.add_space(7.);
-                ui.add(Slider::new(&mut self.k, 0. ..=1.).text("key"));
-            });
+            ui.add_space(15.);
+            ui.add_space(7.);
+            ui.add(Slider::new(&mut self.c, 0. ..=1.).text("cyan"));
+            ui.add_space(7.);
+            ui.add(Slider::new(&mut self.m, 0. ..=1.).text("magenta"));
+            ui.add_space(7.);
+            ui.add(Slider::new(&mut self.y, 0. ..=1.).text("yellow"));
+            ui.add_space(7.);
+            ui.add(Slider::new(&mut self.k, 0. ..=1.).text("key"));
         });
     }
 }
