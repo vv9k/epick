@@ -196,6 +196,23 @@ pub fn create_tints(base: &Color32, total: u8) -> Vec<Color32> {
         .collect()
 }
 
+pub fn create_hues(base: &Color32, total: u8, step: f32) -> Vec<Color32> {
+    let mut colors = Vec::new();
+    let hsva = Hsva::from(*base);
+    for i in (0..=total).rev() {
+        let mut _h = hsva.clone();
+        _h.h -= step * i as f32;
+        colors.push(_h.into());
+    }
+
+    for i in 1..=total {
+        let mut _h = hsva.clone();
+        _h.h += step * i as f32;
+        colors.push(_h.into());
+    }
+
+    colors
+}
 fn color_with_hue_offset(color: &Color32, offset: f32) -> Color32 {
     let mut hsv = Hsva::from_srgb([color.r(), color.g(), color.b()]);
 

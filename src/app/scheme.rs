@@ -1,8 +1,8 @@
 use crate::app::render::{tex_color, TextureManager};
 use crate::app::{color_tooltip, SavedColors};
 use crate::color::{
-    analogous, color_as_hex, complementary, create_shades, create_tints, split_complementary,
-    tetradic, triadic,
+    analogous, color_as_hex, complementary, create_hues, create_shades, create_tints,
+    split_complementary, tetradic, triadic,
 };
 use crate::save_to_clipboard;
 
@@ -38,9 +38,12 @@ impl AsRef<str> for SchemeType {
 pub struct SchemeGenerator {
     pub numof_shades: u8,
     pub numof_tints: u8,
+    pub numof_hues: u8,
     pub shade_color_size: f32,
     pub tint_color_size: f32,
+    pub hue_color_size: f32,
     pub scheme_color_size: f32,
+    pub hues_step: f32,
     pub base_color: Option<Color32>,
     pub tex_mngr: TextureManager,
     pub scheme_ty: SchemeType,
@@ -51,8 +54,11 @@ impl Default for SchemeGenerator {
         Self {
             numof_shades: 6,
             numof_tints: 6,
+            numof_hues: 4,
             shade_color_size: 100.,
             tint_color_size: 100.,
+            hue_color_size: 100.,
+            hues_step: 0.05,
             scheme_color_size: 200.,
             base_color: None,
             tex_mngr: TextureManager::default(),
@@ -141,6 +147,31 @@ impl SchemeGenerator {
         }
     }
 
+    pub fn hues(
+        &mut self,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        saved_colors: &mut SavedColors,
+    ) {
+        ui.collapsing("Hues", |ui| {
+            if let Some(color) = self.base_color {
+                let hues = create_hues(&color, self.numof_hues, self.hues_step);
+                ui.add(Slider::new(&mut self.hues_step, 0.01..=0.1).text("step"));
+                let max_hues = (0.5 / self.hues_step).round() as u8;
+                if self.numof_hues > max_hues {
+                    self.numof_hues = max_hues;
+                }
+                ui.add(Slider::new(&mut self.numof_hues, u8::MIN..=max_hues).text("# of hues"));
+                ui.add(Slider::new(&mut self.hue_color_size, 20.0..=200.).text("color size"));
+
+                let size = vec2(self.hue_color_size, self.hue_color_size);
+                hues.iter().for_each(|hue| {
+                    self.color_box_label_side(hue, size, ui, tex_allocator, saved_colors);
+                });
+            }
+        });
+    }
+
     pub fn tints(
         &mut self,
         ui: &mut Ui,
@@ -160,6 +191,7 @@ impl SchemeGenerator {
             }
         });
     }
+
     pub fn shades(
         &mut self,
         ui: &mut Ui,
@@ -297,6 +329,7 @@ impl SchemeGenerator {
                     .show(&mut columns[0], |mut ui| {
                         self.shades(&mut ui, tex_allocator, saved_colors);
                         self.tints(&mut ui, tex_allocator, saved_colors);
+                        self.hues(&mut ui, tex_allocator, saved_colors);
                     });
                 self.schemes(&mut columns[1], tex_allocator, saved_colors);
             });
