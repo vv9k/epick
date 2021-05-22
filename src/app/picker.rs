@@ -32,7 +32,7 @@ pub struct ColorPicker {
 impl Default for ColorPicker {
     fn default() -> Self {
         Self {
-            color_size: 600.,
+            color_size: MIN_COL_SIZE,
             hex_color: "".to_string(),
             cur_color: Color32::BLACK,
             red: 0.,
@@ -133,6 +133,7 @@ impl ColorPicker {
 
         self.check_color_change();
 
+        ui.add_space(25.);
         ui.horizontal(|ui| {
             ui.scope(|ui| {
                 let resp = tex_color(
@@ -171,6 +172,7 @@ impl ColorPicker {
                     if resp.changed() {
                         self.check_color_change();
                     }
+                    ui.add_space(7.);
                     ui.label(format!("{}: ", $label));
                     ui.add(DragValue::new(&mut self.$it));
                 });
