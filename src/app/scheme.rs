@@ -147,21 +147,16 @@ impl SchemeGenerator {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
     ) {
-        ui.vertical(|ui| {
-            ui.heading("Tints");
+        ui.collapsing("Tints", |ui| {
             if let Some(color) = self.base_color {
                 let tints = create_tints(&color, self.numof_tints);
-                ui.add(Slider::new(&mut self.numof_tints, u8::MIN..=25).text("# of tints"));
+                ui.add(Slider::new(&mut self.numof_tints, u8::MIN..=50).text("# of tints"));
                 ui.add(Slider::new(&mut self.tint_color_size, 20.0..=200.).text("color size"));
 
                 let size = vec2(self.tint_color_size, self.tint_color_size);
-                ScrollArea::auto_sized()
-                    .id_source("tints scroll")
-                    .show(ui, |ui| {
-                        tints.iter().for_each(|tint| {
-                            self.color_box_label_side(tint, size, ui, tex_allocator, saved_colors);
-                        });
-                    });
+                tints.iter().for_each(|tint| {
+                    self.color_box_label_side(tint, size, ui, tex_allocator, saved_colors);
+                });
             }
         });
     }
@@ -171,21 +166,16 @@ impl SchemeGenerator {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
     ) {
-        ui.vertical(|ui| {
-            ui.heading("Shades");
+        ui.collapsing("Shades", |ui| {
             if let Some(color) = self.base_color {
                 let shades = create_shades(&color, self.numof_shades);
-                ui.add(Slider::new(&mut self.numof_shades, u8::MIN..=25).text("# of shades"));
+                ui.add(Slider::new(&mut self.numof_shades, u8::MIN..=50).text("# of shades"));
                 ui.add(Slider::new(&mut self.shade_color_size, 20.0..=200.).text("color size"));
 
                 let size = vec2(self.shade_color_size, self.shade_color_size);
-                ScrollArea::auto_sized()
-                    .id_source("shades scroll")
-                    .show(ui, |ui| {
-                        shades.iter().for_each(|shade| {
-                            self.color_box_label_side(shade, size, ui, tex_allocator, saved_colors);
-                        });
-                    });
+                shades.iter().for_each(|shade| {
+                    self.color_box_label_side(shade, size, ui, tex_allocator, saved_colors);
+                });
             }
         });
     }
@@ -301,10 +291,14 @@ impl SchemeGenerator {
         if self.base_color.is_none() {
             ui.heading("Select a color from saved colors to continue");
         } else {
-            ui.columns(3, |columns| {
-                self.shades(&mut columns[0], tex_allocator, saved_colors);
-                self.tints(&mut columns[1], tex_allocator, saved_colors);
-                self.schemes(&mut columns[2], tex_allocator, saved_colors);
+            ui.columns(2, |columns| {
+                ScrollArea::auto_sized()
+                    .id_source("palettes")
+                    .show(&mut columns[0], |mut ui| {
+                        self.shades(&mut ui, tex_allocator, saved_colors);
+                        self.tints(&mut ui, tex_allocator, saved_colors);
+                    });
+                self.schemes(&mut columns[1], tex_allocator, saved_colors);
             });
         }
     }
