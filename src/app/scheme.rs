@@ -10,6 +10,8 @@ use egui::{color::Color32, ComboBox, Vec2};
 use egui::{vec2, ScrollArea, Slider, Ui};
 use std::convert::AsRef;
 
+//####################################################################################################
+
 #[derive(Debug, PartialEq)]
 pub enum SchemeType {
     Complementary,
@@ -30,6 +32,8 @@ impl AsRef<str> for SchemeType {
         }
     }
 }
+
+//####################################################################################################
 
 pub struct SchemeGenerator {
     pub numof_shades: u8,
@@ -210,15 +214,27 @@ impl SchemeGenerator {
                     ui.selectable_value(
                         &mut self.scheme_ty,
                         SchemeType::Complementary,
-                        "Complementary",
+                        SchemeType::Complementary.as_ref(),
                     );
-                    ui.selectable_value(&mut self.scheme_ty, SchemeType::Triadic, "Triadic");
-                    ui.selectable_value(&mut self.scheme_ty, SchemeType::Tetradic, "Tetradic");
-                    ui.selectable_value(&mut self.scheme_ty, SchemeType::Analogous, "Analogous");
+                    ui.selectable_value(
+                        &mut self.scheme_ty,
+                        SchemeType::Triadic,
+                        SchemeType::Triadic.as_ref(),
+                    );
+                    ui.selectable_value(
+                        &mut self.scheme_ty,
+                        SchemeType::Tetradic,
+                        SchemeType::Tetradic.as_ref(),
+                    );
+                    ui.selectable_value(
+                        &mut self.scheme_ty,
+                        SchemeType::Analogous,
+                        SchemeType::Analogous.as_ref(),
+                    );
                     ui.selectable_value(
                         &mut self.scheme_ty,
                         SchemeType::SplitComplementary,
-                        "Split complementary",
+                        SchemeType::SplitComplementary.as_ref(),
                     );
                 });
             ui.add(Slider::new(&mut self.scheme_color_size, 100.0..=250.).text("color size"));

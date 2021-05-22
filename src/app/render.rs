@@ -12,12 +12,9 @@ pub fn tex_color(
     on_hover: Option<&str>,
 ) -> Option<Response> {
     let gradient = Gradient::one_color(color);
-    let resp = tex_gradient(ui, tex_allocator, tex_mngr, &gradient, size, on_hover);
-
-    resp
+    tex_gradient(ui, tex_allocator, tex_mngr, &gradient, size, on_hover)
 }
 
-//self.set_cur_color(parse_color(&color).unwrap());
 pub fn tex_gradient(
     ui: &mut Ui,
     tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,

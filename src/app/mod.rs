@@ -16,6 +16,8 @@ use egui::color::Color32;
 use egui::{vec2, Id, ScrollArea, Ui, Visuals};
 use std::borrow::Cow;
 
+//####################################################################################################
+
 #[derive(Default, Debug)]
 pub struct SavedColors(Vec<(String, Color32)>);
 
@@ -64,6 +66,8 @@ impl AsRef<[(String, Color32)]> for SavedColors {
     }
 }
 
+//####################################################################################################
+
 #[derive(Debug, PartialEq)]
 pub enum EpickApp {
     ColorPicker,
@@ -76,6 +80,8 @@ impl Default for EpickApp {
         Self::ColorPicker
     }
 }
+
+//####################################################################################################
 
 pub struct Epick {
     pub current_tab: EpickApp,
