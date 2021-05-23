@@ -112,6 +112,10 @@ impl epi::App for Epick {
         "epick"
     }
 
+    fn max_size_points(&self) -> egui::Vec2 {
+        vec2(4096., 8192.)
+    }
+
     fn setup(&mut self, _ctx: &egui::CtxRef) {
         let mut fonts = egui::FontDefinitions::default();
         fonts.font_data.insert(
