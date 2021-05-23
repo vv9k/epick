@@ -85,6 +85,7 @@ impl Default for EpickApp {
 
 pub struct Epick {
     pub current_tab: EpickApp,
+    pub side_visible: bool,
     pub picker: ColorPicker,
     pub generator: SchemeGenerator,
     pub saved_colors: SavedColors,
@@ -96,6 +97,7 @@ impl Default for Epick {
     fn default() -> Self {
         Self {
             current_tab: EpickApp::default(),
+            side_visible: true,
             picker: ColorPicker::default(),
             generator: SchemeGenerator::default(),
             saved_colors: SavedColors::default(),
@@ -137,7 +139,9 @@ impl epi::App for Epick {
         let tex_allocator = &mut Some(frame.tex_allocator());
 
         self.top_panel(ctx);
-        self.side_panel(ctx, tex_allocator);
+        if self.side_visible {
+            self.side_panel(ctx, tex_allocator);
+        }
         self.central_panel(ctx, tex_allocator);
 
         frame.set_window_size(ctx.used_size());
@@ -216,10 +220,21 @@ impl Epick {
     pub fn top_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             self.dark_light_switch(ui);
+            if ui
+                .button("↔")
+                .on_hover_text("Show/hide side panel")
+                .clicked()
+            {
+                self.side_visible = !self.side_visible;
+            }
             ui.add_space(50.);
 
-            ui.selectable_value(&mut self.current_tab, EpickApp::ColorPicker, "picker");
-            ui.selectable_value(&mut self.current_tab, EpickApp::SchemeGenerator, "scheme");
+            ui.selectable_value(&mut self.current_tab, EpickApp::ColorPicker, "🔬 picker");
+            ui.selectable_value(
+                &mut self.current_tab,
+                EpickApp::SchemeGenerator,
+                "🎨 scheme",
+            );
         });
     }
 
@@ -249,7 +264,7 @@ impl Epick {
             ui.horizontal(|ui| {
                 ui.heading("Saved colors");
                 ui.add_space(7.);
-                if ui.button("clear").clicked() {
+                if ui.button("🗑").on_hover_text("Clear colors").clicked() {
                     self.saved_colors.clear();
                 }
             });
