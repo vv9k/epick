@@ -144,7 +144,7 @@ pub fn color_as_hex(color: &Color32) -> String {
 
 pub fn create_shades(base: &Color32, total: u8) -> Vec<Color32> {
     if total == 0 {
-        return vec![base.clone()];
+        return vec![*base];
     }
     let mut step_total = total.saturating_sub(1) as f32;
     if step_total == 0. {
@@ -171,7 +171,7 @@ pub fn create_shades(base: &Color32, total: u8) -> Vec<Color32> {
 
 pub fn create_tints(base: &Color32, total: u8) -> Vec<Color32> {
     if total == 0 {
-        return vec![base.clone()];
+        return vec![*base];
     }
     let mut step_total = total.saturating_sub(1) as f32;
     if step_total == 0. {
@@ -200,13 +200,13 @@ pub fn create_hues(base: &Color32, total: u8, step: f32) -> Vec<Color32> {
     let mut colors = Vec::new();
     let hsva = Hsva::from(*base);
     for i in (0..=total).rev() {
-        let mut _h = hsva.clone();
+        let mut _h = hsva;
         _h.h -= step * i as f32;
         colors.push(_h.into());
     }
 
     for i in 1..=total {
-        let mut _h = hsva.clone();
+        let mut _h = hsva;
         _h.h += step * i as f32;
         colors.push(_h.into());
     }

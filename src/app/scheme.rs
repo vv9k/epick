@@ -124,7 +124,7 @@ impl SchemeGenerator {
             ui,
             tex_allocator,
             &mut self.tex_mngr,
-            color.clone(),
+            *color,
             size,
             Some(&color_tooltip(&color)),
         );
@@ -134,11 +134,11 @@ impl SchemeGenerator {
             }
 
             if color_box.clicked() {
-                self.set_cur_color(color.clone());
+                self.set_cur_color(*color);
             }
 
             if color_box.middle_clicked() {
-                saved_colors.add(color.clone());
+                saved_colors.add(*color);
             }
 
             if color_box.secondary_clicked() {

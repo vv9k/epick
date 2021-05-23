@@ -270,8 +270,8 @@ impl Epick {
                                 let _ = save_to_clipboard(hex.clone());
                             }
                             if ui.button("▶").on_hover_text("Use this color").clicked() {
-                                self.picker.set_cur_color(color.clone());
-                                self.generator.set_cur_color(color.clone());
+                                self.picker.set_cur_color(*color);
+                                self.generator.set_cur_color(*color);
                             }
                         });
                         let help =
@@ -284,7 +284,7 @@ impl Epick {
                                 ui,
                                 tex_allocator,
                                 &mut self.picker.tex_mngr,
-                                color.clone(),
+                                *color,
                                 size,
                                 Some(&help),
                             );

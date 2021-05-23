@@ -82,7 +82,10 @@ impl ColorPicker {
 
         // its ok to unwrap, cur_hsva is always set when cur_color is set
         let hsva = Hsva::from(rgb);
-        if self.hue != hsva.h || self.sat != hsva.s || self.val != hsva.v {
+        if (self.hue - hsva.h).abs() > f32::EPSILON
+            || (self.sat - hsva.s).abs() > f32::EPSILON
+            || (self.val - hsva.v).abs() > f32::EPSILON
+        {
             let new_hsva = Hsva::new(self.hue, self.sat, self.val, 0.);
             let srgb = new_hsva.to_srgb();
             self.set_cur_color(Color32::from_rgb(srgb[0], srgb[1], srgb[2]));
@@ -90,7 +93,11 @@ impl ColorPicker {
         }
 
         let cmyk = Cmyk::from(self.cur_color);
-        if self.c != cmyk.c || self.m != cmyk.m || self.y != cmyk.y || self.k != cmyk.k {
+        if (self.c - cmyk.c).abs() > f32::EPSILON
+            || (self.m - cmyk.m).abs() > f32::EPSILON
+            || (self.y - cmyk.y).abs() > f32::EPSILON
+            || (self.k - cmyk.k).abs() > f32::EPSILON
+        {
             let new_cmyk = Cmyk::new(self.c, self.m, self.y, self.k);
             self.set_cur_color(Color32::from(new_cmyk));
         }
@@ -107,12 +114,12 @@ impl ColorPicker {
             if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
                 || ui.button("▶").on_hover_text("Use this color").clicked()
             {
-                if let Some(color) = parse_color(self.hex_color.trim_start_matches("#")) {
+                if let Some(color) = parse_color(self.hex_color.trim_start_matches('#')) {
                     self.set_cur_color(color);
                 }
             }
             if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
-                if let Some(color) = parse_color(self.hex_color.trim_start_matches("#")) {
+                if let Some(color) = parse_color(self.hex_color.trim_start_matches('#')) {
                     saved_colors.add(color);
                 }
             }

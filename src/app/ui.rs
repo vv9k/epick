@@ -1,8 +1,10 @@
 use crate::color::color_as_hex;
 
 use egui::{
-    color, color::Color32, CursorIcon, Id, InnerResponse, LayerId, Order, Rect, Sense, Shape,
-    Stroke, Ui, Vec2, Visuals,
+    color,
+    color::Color32,
+    style::{Selection, Widgets},
+    CursorIcon, Id, InnerResponse, LayerId, Order, Rect, Sense, Shape, Stroke, Ui, Vec2, Visuals,
 };
 
 pub mod colors {
@@ -110,34 +112,46 @@ pub fn color_tooltip(color: &Color32) -> String {
 }
 
 pub fn light_visuals() -> Visuals {
-    let mut vis = Visuals::default();
-    vis.dark_mode = false;
-    vis.override_text_color = Some(*L_FG_0);
-    vis.extreme_bg_color = Color32::WHITE;
-    vis.widgets.noninteractive.fg_stroke = Stroke::new(0., *L_FG_0);
-    vis.widgets.noninteractive.bg_fill = *L_BG_5;
-    vis.widgets.inactive.bg_fill = *L_BG_4;
-    vis.widgets.inactive.bg_stroke = Stroke::new(0.7, *D_BG_3);
-    vis.widgets.inactive.fg_stroke = Stroke::new(0.7, *D_BG_3);
-    vis.widgets.hovered.bg_fill = *L_BG_5;
-    vis.widgets.hovered.bg_stroke = Stroke::new(1., *D_BG_1);
-    vis.widgets.hovered.fg_stroke = Stroke::new(1., *D_BG_1);
-    vis.widgets.active.bg_fill = *L_BG_5;
-    vis.widgets.active.fg_stroke = Stroke::new(0., *D_BG_0);
-    vis.selection.bg_fill = *L_BG_5;
-    vis.selection.stroke = Stroke::new(0.7, *D_BG_0);
-    vis
+    let mut widgets = Widgets::dark();
+    widgets.noninteractive.fg_stroke = Stroke::new(0., *L_FG_0);
+    widgets.noninteractive.bg_fill = *L_BG_5;
+    widgets.inactive.bg_fill = *L_BG_4;
+    widgets.inactive.bg_stroke = Stroke::new(0.7, *D_BG_3);
+    widgets.inactive.fg_stroke = Stroke::new(0.7, *D_BG_3);
+    widgets.hovered.bg_fill = *L_BG_5;
+    widgets.hovered.bg_stroke = Stroke::new(1., *D_BG_1);
+    widgets.hovered.fg_stroke = Stroke::new(1., *D_BG_1);
+    widgets.active.bg_fill = *L_BG_5;
+    widgets.active.fg_stroke = Stroke::new(0., *D_BG_0);
+
+    Visuals {
+        dark_mode: false,
+        override_text_color: Some(*L_FG_0),
+        extreme_bg_color: Color32::WHITE,
+        selection: Selection {
+            bg_fill: *L_BG_5,
+            stroke: Stroke::new(0.7, *D_BG_0),
+        },
+        widgets,
+        ..Default::default()
+    }
 }
 
 pub fn dark_visuals() -> Visuals {
-    let mut vis = Visuals::default();
-    vis.dark_mode = true;
-    vis.override_text_color = Some(*D_FG_0);
-    vis.widgets.noninteractive.bg_fill = *D_BG_2;
-    vis.widgets.inactive.bg_fill = *D_BG_1;
-    vis.widgets.hovered.bg_fill = *D_BG_2;
-    vis.widgets.active.bg_fill = *D_BG_3;
-    vis.selection.bg_fill = *D_BG_3;
-    vis.selection.stroke = Stroke::new(0.7, *D_FG_0);
-    vis
+    let mut widgets = Widgets::dark();
+    widgets.noninteractive.bg_fill = *D_BG_2;
+    widgets.inactive.bg_fill = *D_BG_1;
+    widgets.hovered.bg_fill = *D_BG_2;
+    widgets.active.bg_fill = *D_BG_3;
+
+    Visuals {
+        dark_mode: true,
+        override_text_color: Some(*D_FG_0),
+        selection: Selection {
+            bg_fill: *D_BG_3,
+            stroke: Stroke::new(0.7, *D_FG_0),
+        },
+        widgets,
+        ..Default::default()
+    }
 }
