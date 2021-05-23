@@ -218,112 +218,107 @@ impl SchemeGenerator {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
     ) {
-        ScrollArea::auto_sized()
-            .id_source("scheme scroll")
-            .show(ui, |ui| {
-                ui.heading("Schemes");
-                let size = vec2(self.scheme_color_size, self.scheme_color_size);
+        ui.collapsing("Schemes", |ui| {
+            let size = vec2(self.scheme_color_size, self.scheme_color_size);
 
-                macro_rules! cb {
-                    ($color:ident, $ui:ident) => {
-                        $ui.scope(|mut ui| {
-                            self.color_box_label_under(
-                                &$color,
-                                size,
-                                &mut ui,
-                                tex_allocator,
-                                saved_colors,
-                            );
-                        });
-                    };
-                }
+            macro_rules! cb {
+                ($color:ident, $ui:ident) => {
+                    $ui.scope(|mut ui| {
+                        self.color_box_label_under(
+                            &$color,
+                            size,
+                            &mut ui,
+                            tex_allocator,
+                            saved_colors,
+                        );
+                    });
+                };
+            }
 
-                if let Some(color) = self.base_color {
-                    ComboBox::from_label("Choose a type")
-                        .selected_text(self.scheme_ty.as_ref())
-                        .show_ui(ui, |ui| {
-                            ui.selectable_value(
-                                &mut self.scheme_ty,
-                                SchemeType::Complementary,
-                                SchemeType::Complementary.as_ref(),
-                            );
-                            ui.selectable_value(
-                                &mut self.scheme_ty,
-                                SchemeType::Triadic,
-                                SchemeType::Triadic.as_ref(),
-                            );
-                            ui.selectable_value(
-                                &mut self.scheme_ty,
-                                SchemeType::Tetradic,
-                                SchemeType::Tetradic.as_ref(),
-                            );
-                            ui.selectable_value(
-                                &mut self.scheme_ty,
-                                SchemeType::Analogous,
-                                SchemeType::Analogous.as_ref(),
-                            );
-                            ui.selectable_value(
-                                &mut self.scheme_ty,
-                                SchemeType::SplitComplementary,
-                                SchemeType::SplitComplementary.as_ref(),
-                            );
+            if let Some(color) = self.base_color {
+                ComboBox::from_label("Choose a type")
+                    .selected_text(self.scheme_ty.as_ref())
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut self.scheme_ty,
+                            SchemeType::Complementary,
+                            SchemeType::Complementary.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.scheme_ty,
+                            SchemeType::Triadic,
+                            SchemeType::Triadic.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.scheme_ty,
+                            SchemeType::Tetradic,
+                            SchemeType::Tetradic.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.scheme_ty,
+                            SchemeType::Analogous,
+                            SchemeType::Analogous.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.scheme_ty,
+                            SchemeType::SplitComplementary,
+                            SchemeType::SplitComplementary.as_ref(),
+                        );
+                    });
+                ui.add(Slider::new(&mut self.scheme_color_size, 100.0..=250.).text("color size"));
+                match self.scheme_ty {
+                    SchemeType::Complementary => {
+                        let compl = complementary(&color);
+                        ui.vertical(|ui| {
+                            cb!(color, ui);
+                            cb!(compl, ui);
                         });
-                    ui.add(
-                        Slider::new(&mut self.scheme_color_size, 100.0..=250.).text("color size"),
-                    );
-                    match self.scheme_ty {
-                        SchemeType::Complementary => {
-                            let compl = complementary(&color);
-                            ui.vertical(|ui| {
-                                cb!(color, ui);
-                                cb!(compl, ui);
-                            });
-                        }
-                        SchemeType::Triadic => {
-                            let tri = triadic(&color);
-                            ui.vertical(|ui| {
-                                let c1 = tri.0;
-                                let c2 = tri.1;
-                                cb!(color, ui);
-                                cb!(c1, ui);
-                                cb!(c2, ui);
-                            });
-                        }
-                        SchemeType::Tetradic => {
-                            let tetr = tetradic(&color);
-                            ui.vertical(|ui| {
-                                let c1 = &tetr.0;
-                                let c2 = &tetr.1;
-                                let c3 = &tetr.2;
-                                cb!(color, ui);
-                                cb!(c1, ui);
-                                cb!(c2, ui);
-                                cb!(c3, ui);
-                            });
-                        }
-                        SchemeType::Analogous => {
-                            let an = analogous(&color);
-                            ui.vertical(|ui| {
-                                let c1 = an.0;
-                                let c2 = an.1;
-                                cb!(color, ui);
-                                cb!(c1, ui);
-                                cb!(c2, ui);
-                            });
-                        }
-                        SchemeType::SplitComplementary => {
-                            let sc = split_complementary(&color);
-                            ui.vertical(|ui| {
-                                let c1 = sc.0;
-                                let c2 = sc.1;
-                                cb!(color, ui);
-                                cb!(c1, ui);
-                                cb!(c2, ui);
-                            });
-                        }
+                    }
+                    SchemeType::Triadic => {
+                        let tri = triadic(&color);
+                        ui.vertical(|ui| {
+                            let c1 = tri.0;
+                            let c2 = tri.1;
+                            cb!(color, ui);
+                            cb!(c1, ui);
+                            cb!(c2, ui);
+                        });
+                    }
+                    SchemeType::Tetradic => {
+                        let tetr = tetradic(&color);
+                        ui.vertical(|ui| {
+                            let c1 = &tetr.0;
+                            let c2 = &tetr.1;
+                            let c3 = &tetr.2;
+                            cb!(color, ui);
+                            cb!(c1, ui);
+                            cb!(c2, ui);
+                            cb!(c3, ui);
+                        });
+                    }
+                    SchemeType::Analogous => {
+                        let an = analogous(&color);
+                        ui.vertical(|ui| {
+                            let c1 = an.0;
+                            let c2 = an.1;
+                            cb!(color, ui);
+                            cb!(c1, ui);
+                            cb!(c2, ui);
+                        });
+                    }
+                    SchemeType::SplitComplementary => {
+                        let sc = split_complementary(&color);
+                        ui.vertical(|ui| {
+                            let c1 = sc.0;
+                            let c2 = sc.1;
+                            cb!(color, ui);
+                            cb!(c1, ui);
+                            cb!(c2, ui);
+                        });
                     }
                 }
-            });
+            }
+        });
     }
 
     pub fn ui(
@@ -335,16 +330,14 @@ impl SchemeGenerator {
         if self.base_color.is_none() {
             ui.heading("Select a color from saved colors to continue");
         } else {
-            ui.columns(2, |columns| {
-                ScrollArea::auto_sized()
-                    .id_source("palettes")
-                    .show(&mut columns[0], |mut ui| {
-                        self.shades(&mut ui, tex_allocator, saved_colors);
-                        self.tints(&mut ui, tex_allocator, saved_colors);
-                        self.hues(&mut ui, tex_allocator, saved_colors);
-                    });
-                self.schemes(&mut columns[1], tex_allocator, saved_colors);
-            });
+            ScrollArea::auto_sized()
+                .id_source("palettes")
+                .show(ui, |mut ui| {
+                    self.shades(&mut ui, tex_allocator, saved_colors);
+                    self.tints(&mut ui, tex_allocator, saved_colors);
+                    self.hues(&mut ui, tex_allocator, saved_colors);
+                    self.schemes(&mut ui, tex_allocator, saved_colors);
+                });
         }
     }
 }
