@@ -4,11 +4,11 @@ use crate::color::{color_as_hex, parse_color, Cmyk};
 use crate::save_to_clipboard;
 use egui::{
     color::{Color32, Hsva, HsvaGamma},
-    DragValue, Rgba,
+    DragValue, Rgba, ScrollArea,
 };
 use egui::{vec2, Slider, Ui};
 
-static MIN_COL_SIZE: f32 = 450.;
+static MIN_COL_SIZE: f32 = 50.;
 static ADD_ICON: &str = "➕";
 static ADD_DESCR: &str = "Add this color to saved colors";
 
@@ -34,7 +34,7 @@ pub struct ColorPicker {
 impl Default for ColorPicker {
     fn default() -> Self {
         Self {
-            color_size: MIN_COL_SIZE,
+            color_size: 300.,
             hex_color: "".to_string(),
             cur_color: Color32::BLACK,
             red: 0.,
@@ -108,8 +108,8 @@ impl ColorPicker {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
     ) {
+        ui.label("Enter a hex color: ");
         let enter_bar = ui.horizontal(|ui| {
-            ui.label("Enter a hex color: ");
             let resp = ui.text_edit_singleline(&mut self.hex_color);
             if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
                 || ui.button("▶").on_hover_text("Use this color").clicked()
@@ -152,15 +152,16 @@ impl ColorPicker {
 
         self.check_color_change();
 
-        ui.add_space(25.);
-        ui.horizontal(|ui| {
-            ui.scope(|ui| {
+        ScrollArea::auto_sized()
+            .id_source("picker scroll")
+            .show(ui, |ui| {
+                self.sliders(ui);
                 let resp = tex_color(
                     ui,
                     tex_allocator,
                     &mut self.tex_mngr,
                     self.cur_color,
-                    vec2(self.color_size / 2., self.color_size),
+                    vec2(self.color_size, self.color_size),
                     Some(&color_tooltip(&self.cur_color)),
                 );
                 if let Some(resp) = resp {
@@ -177,9 +178,6 @@ impl ColorPicker {
                     }
                 }
             });
-            ui.add_space(20.);
-            self.sliders(ui);
-        });
     }
 
     fn sliders(&mut self, ui: &mut Ui) {
