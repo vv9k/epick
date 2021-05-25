@@ -1,12 +1,8 @@
 use crate::app::render::{tex_color, TextureManager};
 use crate::app::{color_tooltip, SavedColors};
-use crate::color::{
-    analogous, color_as_hex, complementary, create_hues, create_shades, create_tints,
-    split_complementary, tetradic, triadic,
-};
+use crate::color::Color;
 use crate::save_to_clipboard;
 
-use egui::color::Color32;
 use egui::{vec2, CollapsingHeader, ComboBox, ScrollArea, Slider, Ui, Vec2};
 use std::convert::AsRef;
 
@@ -44,7 +40,7 @@ pub struct SchemeGenerator {
     pub hue_color_size: f32,
     pub scheme_color_size: f32,
     pub hues_step: f32,
-    pub base_color: Option<Color32>,
+    pub base_color: Option<Color>,
     pub tex_mngr: TextureManager,
     pub scheme_ty: SchemeType,
 }
@@ -68,13 +64,13 @@ impl Default for SchemeGenerator {
 }
 
 impl SchemeGenerator {
-    pub fn set_cur_color(&mut self, color: Color32) {
+    pub fn set_cur_color(&mut self, color: Color) {
         self.base_color = Some(color);
     }
 
     fn color_box_label_under(
         &mut self,
-        color: &Color32,
+        color: &Color,
         size: Vec2,
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
@@ -87,7 +83,7 @@ impl SchemeGenerator {
 
     fn color_box_label_side(
         &mut self,
-        color: &Color32,
+        color: &Color,
         size: Vec2,
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
@@ -101,7 +97,7 @@ impl SchemeGenerator {
     #[allow(dead_code)]
     fn color_box_no_label(
         &mut self,
-        color: &Color32,
+        color: &Color,
         size: Vec2,
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
@@ -112,19 +108,19 @@ impl SchemeGenerator {
 
     fn _color_box(
         &mut self,
-        color: &Color32,
+        color: &Color,
         size: Vec2,
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
         with_label: bool,
     ) {
-        let hex = color_as_hex(&color);
+        let hex = color.as_hex();
         let color_box = tex_color(
             ui,
             tex_allocator,
             &mut self.tex_mngr,
-            *color,
+            color.as_32(),
             size,
             Some(&color_tooltip(&color)),
         );
@@ -155,7 +151,7 @@ impl SchemeGenerator {
     ) {
         ui.collapsing("Hues", |ui| {
             if let Some(color) = self.base_color {
-                let hues = create_hues(&color, self.numof_hues, self.hues_step);
+                let hues = color.hues(self.numof_hues, self.hues_step);
                 ui.add(Slider::new(&mut self.hues_step, 0.01..=0.1).text("step"));
                 let max_hues = (0.5 / self.hues_step).round() as u8;
                 if self.numof_hues > max_hues {
@@ -180,7 +176,7 @@ impl SchemeGenerator {
     ) {
         ui.collapsing("Tints", |ui| {
             if let Some(color) = self.base_color {
-                let tints = create_tints(&color, self.numof_tints);
+                let tints = color.tints(self.numof_tints);
                 ui.add(Slider::new(&mut self.numof_tints, u8::MIN..=50).text("# of tints"));
                 ui.add(Slider::new(&mut self.tint_color_size, 20.0..=200.).text("color size"));
 
@@ -200,7 +196,7 @@ impl SchemeGenerator {
     ) {
         ui.collapsing("Shades", |ui| {
             if let Some(color) = self.base_color {
-                let shades = create_shades(&color, self.numof_shades);
+                let shades = color.shades(self.numof_shades);
                 ui.add(Slider::new(&mut self.numof_shades, u8::MIN..=50).text("# of shades"));
                 ui.add(Slider::new(&mut self.shade_color_size, 20.0..=200.).text("color size"));
 
@@ -272,14 +268,14 @@ impl SchemeGenerator {
                     );
                     match self.scheme_ty {
                         SchemeType::Complementary => {
-                            let compl = complementary(&color);
+                            let compl = color.complementary();
                             ui.vertical(|ui| {
                                 cb!(color, ui);
                                 cb!(compl, ui);
                             });
                         }
                         SchemeType::Triadic => {
-                            let tri = triadic(&color);
+                            let tri = color.triadic();
                             ui.vertical(|ui| {
                                 let c1 = tri.0;
                                 let c2 = tri.1;
@@ -289,7 +285,7 @@ impl SchemeGenerator {
                             });
                         }
                         SchemeType::Tetradic => {
-                            let tetr = tetradic(&color);
+                            let tetr = color.tetradic();
                             ui.vertical(|ui| {
                                 let c1 = &tetr.0;
                                 let c2 = &tetr.1;
@@ -301,7 +297,7 @@ impl SchemeGenerator {
                             });
                         }
                         SchemeType::Analogous => {
-                            let an = analogous(&color);
+                            let an = color.analogous();
                             ui.vertical(|ui| {
                                 let c1 = an.0;
                                 let c2 = an.1;
@@ -311,7 +307,7 @@ impl SchemeGenerator {
                             });
                         }
                         SchemeType::SplitComplementary => {
-                            let sc = split_complementary(&color);
+                            let sc = color.split_complementary();
                             ui.vertical(|ui| {
                                 let c1 = sc.0;
                                 let c2 = sc.1;

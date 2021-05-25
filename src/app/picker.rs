@@ -1,9 +1,9 @@
 use crate::app::render::{color_slider_1d, tex_color, TextureManager};
 use crate::app::{color_tooltip, SavedColors};
-use crate::color::{color_as_hex, parse_color, Cmyk};
+use crate::color::{Cmyk, Color};
 use crate::save_to_clipboard;
 use egui::{
-    color::{Color32, Hsva, HsvaGamma},
+    color::{Hsva, HsvaGamma},
     DragValue, Rgba, ScrollArea,
 };
 use egui::{vec2, Slider, Ui};
@@ -16,7 +16,7 @@ static ADD_DESCR: &str = "Add this color to saved colors";
 pub struct ColorPicker {
     pub color_size: f32,
     pub hex_color: String,
-    pub cur_color: Color32,
+    pub cur_color: Color,
     pub red: f32,
     pub green: f32,
     pub blue: f32,
@@ -36,7 +36,7 @@ impl Default for ColorPicker {
         Self {
             color_size: 300.,
             hex_color: "".to_string(),
-            cur_color: Color32::BLACK,
+            cur_color: Color::black(),
             red: 0.,
             green: 0.,
             blue: 0.,
@@ -54,15 +54,16 @@ impl Default for ColorPicker {
 }
 
 impl ColorPicker {
-    pub fn set_cur_color(&mut self, color: Color32) {
-        self.red = color.r() as f32;
-        self.green = color.g() as f32;
-        self.blue = color.b() as f32;
-        let hsva = Hsva::from(color);
+    pub fn set_cur_color(&mut self, color: Color) {
+        let _color = Rgba::from(color);
+        self.red = _color.r() * 255.;
+        self.green = _color.g() * 255.;
+        self.blue = _color.b() * 255.;
+        let hsva = Hsva::from(_color);
         self.hue = hsva.h;
         self.sat = hsva.s;
         self.val = hsva.v;
-        let cmyk = Cmyk::from(color);
+        let cmyk = Cmyk::from(_color);
         self.c = cmyk.c;
         self.m = cmyk.m;
         self.y = cmyk.y;
@@ -71,24 +72,23 @@ impl ColorPicker {
     }
 
     fn check_color_change(&mut self) {
-        let rgb = self.cur_color;
-        let r = self.red.round() as u8;
-        let g = self.green.round() as u8;
-        let b = self.blue.round() as u8;
+        let rgb = Rgba::from(self.cur_color);
+        let r = self.red / 255.;
+        let g = self.green / 255.;
+        let b = self.blue / 255.;
         if r != rgb.r() || g != rgb.g() || b != rgb.b() {
-            self.set_cur_color(Color32::from_rgb(r, g, b));
+            self.set_cur_color(Rgba::from_rgb(r, g, b).into());
             return;
         }
 
         // its ok to unwrap, cur_hsva is always set when cur_color is set
-        let hsva = Hsva::from(rgb);
+        let hsva = Hsva::from(self.cur_color);
         if (self.hue - hsva.h).abs() > f32::EPSILON
             || (self.sat - hsva.s).abs() > f32::EPSILON
             || (self.val - hsva.v).abs() > f32::EPSILON
         {
-            let new_hsva = Hsva::new(self.hue, self.sat, self.val, 0.);
-            let srgb = new_hsva.to_srgb();
-            self.set_cur_color(Color32::from_rgb(srgb[0], srgb[1], srgb[2]));
+            let new_hsva = Hsva::new(self.hue, self.sat, self.val, 1.);
+            self.set_cur_color(new_hsva.into());
             return;
         }
 
@@ -99,7 +99,7 @@ impl ColorPicker {
             || (self.k - cmyk.k).abs() > f32::EPSILON
         {
             let new_cmyk = Cmyk::new(self.c, self.m, self.y, self.k);
-            self.set_cur_color(Color32::from(new_cmyk));
+            self.set_cur_color(new_cmyk.into());
         }
     }
     pub fn ui(
@@ -114,13 +114,13 @@ impl ColorPicker {
             if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
                 || ui.button("▶").on_hover_text("Use this color").clicked()
             {
-                if let Some(color) = parse_color(self.hex_color.trim_start_matches('#')) {
+                if let Some(color) = Color::from_hex(self.hex_color.trim_start_matches('#')) {
                     self.set_cur_color(color);
                 }
             }
             if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
-                if let Some(color) = parse_color(self.hex_color.trim_start_matches('#')) {
-                    saved_colors.add(color);
+                if let Some(color) = Color::from_hex(self.hex_color.trim_start_matches('#')) {
+                    self.set_cur_color(color);
                 }
             }
         });
@@ -129,7 +129,7 @@ impl ColorPicker {
 
         ui.add_space(20.);
 
-        let hex = color_as_hex(&self.cur_color);
+        let hex = self.cur_color.as_hex();
 
         ui.horizontal(|ui| {
             ui.label("Current color: ");
@@ -160,7 +160,7 @@ impl ColorPicker {
                     ui,
                     tex_allocator,
                     &mut self.tex_mngr,
-                    self.cur_color,
+                    self.cur_color.into(),
                     vec2(self.color_size, self.color_size),
                     Some(&color_tooltip(&self.cur_color)),
                 );

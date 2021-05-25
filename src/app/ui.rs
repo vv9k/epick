@@ -1,4 +1,4 @@
-use crate::color::color_as_hex;
+use crate::color::Color;
 
 use egui::{
     color,
@@ -104,10 +104,10 @@ pub fn drop_target<R>(
     InnerResponse::new(ret, response)
 }
 
-pub fn color_tooltip(color: &Color32) -> String {
+pub fn color_tooltip(color: &Color) -> String {
     format!(
         "#{}\n\nPrimary click: set current\nMiddle click: save color\nSecondary click: copy hex",
-        color_as_hex(&color)
+        color.as_hex(),
     )
 }
 

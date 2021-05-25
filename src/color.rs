@@ -2,7 +2,228 @@ use egui::color::*;
 use egui::lerp;
 use std::cmp::Ordering;
 
-#[derive(Clone, Copy, Default, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Color {
+    Cmyk(Cmyk),
+    Rgb(Rgba),
+    Hsv(Hsva),
+}
+
+impl Color {
+    pub fn black() -> Self {
+        Self::Rgb(Color32::BLACK.into())
+    }
+
+    pub fn white() -> Self {
+        Self::Rgb(Color32::WHITE.into())
+    }
+
+    pub fn as_hex(&self) -> String {
+        let color = Color32::from(*self);
+        format!("{:02x}{:02x}{:02x}", color.r(), color.g(), color.b())
+    }
+
+    pub fn from_hex(hex: &str) -> Option<Self> {
+        parse_hex(hex).map(|(r, g, b)| Color::Rgb(Color32::from_rgb(r, g, b).into()))
+    }
+
+    pub fn as_32(&self) -> Color32 {
+        Color32::from(*self)
+    }
+
+    pub fn with_hue_offset(&self, offset: f32) -> Color {
+        let mut hsv = Hsva::from(*self);
+
+        hsv.h = (hsv.h + offset) % 1.;
+        Self::Hsv(hsv)
+    }
+
+    pub fn shades(&self, total: u8) -> Vec<Color> {
+        let base = self.as_32();
+        if total == 0 {
+            return vec![*self];
+        }
+        let mut step_total = total.saturating_sub(1) as f32;
+        if step_total == 0. {
+            step_total = 1.;
+        }
+        let mut base_r = base.r();
+        let mut base_g = base.g();
+        let mut base_b = base.b();
+        let step_r = (base_r as f32 / step_total).ceil() as u8;
+        let step_g = (base_g as f32 / step_total).ceil() as u8;
+        let step_b = (base_b as f32 / step_total).ceil() as u8;
+
+        (0..total)
+            .into_iter()
+            .map(|_| {
+                let c = Color32::from_rgb(base_r, base_g, base_b);
+                base_r = base_r.saturating_sub(step_r);
+                base_g = base_g.saturating_sub(step_g);
+                base_b = base_b.saturating_sub(step_b);
+                Color::Rgb(c.into())
+            })
+            .collect()
+    }
+    pub fn tints(&self, total: u8) -> Vec<Color> {
+        let base = self.as_32();
+        if total == 0 {
+            return vec![*self];
+        }
+        let mut step_total = total.saturating_sub(1) as f32;
+        if step_total == 0. {
+            step_total = 1.;
+        }
+        let mut base_r = base.r();
+        let mut base_g = base.g();
+        let mut base_b = base.b();
+        let step_r = ((u8::MAX - base_r) as f32 / step_total).ceil() as u8;
+        let step_g = ((u8::MAX - base_g) as f32 / step_total).ceil() as u8;
+        let step_b = ((u8::MAX - base_b) as f32 / step_total).ceil() as u8;
+
+        (0..total)
+            .into_iter()
+            .map(|_| {
+                let c = Color32::from_rgb(base_r, base_g, base_b);
+                base_r = base_r.saturating_add(step_r);
+                base_g = base_g.saturating_add(step_g);
+                base_b = base_b.saturating_add(step_b);
+                Color::Rgb(c.into())
+            })
+            .collect()
+    }
+
+    pub fn hues(&self, total: u8, step: f32) -> Vec<Color> {
+        let mut colors = Vec::new();
+        let hsva = Hsva::from(*self);
+        for i in (0..=total).rev() {
+            let mut _h = hsva;
+            _h.h -= step * i as f32;
+            colors.push(_h.into());
+        }
+
+        for i in 1..=total {
+            let mut _h = hsva;
+            _h.h += step * i as f32;
+            colors.push(_h.into());
+        }
+
+        colors
+    }
+
+    pub fn complementary(&self) -> Color {
+        let color = self.as_32();
+        if color == Color32::BLACK {
+            return Color32::WHITE.into();
+        } else if color == Color32::WHITE {
+            return Color32::BLACK.into();
+        }
+
+        self.with_hue_offset(0.5)
+    }
+
+    pub fn triadic(&self) -> (Color, Color) {
+        (
+            self.with_hue_offset(120. / 360.),
+            self.with_hue_offset(240. / 360.),
+        )
+    }
+
+    pub fn tetradic(&self) -> (Color, Color, Color) {
+        (
+            self.with_hue_offset(0.25),
+            self.complementary(),
+            self.with_hue_offset(0.75),
+        )
+    }
+
+    pub fn analogous(&self) -> (Color, Color) {
+        (
+            self.with_hue_offset(-1. / 12.),
+            self.with_hue_offset(1. / 12.),
+        )
+    }
+
+    pub fn split_complementary(&self) -> (Color, Color) {
+        (
+            self.with_hue_offset(150. / 360.),
+            self.with_hue_offset(240. / 360.),
+        )
+    }
+}
+
+impl From<Color> for Color32 {
+    fn from(c: Color) -> Color32 {
+        match c {
+            Color::Cmyk(c) => c.into(),
+            Color::Rgb(c) => c.into(),
+            Color::Hsv(c) => c.into(),
+        }
+    }
+}
+
+impl From<Color> for Rgba {
+    fn from(c: Color) -> Rgba {
+        match c {
+            Color::Cmyk(c) => c.into(),
+            Color::Rgb(c) => c,
+            Color::Hsv(c) => c.into(),
+        }
+    }
+}
+
+impl From<Color> for Hsva {
+    fn from(c: Color) -> Hsva {
+        match c {
+            Color::Cmyk(c) => c.into(),
+            Color::Rgb(c) => c.into(),
+            Color::Hsv(c) => c,
+        }
+    }
+}
+
+impl From<Color> for HsvaGamma {
+    fn from(c: Color) -> HsvaGamma {
+        match c {
+            Color::Cmyk(c) => Color32::from(c).into(),
+            Color::Rgb(c) => c.into(),
+            Color::Hsv(c) => c.into(),
+        }
+    }
+}
+
+impl From<Color> for Cmyk {
+    fn from(c: Color) -> Cmyk {
+        match c {
+            Color::Cmyk(c) => c,
+            Color::Rgb(c) => Color32::from(c).into(),
+            Color::Hsv(c) => Color32::from(c).into(),
+        }
+    }
+}
+
+impl From<Cmyk> for Color {
+    fn from(c: Cmyk) -> Color {
+        Color::Cmyk(c)
+    }
+}
+impl From<Rgba> for Color {
+    fn from(c: Rgba) -> Color {
+        Color::Rgb(c)
+    }
+}
+impl From<Color32> for Color {
+    fn from(c: Color32) -> Color {
+        Color::Rgb(Rgba::from(c))
+    }
+}
+impl From<Hsva> for Color {
+    fn from(c: Hsva) -> Color {
+        Color::Hsv(c)
+    }
+}
+
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Cmyk {
     pub c: f32,
     pub m: f32,
@@ -22,6 +243,24 @@ impl From<Cmyk> for Color32 {
         let g = (255. * (1. - (cmyk.m * (1. - cmyk.k) + cmyk.k))).round() as u8;
         let b = (255. * (1. - (cmyk.y * (1. - cmyk.k) + cmyk.k))).round() as u8;
         Color32::from_rgb(r, g, b)
+    }
+}
+
+impl From<Cmyk> for Rgba {
+    fn from(cmyk: Cmyk) -> Rgba {
+        Color32::from(cmyk).into()
+    }
+}
+
+impl From<Cmyk> for Hsva {
+    fn from(cmyk: Cmyk) -> Hsva {
+        Color32::from(cmyk).into()
+    }
+}
+
+impl From<Rgba> for Cmyk {
+    fn from(rgba: Rgba) -> Cmyk {
+        Color32::from(rgba).into()
     }
 }
 
@@ -130,138 +369,6 @@ pub fn parse_hex(color: &str) -> Option<(u8, u8, u8)> {
         bytes.next().map(|arr| hex_chars_to_u8((arr[0], arr[1])))?,
         bytes.next().map(|arr| hex_chars_to_u8((arr[0], arr[1])))?,
     ))
-}
-
-pub fn parse_color(hex: &str) -> Option<Color32> {
-    if hex.len() == 6 {
-        if let Some((r, g, b)) = parse_hex(&hex) {
-            return Some(Color32::from_rgb(r, g, b));
-        }
-    }
-
-    None
-}
-
-pub fn color_as_hex(color: &Color32) -> String {
-    format!("{:02x}{:02x}{:02x}", color.r(), color.g(), color.b())
-}
-
-pub fn create_shades(base: &Color32, total: u8) -> Vec<Color32> {
-    if total == 0 {
-        return vec![*base];
-    }
-    let mut step_total = total.saturating_sub(1) as f32;
-    if step_total == 0. {
-        step_total = 1.;
-    }
-    let mut base_r = base.r();
-    let mut base_g = base.g();
-    let mut base_b = base.b();
-    let step_r = (base_r as f32 / step_total).ceil() as u8;
-    let step_g = (base_g as f32 / step_total).ceil() as u8;
-    let step_b = (base_b as f32 / step_total).ceil() as u8;
-
-    (0..total)
-        .into_iter()
-        .map(|_| {
-            let c = Color32::from_rgb(base_r, base_g, base_b);
-            base_r = base_r.saturating_sub(step_r);
-            base_g = base_g.saturating_sub(step_g);
-            base_b = base_b.saturating_sub(step_b);
-            c
-        })
-        .collect()
-}
-
-pub fn create_tints(base: &Color32, total: u8) -> Vec<Color32> {
-    if total == 0 {
-        return vec![*base];
-    }
-    let mut step_total = total.saturating_sub(1) as f32;
-    if step_total == 0. {
-        step_total = 1.;
-    }
-    let mut base_r = base.r();
-    let mut base_g = base.g();
-    let mut base_b = base.b();
-    let step_r = ((u8::MAX - base_r) as f32 / step_total).ceil() as u8;
-    let step_g = ((u8::MAX - base_g) as f32 / step_total).ceil() as u8;
-    let step_b = ((u8::MAX - base_b) as f32 / step_total).ceil() as u8;
-
-    (0..total)
-        .into_iter()
-        .map(|_| {
-            let c = Color32::from_rgb(base_r, base_g, base_b);
-            base_r = base_r.saturating_add(step_r);
-            base_g = base_g.saturating_add(step_g);
-            base_b = base_b.saturating_add(step_b);
-            c
-        })
-        .collect()
-}
-
-pub fn create_hues(base: &Color32, total: u8, step: f32) -> Vec<Color32> {
-    let mut colors = Vec::new();
-    let hsva = Hsva::from(*base);
-    for i in (0..=total).rev() {
-        let mut _h = hsva;
-        _h.h -= step * i as f32;
-        colors.push(_h.into());
-    }
-
-    for i in 1..=total {
-        let mut _h = hsva;
-        _h.h += step * i as f32;
-        colors.push(_h.into());
-    }
-
-    colors
-}
-fn color_with_hue_offset(color: &Color32, offset: f32) -> Color32 {
-    let mut hsv = Hsva::from_srgb([color.r(), color.g(), color.b()]);
-
-    hsv.h = (hsv.h + offset) % 1.;
-    let rgb = hsv.to_srgb();
-    Color32::from_rgb(rgb[0], rgb[1], rgb[2])
-}
-
-pub fn complementary(color: &Color32) -> Color32 {
-    if color == &Color32::BLACK {
-        return Color32::WHITE;
-    } else if color == &Color32::WHITE {
-        return Color32::BLACK;
-    }
-
-    color_with_hue_offset(color, 0.5)
-}
-
-pub fn triadic(color: &Color32) -> (Color32, Color32) {
-    (
-        color_with_hue_offset(color, 120. / 360.),
-        color_with_hue_offset(color, 240. / 360.),
-    )
-}
-
-pub fn tetradic(color: &Color32) -> (Color32, Color32, Color32) {
-    (
-        color_with_hue_offset(color, 0.25),
-        complementary(color),
-        color_with_hue_offset(color, 0.75),
-    )
-}
-
-pub fn analogous(color: &Color32) -> (Color32, Color32) {
-    (
-        color_with_hue_offset(color, -1. / 12.),
-        color_with_hue_offset(color, 1. / 12.),
-    )
-}
-
-pub fn split_complementary(color: &Color32) -> (Color32, Color32) {
-    (
-        color_with_hue_offset(color, 150. / 360.),
-        color_with_hue_offset(color, 240. / 360.),
-    )
 }
 
 pub fn contrast_color(color: impl Into<Rgba>) -> Color32 {

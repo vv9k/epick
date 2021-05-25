@@ -9,41 +9,40 @@ use scheme::SchemeGenerator;
 use ui::colors::*;
 use ui::{color_tooltip, dark_visuals, drag_source, drop_target, light_visuals};
 
-use crate::color::color_as_hex;
+use crate::color::Color;
 use crate::save_to_clipboard;
 
-use egui::color::Color32;
 use egui::{vec2, Id, ScrollArea, Ui, Visuals};
 use std::borrow::Cow;
 
 //####################################################################################################
 
 #[derive(Default, Debug)]
-pub struct SavedColors(Vec<(String, Color32)>);
+pub struct SavedColors(Vec<(String, Color)>);
 
 impl SavedColors {
-    pub fn add(&mut self, color: Color32) {
-        let color = (color_as_hex(&color), color);
+    pub fn add(&mut self, color: Color) {
+        let color = (color.as_hex(), color);
         if !self.0.contains(&color) {
             self.0.push(color);
         }
     }
 
-    pub fn insert(&mut self, i: usize, color: Color32) {
-        let color = (color_as_hex(&color), color);
+    pub fn insert(&mut self, i: usize, color: Color) {
+        let color = (color.as_hex(), color);
         if !self.0.contains(&color) {
             self.0.insert(i, color);
         }
     }
 
-    pub fn remove(&mut self, color: &Color32) -> Option<(String, Color32)> {
+    pub fn remove(&mut self, color: &Color) -> Option<(String, Color)> {
         self.0
             .iter()
             .position(|(_, col)| col == color)
             .map(|i| self.0.remove(i))
     }
 
-    pub fn remove_pos(&mut self, i: usize) -> Option<(String, Color32)> {
+    pub fn remove_pos(&mut self, i: usize) -> Option<(String, Color)> {
         if i < self.0.len() {
             Some(self.0.remove(i))
         } else {
@@ -60,8 +59,8 @@ impl SavedColors {
     }
 }
 
-impl AsRef<[(String, Color32)]> for SavedColors {
-    fn as_ref(&self) -> &[(String, Color32)] {
+impl AsRef<[(String, Color)]> for SavedColors {
+    fn as_ref(&self) -> &[(String, Color)] {
         self.0.as_ref()
     }
 }
@@ -303,7 +302,7 @@ impl Epick {
                                 ui,
                                 tex_allocator,
                                 &mut self.picker.tex_mngr,
-                                *color,
+                                color.as_32(),
                                 size,
                                 Some(&help),
                             );
