@@ -121,9 +121,7 @@ impl ColorPicker {
                 }
             }
             if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
-                if let Some(color) = Color::from_hex(self.hex_color.trim_start_matches('#')) {
-                    self.set_cur_color(color);
-                }
+                saved_colors.add(self.cur_color);
             }
         });
 
