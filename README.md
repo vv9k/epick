@@ -8,12 +8,18 @@ Simple color picker that lets the user create harmonic palettes with ease.
 
 You can checkout the web demo over [here](https://wojciechkepka.github.io/epick/) or get a native binary from the [GitHub release page](https://github.com/wojciechkepka/epick/releases).
 
-![Screenshot of UI](https://github.com/wojciechkepka/epick/blob/master/assets/ui.png)
+If you happen to use Arch Linux you can grap **epick** from AUR using your favorite package manager:
+```bash
+paru -S epick
+```
 
 ## Build
 
 To manually build **epick** you'll need the latest Rust with `cargo`. The build command is:
 - `cargo build --release`
+
+
+![Screenshot of UI](https://github.com/wojciechkepka/epick/blob/master/assets/ui.png)
 
 
 ## License
