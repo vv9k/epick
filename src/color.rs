@@ -18,33 +18,37 @@ impl Cmyk {
 
 impl From<Cmyk> for Color32 {
     fn from(cmyk: Cmyk) -> Self {
-        let r = (255. * (1. - cmyk.c) * (1. - cmyk.k)) as u8;
-        let g = (255. * (1. - cmyk.m) * (1. - cmyk.k)) as u8;
-        let b = (255. * (1. - cmyk.y) * (1. - cmyk.k)) as u8;
+        let r = (255. * (1. - (cmyk.c * (1. - cmyk.k) + cmyk.k))).round() as u8;
+        let g = (255. * (1. - (cmyk.m * (1. - cmyk.k) + cmyk.k))).round() as u8;
+        let b = (255. * (1. - (cmyk.y * (1. - cmyk.k) + cmyk.k))).round() as u8;
         Color32::from_rgb(r, g, b)
     }
 }
 
 impl From<Color32> for Cmyk {
     fn from(color: Color32) -> Self {
-        let _r: f32 = color.r() as f32 / 255.;
-        let _g: f32 = color.g() as f32 / 255.;
-        let _b: f32 = color.b() as f32 / 255.;
+        let _r: f32 = 1. - (color.r() as f32 / 255.);
+        let _g: f32 = 1. - (color.g() as f32 / 255.);
+        let _b: f32 = 1. - (color.b() as f32 / 255.);
         let rgb = [_r, _g, _b];
-        let k = 1.
-            - rgb
-                .iter()
-                .max_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
-                .unwrap();
-        let c = 1. - (_r / (1. - k));
-        let m = 1. - (_g / (1. - k));
-        let y = 1. - (_b / (1. - k));
+        let k = rgb
+            .iter()
+            .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
+            .unwrap();
+
+        if *k == 1. {
+            return Cmyk::new(0., 0., 0., *k);
+        }
+
+        let c = (_r - k) / (1. - k);
+        let m = (_g - k) / (1. - k);
+        let y = (_b - k) / (1. - k);
 
         Cmyk::new(
             if c.is_nan() { 0. } else { c },
             if m.is_nan() { 0. } else { m },
             if y.is_nan() { 0. } else { y },
-            if k.is_nan() { 0. } else { k },
+            if k.is_nan() { 0. } else { *k },
         )
     }
 }
