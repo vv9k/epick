@@ -89,6 +89,7 @@ jobs:
       - name: Set archive name
         id: set_name
         run: echo ::set-output name=EPICK_ARCHIVE::epick-${{steps.set_version.outputs.EPICK_VERSION}}-${{ matrix.target}}
+      - run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev 
       - run: cargo build --release
         name: Release build
       - name: Prepare archive directory
