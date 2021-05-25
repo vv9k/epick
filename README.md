@@ -10,17 +10,24 @@ You can checkout the web demo over [here](https://wojciechkepka.github.io/epick/
 
 If you happen to use Arch Linux you can grap **epick** from AUR using your favorite package manager:
 ```bash
-paru -S epick
+$ paru -S epick
 ```
 
 ## Build
 
-To manually build **epick** you'll need the latest Rust with `cargo`. The build command is:
-- `cargo build --release`
+Install required libraries:
+```
+$ apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev 
+```
 
+To manually build **epick** you'll need the latest Rust with `cargo`. The build command is:
+```
+$ cargo build --release
+```
+
+## Screenshot
 
 ![Screenshot of UI](https://github.com/wojciechkepka/epick/blob/master/assets/ui.png)
-
 
 ## License
 [GPLv3](https://github.com/wojciechkepka/epick/blob/master/LICENSE)
