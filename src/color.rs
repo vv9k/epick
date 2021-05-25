@@ -65,6 +65,7 @@ impl Color {
             })
             .collect()
     }
+
     pub fn tints(&self, total: u8) -> Vec<Color> {
         let base = self.as_32();
         if total == 0 {

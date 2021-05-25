@@ -21,11 +21,13 @@ use std::borrow::Cow;
 pub struct SavedColors(Vec<(String, Color)>);
 
 impl SavedColors {
-    pub fn add(&mut self, color: Color) {
+    pub fn add(&mut self, color: Color) -> bool {
         let color = (color.as_hex(), color);
         if !self.0.contains(&color) {
             self.0.push(color);
+            return true;
         }
+        false
     }
 
     pub fn insert(&mut self, i: usize, color: Color) {

@@ -2,11 +2,11 @@ use crate::app::render::{color_slider_1d, tex_color, TextureManager};
 use crate::app::{color_tooltip, SavedColors};
 use crate::color::{Cmyk, Color};
 use crate::save_to_clipboard;
+use egui::{color::Color32, vec2, Slider, Ui};
 use egui::{
     color::{Hsva, HsvaGamma},
     DragValue, Rgba, ScrollArea,
 };
-use egui::{vec2, Slider, Ui};
 
 static MIN_COL_SIZE: f32 = 50.;
 static ADD_ICON: &str = "➕";
@@ -29,6 +29,7 @@ pub struct ColorPicker {
     pub k: f32,
     pub tex_mngr: TextureManager,
     pub main_width: f32,
+    pub err: Option<String>,
 }
 
 impl Default for ColorPicker {
@@ -49,6 +50,7 @@ impl Default for ColorPicker {
             k: 1.,
             tex_mngr: TextureManager::default(),
             main_width: 0.,
+            err: None,
         }
     }
 }
@@ -110,18 +112,31 @@ impl ColorPicker {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         saved_colors: &mut SavedColors,
     ) {
+        if let Some(err) = &self.err {
+            ui.colored_label(Color32::RED, err);
+        }
         ui.label("Enter a hex color: ");
         let enter_bar = ui.horizontal(|ui| {
             let resp = ui.text_edit_singleline(&mut self.hex_color);
             if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
                 || ui.button("▶").on_hover_text("Use this color").clicked()
             {
-                if let Some(color) = Color::from_hex(self.hex_color.trim_start_matches('#')) {
+                if self.hex_color.len() < 6 {
+                    self.err = Some("Enter a color first (ex. ab12ff #1200ff)".to_owned());
+                } else if let Some(color) = Color::from_hex(self.hex_color.trim_start_matches('#'))
+                {
                     self.set_cur_color(color);
+                    self.err = None;
+                } else {
+                    self.err = Some("The entered hex color is not valid".to_owned());
                 }
             }
             if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
-                saved_colors.add(self.cur_color);
+                if !saved_colors.add(self.cur_color) {
+                    self.err = Some(format!("Color #{} already saved!", self.cur_color.as_hex()));
+                } else {
+                    self.err = None;
+                }
             }
         });
 
@@ -143,10 +158,18 @@ impl ColorPicker {
                 .on_hover_text("Copy hex color to clipboard")
                 .clicked()
             {
-                let _ = save_to_clipboard(hex.clone());
+                if let Err(e) = save_to_clipboard(format!("#{}", hex)) {
+                    self.err = Some(format!("Failed to save color to clipboard - {}", e));
+                } else {
+                    self.err = None;
+                }
             }
             if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
-                saved_colors.add(self.cur_color);
+                if !saved_colors.add(self.cur_color) {
+                    self.err = Some(format!("Color {} already saved!", self.cur_color.as_hex()));
+                } else {
+                    self.err = None;
+                }
             }
         });
 
@@ -167,14 +190,24 @@ impl ColorPicker {
                 if let Some(resp) = resp {
                     if resp.clicked() {
                         self.set_cur_color(self.cur_color);
+                        self.err = None;
                     }
 
                     if resp.middle_clicked() {
-                        saved_colors.add(self.cur_color);
+                        if !saved_colors.add(self.cur_color) {
+                            self.err =
+                                Some(format!("Color {} already saved!", self.cur_color.as_hex()));
+                        } else {
+                            self.err = None;
+                        }
                     }
 
                     if resp.secondary_clicked() {
-                        let _ = save_to_clipboard(format!("#{}", hex));
+                        if let Err(e) = save_to_clipboard(format!("#{}", hex)) {
+                            self.err = Some(format!("Failed to save color to clipboard - {}", e));
+                        } else {
+                            self.err = None;
+                        }
                     }
                 }
             });
