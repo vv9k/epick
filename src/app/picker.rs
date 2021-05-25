@@ -76,12 +76,14 @@ impl ColorPicker {
         let r = self.red / 255.;
         let g = self.green / 255.;
         let b = self.blue / 255.;
-        if r != rgb.r() || g != rgb.g() || b != rgb.b() {
+        if (r - rgb.r()).abs() > f32::EPSILON
+            || (g - rgb.g()).abs() > f32::EPSILON
+            || (b - rgb.b()).abs() > f32::EPSILON
+        {
             self.set_cur_color(Rgba::from_rgb(r, g, b).into());
             return;
         }
 
-        // its ok to unwrap, cur_hsva is always set when cur_color is set
         let hsva = Hsva::from(self.cur_color);
         if (self.hue - hsva.h).abs() > f32::EPSILON
             || (self.sat - hsva.s).abs() > f32::EPSILON

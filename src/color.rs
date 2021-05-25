@@ -275,7 +275,7 @@ impl From<Color32> for Cmyk {
             .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
             .unwrap();
 
-        if *k == 1. {
+        if (*k - 1.).abs() < f32::EPSILON {
             return Cmyk::new(0., 0., 0., *k);
         }
 
