@@ -8,7 +8,7 @@ Simple color picker that lets the user create harmonic palettes with ease.
 
 You can checkout the web demo over [here](https://wojciechkepka.github.io/epick/) or get a native binary from the [GitHub release page](https://github.com/wojciechkepka/epick/releases).
 
-If you happen to use Arch Linux you can grap **epick** from AUR using your favorite package manager:
+If you happen to use Arch Linux you can grab **epick** from AUR using your favorite package manager:
 ```bash
 $ paru -S epick
 ```
