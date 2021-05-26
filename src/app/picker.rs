@@ -62,7 +62,9 @@ impl ColorPicker {
         self.green = _color.g() * 255.;
         self.blue = _color.b() * 255.;
         let hsva = Hsva::from(_color);
-        self.hue = hsva.h;
+        if hsva.s != 0. {
+            self.hue = hsva.h;
+        }
         self.sat = hsva.s;
         self.val = hsva.v;
         let cmyk = Cmyk::from(_color);
