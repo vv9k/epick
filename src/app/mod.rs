@@ -336,7 +336,11 @@ impl ColorPicker {
             ui.label("Current color: ");
             ui.monospace(format!("#{}", hex.to_uppercase()));
             ui.add_space(7.);
-            ui.add(Slider::new(&mut self.color_size, MIN_COL_SIZE..=1000.).text("color size"));
+            ui.add(
+                Slider::new(&mut self.color_size, MIN_COL_SIZE..=1000.)
+                    .clamp_to_range(true)
+                    .text("color size"),
+            );
         });
         ui.horizontal(|ui| {
             if ui
@@ -382,7 +386,7 @@ impl ColorPicker {
                     }
                     ui.add_space(7.);
                     ui.label(format!("{}: ", $label));
-                    ui.add(DragValue::new(&mut self.$it));
+                    ui.add(DragValue::new(&mut self.$it).clamp_range($range));
                 });
             };
         }

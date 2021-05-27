@@ -18,13 +18,25 @@ impl ColorPicker {
                 .show(ctx, |ui| {
                     let color = &self.cur_color;
                     let hues = color.hues(self.numof_hues, self.hues_step);
-                    ui.add(Slider::new(&mut self.hues_step, 0.01..=0.1).text("step"));
+                    ui.add(
+                        Slider::new(&mut self.hues_step, 0.01..=0.1)
+                            .clamp_to_range(true)
+                            .text("step"),
+                    );
                     let max_hues = (0.5 / self.hues_step).round() as u8;
                     if self.numof_hues > max_hues {
                         self.numof_hues = max_hues;
                     }
-                    ui.add(Slider::new(&mut self.numof_hues, u8::MIN..=max_hues).text("# of hues"));
-                    ui.add(Slider::new(&mut self.hue_color_size, 20.0..=200.).text("color size"));
+                    ui.add(
+                        Slider::new(&mut self.numof_hues, u8::MIN..=max_hues)
+                            .clamp_to_range(true)
+                            .text("# of hues"),
+                    );
+                    ui.add(
+                        Slider::new(&mut self.hue_color_size, 20.0..=200.)
+                            .clamp_to_range(true)
+                            .text("color size"),
+                    );
 
                     let size = vec2(self.hue_color_size, self.hue_color_size);
                     hues.iter().for_each(|hue| {
@@ -53,8 +65,16 @@ impl ColorPicker {
                 .show(ctx, |ui| {
                     let color = &self.cur_color;
                     let tints = color.tints(self.numof_tints);
-                    ui.add(Slider::new(&mut self.numof_tints, u8::MIN..=50).text("# of tints"));
-                    ui.add(Slider::new(&mut self.tint_color_size, 20.0..=200.).text("color size"));
+                    ui.add(
+                        Slider::new(&mut self.numof_tints, u8::MIN..=50)
+                            .clamp_to_range(true)
+                            .text("# of tints"),
+                    );
+                    ui.add(
+                        Slider::new(&mut self.tint_color_size, 20.0..=200.)
+                            .clamp_to_range(true)
+                            .text("color size"),
+                    );
 
                     let size = vec2(self.tint_color_size, self.tint_color_size);
                     tints.iter().for_each(|tint| {
@@ -83,8 +103,16 @@ impl ColorPicker {
                 .show(ctx, |ui| {
                     let color = self.cur_color;
                     let shades = color.shades(self.numof_shades);
-                    ui.add(Slider::new(&mut self.numof_shades, u8::MIN..=50).text("# of shades"));
-                    ui.add(Slider::new(&mut self.shade_color_size, 20.0..=200.).text("color size"));
+                    ui.add(
+                        Slider::new(&mut self.numof_shades, u8::MIN..=50)
+                            .clamp_to_range(true)
+                            .text("# of shades"),
+                    );
+                    ui.add(
+                        Slider::new(&mut self.shade_color_size, 20.0..=200.)
+                            .clamp_to_range(true)
+                            .text("color size"),
+                    );
 
                     let size = vec2(self.shade_color_size, self.shade_color_size);
                     shades.iter().for_each(|shade| {
@@ -153,7 +181,11 @@ impl ColorPicker {
                             SchemeType::SplitComplementary.as_ref(),
                         );
                     });
-                ui.add(Slider::new(&mut self.scheme_color_size, 100.0..=250.).text("color size"));
+                ui.add(
+                    Slider::new(&mut self.scheme_color_size, 100.0..=250.)
+                        .clamp_to_range(true)
+                        .text("color size"),
+                );
                 match self.scheme_ty {
                     SchemeType::Complementary => {
                         let compl = color.complementary();
