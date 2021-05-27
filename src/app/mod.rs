@@ -1,19 +1,22 @@
-mod picker;
 mod render;
 mod scheme;
 mod ui;
 
-use picker::ColorPicker;
-use render::tex_color;
-use scheme::SchemeGenerator;
-use ui::colors::*;
-use ui::{color_tooltip, dark_visuals, drag_source, drop_target, light_visuals};
+use render::{color_slider_1d, tex_color, TextureManager};
+use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
-use crate::color::Color;
+use crate::color::{Cmyk, Color};
 use crate::save_to_clipboard;
-
-use egui::{vec2, Id, ScrollArea, Ui, Visuals};
+use egui::{color::Color32, vec2, Slider, Ui};
+use egui::{
+    color::{Hsva, HsvaGamma},
+    DragValue, Id, Rgba, ScrollArea, Vec2, Visuals,
+};
 use std::borrow::Cow;
+
+static MIN_COL_SIZE: f32 = 50.;
+static ADD_ICON: &str = "➕";
+static ADD_DESCR: &str = "Add this color to saved colors";
 
 //####################################################################################################
 
@@ -69,46 +72,79 @@ impl AsRef<[(String, Color)]> for SavedColors {
 
 //####################################################################################################
 
-#[derive(Debug, PartialEq)]
-pub enum EpickApp {
-    ColorPicker,
-    GradientView,
-    SchemeGenerator,
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum SideTab {
+    Hues,
+    Shades,
+    Tints,
+    NoTab,
 }
 
-impl Default for EpickApp {
-    fn default() -> Self {
-        Self::ColorPicker
+//####################################################################################################
+
+#[derive(Debug, PartialEq)]
+pub enum SchemeType {
+    Complementary,
+    Triadic,
+    Tetradic,
+    Analogous,
+    SplitComplementary,
+}
+
+impl AsRef<str> for SchemeType {
+    fn as_ref(&self) -> &str {
+        match &self {
+            SchemeType::Complementary => "complementary",
+            SchemeType::Triadic => "triadic",
+            SchemeType::Tetradic => "tetradic",
+            SchemeType::Analogous => "analogous",
+            SchemeType::SplitComplementary => "split complementary",
+        }
     }
 }
 
 //####################################################################################################
 
-pub struct Epick {
-    pub current_tab: EpickApp,
-    pub side_visible: bool,
-    pub picker: ColorPicker,
-    pub generator: SchemeGenerator,
+#[derive(Debug)]
+pub struct ColorPicker {
+    // picker fields
+    pub color_size: f32,
+    pub hex_color: String,
+    pub cur_color: Color,
+    pub red: f32,
+    pub green: f32,
+    pub blue: f32,
+    pub hue: f32,
+    pub sat: f32,
+    pub val: f32,
+    pub c: f32,
+    pub m: f32,
+    pub y: f32,
+    pub k: f32,
+
+    pub scheme_ty: SchemeType,
+
+    // side panel
+    pub numof_shades: u8,
+    pub numof_tints: u8,
+    pub numof_hues: u8,
+    pub shade_color_size: f32,
+    pub tint_color_size: f32,
+    pub hue_color_size: f32,
+    pub scheme_color_size: f32,
+    pub hues_step: f32,
+    pub side_panel_visible: Option<SideTab>,
+
+    pub tex_mngr: TextureManager,
+    pub main_width: f32,
+    pub err: Option<String>,
+    pub saved_panel_visible: bool,
     pub saved_colors: SavedColors,
     pub light_theme: Visuals,
     pub dark_theme: Visuals,
 }
 
-impl Default for Epick {
-    fn default() -> Self {
-        Self {
-            current_tab: EpickApp::default(),
-            side_visible: true,
-            picker: ColorPicker::default(),
-            generator: SchemeGenerator::default(),
-            saved_colors: SavedColors::default(),
-            light_theme: light_visuals(),
-            dark_theme: dark_visuals(),
-        }
-    }
-}
-
-impl epi::App for Epick {
+impl epi::App for ColorPicker {
     fn name(&self) -> &str {
         "epick"
     }
@@ -144,7 +180,7 @@ impl epi::App for Epick {
         let tex_allocator = &mut Some(frame.tex_allocator());
 
         self.top_panel(ctx);
-        if self.side_visible {
+        if self.saved_panel_visible {
             self.side_panel(ctx, tex_allocator);
         }
         self.central_panel(ctx, tex_allocator);
@@ -153,7 +189,305 @@ impl epi::App for Epick {
     }
 }
 
-impl Epick {
+impl Default for ColorPicker {
+    fn default() -> Self {
+        Self {
+            color_size: 300.,
+            hex_color: "".to_string(),
+            cur_color: Color::black(),
+            red: 0.,
+            green: 0.,
+            blue: 0.,
+            hue: 0.,
+            sat: 0.,
+            val: 0.,
+            c: 0.,
+            m: 0.,
+            y: 0.,
+            k: 1.,
+            numof_shades: 6,
+            numof_tints: 6,
+            numof_hues: 4,
+            shade_color_size: 100.,
+            tint_color_size: 100.,
+            hue_color_size: 100.,
+            hues_step: 0.05,
+            scheme_color_size: 200.,
+            scheme_ty: SchemeType::Complementary,
+            tex_mngr: TextureManager::default(),
+            main_width: 0.,
+            err: None,
+            side_panel_visible: None,
+            saved_panel_visible: false,
+            saved_colors: SavedColors::default(),
+            light_theme: light_visuals(),
+            dark_theme: dark_visuals(),
+        }
+    }
+}
+
+impl ColorPicker {
+    pub fn set_cur_color(&mut self, color: Color) {
+        let _color = Rgba::from(color);
+        self.red = _color.r() * 255.;
+        self.green = _color.g() * 255.;
+        self.blue = _color.b() * 255.;
+        let hsva = Hsva::from(_color);
+        if hsva.s != 0. {
+            self.hue = hsva.h;
+        }
+        self.sat = hsva.s;
+        self.val = hsva.v;
+        let cmyk = Cmyk::from(_color);
+        self.c = cmyk.c;
+        self.m = cmyk.m;
+        self.y = cmyk.y;
+        self.k = cmyk.k;
+        self.cur_color = color;
+    }
+
+    fn check_color_change(&mut self) {
+        let rgb = Rgba::from(self.cur_color);
+        let r = self.red / 255.;
+        let g = self.green / 255.;
+        let b = self.blue / 255.;
+        if (r - rgb.r()).abs() > f32::EPSILON
+            || (g - rgb.g()).abs() > f32::EPSILON
+            || (b - rgb.b()).abs() > f32::EPSILON
+        {
+            self.set_cur_color(Rgba::from_rgb(r, g, b).into());
+            return;
+        }
+
+        let hsva = Hsva::from(self.cur_color);
+        if (self.hue - hsva.h).abs() > f32::EPSILON
+            || (self.sat - hsva.s).abs() > f32::EPSILON
+            || (self.val - hsva.v).abs() > f32::EPSILON
+        {
+            let new_hsva = Hsva::new(self.hue, self.sat, self.val, 1.);
+            self.set_cur_color(new_hsva.into());
+            return;
+        }
+
+        let cmyk = Cmyk::from(self.cur_color);
+        if (self.c - cmyk.c).abs() > f32::EPSILON
+            || (self.m - cmyk.m).abs() > f32::EPSILON
+            || (self.y - cmyk.y).abs() > f32::EPSILON
+            || (self.k - cmyk.k).abs() > f32::EPSILON
+        {
+            let new_cmyk = Cmyk::new(self.c, self.m, self.y, self.k);
+            self.set_cur_color(new_cmyk.into());
+        }
+    }
+
+    pub fn ui(
+        &mut self,
+        ctx: &egui::CtxRef,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+    ) {
+        if let Some(err) = &self.err {
+            ui.colored_label(Color32::RED, err);
+        }
+        ui.label("Enter a hex color: ");
+        let enter_bar = ui.horizontal(|ui| {
+            let resp = ui.text_edit_singleline(&mut self.hex_color);
+            if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
+                || ui.button("▶").on_hover_text("Use this color").clicked()
+            {
+                if self.hex_color.len() < 6 {
+                    self.err = Some("Enter a color first (ex. ab12ff #1200ff)".to_owned());
+                } else if let Some(color) = Color::from_hex(self.hex_color.trim_start_matches('#'))
+                {
+                    self.set_cur_color(color);
+                    self.err = None;
+                } else {
+                    self.err = Some("The entered hex color is not valid".to_owned());
+                }
+            }
+            if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
+                if !self.saved_colors.add(self.cur_color) {
+                    self.err = Some(format!("Color #{} already saved!", self.cur_color.as_hex()));
+                } else {
+                    self.err = None;
+                }
+            }
+        });
+
+        self.main_width = enter_bar.response.rect.width();
+
+        ui.add_space(20.);
+
+        let hex = self.cur_color.as_hex();
+
+        ui.horizontal(|ui| {
+            ui.label("Current color: ");
+            ui.monospace(format!("#{}", hex.to_uppercase()));
+            ui.add_space(7.);
+            ui.add(Slider::new(&mut self.color_size, MIN_COL_SIZE..=1000.).text("color size"));
+        });
+        ui.horizontal(|ui| {
+            if ui
+                .button("📋")
+                .on_hover_text("Copy hex color to clipboard")
+                .clicked()
+            {
+                if let Err(e) = save_to_clipboard(format!("#{}", hex)) {
+                    self.err = Some(format!("Failed to save color to clipboard - {}", e));
+                } else {
+                    self.err = None;
+                }
+            }
+            if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
+                if !self.saved_colors.add(self.cur_color) {
+                    self.err = Some(format!("Color {} already saved!", self.cur_color.as_hex()));
+                } else {
+                    self.err = None;
+                }
+            }
+        });
+
+        self.check_color_change();
+
+        ScrollArea::auto_sized()
+            .id_source("picker scroll")
+            .show(ui, |mut ui| {
+                self.sliders(ui);
+                self.schemes(&mut ui, tex_allocator);
+                self.shades(ctx, tex_allocator);
+                self.tints(ctx, tex_allocator);
+                self.hues(ctx, tex_allocator);
+            });
+    }
+
+    fn sliders(&mut self, ui: &mut Ui) {
+        macro_rules! slider {
+            ($ui:ident, $it:ident, $label:literal, $range:expr, $($tt:tt)+) => {
+                $ui.add_space(7.);
+                $ui.horizontal(|mut ui| {
+                    let resp = color_slider_1d(&mut ui, &mut self.$it, $range, $($tt)+).on_hover_text($label);
+                    if resp.changed() {
+                        self.check_color_change();
+                    }
+                    ui.add_space(7.);
+                    ui.label(format!("{}: ", $label));
+                    ui.add(DragValue::new(&mut self.$it));
+                });
+            };
+        }
+        ui.vertical(|ui| {
+            ui.add_space(7.);
+            ui.collapsing("RGB", |ui| {
+                slider!(ui, red, "red", u8::MIN as f32..=u8::MAX as f32, |r| {
+                    Rgba::from_rgb(r, 0., 0.).into()
+                });
+                slider!(ui, green, "green", u8::MIN as f32..=u8::MAX as f32, |g| {
+                    Rgba::from_rgb(0., g, 0.).into()
+                });
+                slider!(ui, blue, "blue", u8::MIN as f32..=u8::MAX as f32, |b| {
+                    Rgba::from_rgb(0., 0., b).into()
+                });
+            });
+
+            ui.add_space(7.);
+            ui.collapsing("CMYK", |ui| {
+                slider!(ui, c, "cyan", 0. ..=1., |c| Cmyk::new(c, 0., 0., 0.).into());
+                slider!(ui, m, "magenta", 0. ..=1., |m| Cmyk::new(0., m, 0., 0.)
+                    .into());
+                slider!(ui, y, "yellow", 0. ..=1., |y| Cmyk::new(0., 0., y, 0.)
+                    .into());
+                slider!(ui, k, "key", 0. ..=1., |k| Cmyk::new(0., 0., 0., k).into());
+            });
+
+            let mut opaque = HsvaGamma::from(self.cur_color);
+            opaque.a = 1.;
+
+            ui.add_space(7.);
+            ui.collapsing("HSV", |ui| {
+                slider!(ui, hue, "hue", 0. ..=1., |h| HsvaGamma { h, ..opaque }
+                    .into());
+                slider!(ui, sat, "saturation", 0. ..=1., |s| HsvaGamma {
+                    s,
+                    ..opaque
+                }
+                .into());
+                slider!(ui, val, "value", 0. ..=1., |v| HsvaGamma { v, ..opaque }
+                    .into());
+            });
+        });
+    }
+
+    fn color_box_label_under(
+        &mut self,
+        color: &Color,
+        size: Vec2,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+    ) {
+        ui.vertical(|ui| {
+            self._color_box(color, size, ui, tex_allocator, true);
+        });
+    }
+
+    fn color_box_label_side(
+        &mut self,
+        color: &Color,
+        size: Vec2,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+    ) {
+        ui.horizontal(|ui| {
+            self._color_box(color, size, ui, tex_allocator, true);
+        });
+    }
+
+    #[allow(dead_code)]
+    fn color_box_no_label(
+        &mut self,
+        color: &Color,
+        size: Vec2,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+    ) {
+        self._color_box(color, size, ui, tex_allocator, false);
+    }
+
+    fn _color_box(
+        &mut self,
+        color: &Color,
+        size: Vec2,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        with_label: bool,
+    ) {
+        let hex = color.as_hex();
+        let color_box = tex_color(
+            ui,
+            tex_allocator,
+            &mut self.tex_mngr,
+            color.as_32(),
+            size,
+            Some(&color_tooltip(&color)),
+        );
+        if let Some(color_box) = color_box {
+            if with_label {
+                ui.monospace(format!("#{}", hex));
+            }
+
+            if color_box.clicked() {
+                self.set_cur_color(*color);
+            }
+
+            if color_box.middle_clicked() {
+                self.saved_colors.add(*color);
+            }
+
+            if color_box.secondary_clicked() {
+                let _ = save_to_clipboard(hex);
+            }
+        }
+    }
+
     pub fn top_panel(&mut self, ctx: &egui::CtxRef) {
         let frame = egui::Frame {
             fill: if ctx.style().visuals.dark_mode {
@@ -209,17 +543,9 @@ impl Epick {
             margin: vec2(20., 20.),
             ..Default::default()
         };
-        egui::CentralPanel::default()
-            .frame(_frame)
-            .show(ctx, |ui| match self.current_tab {
-                EpickApp::ColorPicker => {
-                    self.picker.ui(ui, tex_allocator, &mut self.saved_colors);
-                }
-                EpickApp::GradientView => {}
-                EpickApp::SchemeGenerator => {
-                    self.generator.ui(ui, tex_allocator, &mut self.saved_colors);
-                }
-            });
+        egui::CentralPanel::default().frame(_frame).show(ctx, |ui| {
+            self.ui(ctx, ui, tex_allocator);
+        });
     }
 
     pub fn top_ui(&mut self, ui: &mut Ui) {
@@ -230,15 +556,16 @@ impl Epick {
                 .on_hover_text("Show/hide side panel")
                 .clicked()
             {
-                self.side_visible = !self.side_visible;
+                self.saved_panel_visible = !self.saved_panel_visible;
             }
             ui.add_space(50.);
 
-            ui.selectable_value(&mut self.current_tab, EpickApp::ColorPicker, "🔬 picker");
+            ui.selectable_value(&mut self.side_panel_visible, Some(SideTab::Hues), "hues");
+            ui.selectable_value(&mut self.side_panel_visible, Some(SideTab::Tints), "tints");
             ui.selectable_value(
-                &mut self.current_tab,
-                EpickApp::SchemeGenerator,
-                "🎨 scheme",
+                &mut self.side_panel_visible,
+                Some(SideTab::Shades),
+                "shades",
             );
         });
     }
@@ -290,8 +617,7 @@ impl Epick {
                                 let _ = save_to_clipboard(hex.clone());
                             }
                             if ui.button("▶").on_hover_text("Use this color").clicked() {
-                                self.picker.set_cur_color(*color);
-                                self.generator.set_cur_color(*color);
+                                self.set_cur_color(*color);
                             }
                         });
                         let help =
@@ -303,7 +629,7 @@ impl Epick {
                             tex_color(
                                 ui,
                                 tex_allocator,
-                                &mut self.picker.tex_mngr,
+                                &mut self.tex_mngr,
                                 color.as_32(),
                                 size,
                                 Some(&help),
