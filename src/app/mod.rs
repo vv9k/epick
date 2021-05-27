@@ -25,9 +25,9 @@ pub struct SavedColors(Vec<(String, Color)>);
 
 impl SavedColors {
     pub fn add(&mut self, color: Color) -> bool {
-        let color = (color.as_hex(), color);
-        if !self.0.contains(&color) {
-            self.0.push(color);
+        let hex = color.as_hex();
+        if self.0.iter().find(|(_hex, _)| _hex == &hex).is_none() {
+            self.0.push((hex, color));
             return true;
         }
         false
