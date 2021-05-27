@@ -7,14 +7,13 @@ use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light
 
 use crate::color::{Cmyk, Color};
 use crate::save_to_clipboard;
-use egui::{color::Color32, vec2, Slider, Ui};
+use egui::{color::Color32, vec2, Ui};
 use egui::{
     color::{Hsva, HsvaGamma},
     DragValue, Id, Rgba, ScrollArea, Vec2, Visuals,
 };
 use std::borrow::Cow;
 
-static MIN_COL_SIZE: f32 = 50.;
 static ADD_ICON: &str = "➕";
 static ADD_DESCR: &str = "Add this color to saved colors";
 
@@ -309,7 +308,7 @@ impl ColorPicker {
 
     fn add_color(&mut self, color: Color) {
         if !self.saved_colors.add(color) {
-            self.err = Some(format!("Color {} already saved!", self.cur_color.as_hex()));
+            self.err = Some(format!("Color {} already saved!", color.as_hex()));
         } else {
             self.err = None;
             self.saved_panel_visible = true;
@@ -544,7 +543,7 @@ impl ColorPicker {
             } else {
                 *L_BG_2
             },
-            margin: vec2(20., 20.),
+            margin: vec2(10., 5.),
             ..Default::default()
         };
         egui::CentralPanel::default().frame(_frame).show(ctx, |ui| {
