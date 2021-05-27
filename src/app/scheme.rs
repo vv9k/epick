@@ -95,12 +95,19 @@ impl ColorPicker {
             .default_open(true)
             .show(ui, |ui| {
                 let size = vec2(self.scheme_color_size, self.scheme_color_size);
+                let double_size = vec2(
+                    (self.scheme_color_size + ui.spacing().item_spacing.x) * 2.,
+                    self.scheme_color_size,
+                );
 
                 macro_rules! cb {
-                    ($color:ident, $ui:ident) => {
+                    ($color:ident, $size:expr, $ui:ident) => {
                         $ui.scope(|mut ui| {
-                            self.color_box_label_under(&$color, size, &mut ui, tex_allocator);
+                            self.color_box_label_under(&$color, $size, &mut ui, tex_allocator);
                         });
+                    };
+                    ($color:ident, $ui:ident) => {
+                        cb!($color, size, $ui)
                     };
                 }
 
@@ -139,8 +146,8 @@ impl ColorPicker {
                     SchemeType::Complementary => {
                         let compl = color.complementary();
                         ui.vertical(|ui| {
-                            cb!(color, ui);
-                            cb!(compl, ui);
+                            cb!(color, double_size, ui);
+                            cb!(compl, double_size, ui);
                         });
                     }
                     SchemeType::Triadic => {
@@ -148,9 +155,11 @@ impl ColorPicker {
                         ui.vertical(|ui| {
                             let c1 = tri.0;
                             let c2 = tri.1;
-                            cb!(color, ui);
-                            cb!(c1, ui);
-                            cb!(c2, ui);
+                            cb!(color, double_size, ui);
+                            ui.horizontal(|ui| {
+                                cb!(c1, ui);
+                                cb!(c2, ui);
+                            });
                         });
                     }
                     SchemeType::Tetradic => {
@@ -159,10 +168,14 @@ impl ColorPicker {
                             let c1 = &tetr.0;
                             let c2 = &tetr.1;
                             let c3 = &tetr.2;
-                            cb!(color, ui);
-                            cb!(c1, ui);
-                            cb!(c2, ui);
-                            cb!(c3, ui);
+                            ui.horizontal(|ui| {
+                                cb!(color, ui);
+                                cb!(c1, ui);
+                            });
+                            ui.horizontal(|ui| {
+                                cb!(c2, ui);
+                                cb!(c3, ui);
+                            });
                         });
                     }
                     SchemeType::Analogous => {
@@ -170,9 +183,11 @@ impl ColorPicker {
                         ui.vertical(|ui| {
                             let c1 = an.0;
                             let c2 = an.1;
-                            cb!(color, ui);
-                            cb!(c1, ui);
-                            cb!(c2, ui);
+                            cb!(color, double_size, ui);
+                            ui.horizontal(|ui| {
+                                cb!(c1, ui);
+                                cb!(c2, ui);
+                            });
                         });
                     }
                     SchemeType::SplitComplementary => {
@@ -180,9 +195,11 @@ impl ColorPicker {
                         ui.vertical(|ui| {
                             let c1 = sc.0;
                             let c2 = sc.1;
-                            cb!(color, ui);
-                            cb!(c1, ui);
-                            cb!(c2, ui);
+                            cb!(color, double_size, ui);
+                            ui.horizontal(|ui| {
+                                cb!(c1, ui);
+                                cb!(c2, ui);
+                            });
                         });
                     }
                 }
