@@ -44,10 +44,12 @@ impl ColorPicker {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
         if let Some(SideTab::Tints) = self.side_panel_visible {
+            let mut is_open = true;
             Window::new("Tints")
                 .anchor(egui::Align2::RIGHT_TOP, vec2(0., 0.))
                 .collapsible(false)
                 .scroll(true)
+                .open(&mut is_open)
                 .show(ctx, |ui| {
                     let color = &self.cur_color;
                     let tints = color.tints(self.numof_tints);
@@ -59,6 +61,10 @@ impl ColorPicker {
                         self.color_box_label_side(tint, size, ui, tex_allocator);
                     });
                 });
+
+            if !is_open {
+                self.side_panel_visible = None;
+            }
         }
     }
 
@@ -68,10 +74,12 @@ impl ColorPicker {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
         if let Some(SideTab::Shades) = self.side_panel_visible {
+            let mut is_open = true;
             Window::new("Shades")
                 .anchor(egui::Align2::RIGHT_TOP, vec2(0., 0.))
                 .collapsible(false)
                 .scroll(true)
+                .open(&mut is_open)
                 .show(ctx, |ui| {
                     let color = self.cur_color;
                     let shades = color.shades(self.numof_shades);
@@ -83,6 +91,10 @@ impl ColorPicker {
                         self.color_box_label_side(shade, size, ui, tex_allocator);
                     });
                 });
+
+            if !is_open {
+                self.side_panel_visible = None;
+            }
         }
     }
 
@@ -145,9 +157,9 @@ impl ColorPicker {
                 match self.scheme_ty {
                     SchemeType::Complementary => {
                         let compl = color.complementary();
-                        ui.vertical(|ui| {
-                            cb!(color, double_size, ui);
-                            cb!(compl, double_size, ui);
+                        ui.horizontal(|ui| {
+                            cb!(color, ui);
+                            cb!(compl, ui);
                         });
                     }
                     SchemeType::Triadic => {
