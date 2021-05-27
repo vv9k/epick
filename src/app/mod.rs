@@ -10,7 +10,7 @@ use crate::save_to_clipboard;
 use egui::{color::Color32, vec2, Ui};
 use egui::{
     color::{Hsva, HsvaGamma},
-    DragValue, Id, Rgba, ScrollArea, Vec2, Visuals,
+    DragValue, Id, Rgba, ScrollArea, Vec2, Visuals, Window,
 };
 use std::borrow::Cow;
 
@@ -141,6 +141,8 @@ pub struct ColorPicker {
     pub saved_colors: SavedColors,
     pub light_theme: Visuals,
     pub dark_theme: Visuals,
+    pub show_settings: bool,
+    pub upper_hex: bool,
 }
 
 impl epi::App for ColorPicker {
@@ -221,6 +223,8 @@ impl Default for ColorPicker {
             saved_colors: SavedColors::default(),
             light_theme: light_visuals(),
             dark_theme: dark_visuals(),
+            show_settings: false,
+            upper_hex: false,
         }
     }
 }
@@ -281,7 +285,8 @@ impl ColorPicker {
 
     fn add_color(&mut self, color: Color) {
         if !self.saved_colors.add(color) {
-            self.err = Some(format!("Color {} already saved!", color.as_hex()));
+            let hex = self.color_hex(&color);
+            self.err = Some(format!("Color {} already saved!", hex));
         } else {
             self.err = None;
             self.saved_panel_visible = true;
@@ -317,6 +322,14 @@ impl ColorPicker {
             });
             self.main_width = enter_bar.response.rect.width();
         });
+    }
+
+    fn color_hex(&self, color: &Color) -> String {
+        if self.upper_hex {
+            color.as_hex().to_uppercase()
+        } else {
+            color.as_hex()
+        }
     }
 
     fn sliders(&mut self, ui: &mut Ui) {
@@ -416,14 +429,14 @@ impl ColorPicker {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         with_label: bool,
     ) {
-        let hex = color.as_hex();
+        let hex = self.color_hex(color);
         let color_box = tex_color(
             ui,
             tex_allocator,
             &mut self.tex_mngr,
             color.as_32(),
             size,
-            Some(&color_tooltip(&color)),
+            Some(&color_tooltip(&color, self.upper_hex)),
         );
         if let Some(color_box) = color_box {
             if with_label {
@@ -507,6 +520,9 @@ impl ColorPicker {
     fn top_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             self.dark_light_switch(ui);
+            if ui.button("⚙").on_hover_text("Settings").clicked() {
+                self.show_settings = true;
+            }
             if ui
                 .button("↔")
                 .on_hover_text("Show/hide side panel")
@@ -524,6 +540,19 @@ impl ColorPicker {
                 "shades",
             );
         });
+    }
+
+    fn settings_window(&mut self, ctx: &egui::CtxRef) {
+        if self.show_settings {
+            let mut show = true;
+            Window::new("settings").open(&mut show).show(ctx, |ui| {
+                ui.checkbox(&mut self.upper_hex, "Show hex as uppercase");
+            });
+
+            if !show {
+                self.show_settings = false;
+            }
+        }
     }
 
     fn dark_light_switch(&mut self, ui: &mut Ui) {
@@ -556,9 +585,10 @@ impl ColorPicker {
             let mut src_row = None;
             let mut dst_row = None;
 
-            for (idx, (hex, color)) in self.saved_colors.as_ref().to_vec().iter().enumerate() {
+            for (idx, (_, color)) in self.saved_colors.as_ref().to_vec().iter().enumerate() {
                 let resp = drop_target(ui, true, |ui| {
                     let color_id = Id::new("side-color").with(idx);
+                    let hex = self.color_hex(&color);
                     ui.vertical(|mut ui| {
                         let fst = ui.horizontal(|ui| {
                             ui.monospace(format!("#{}", hex));
@@ -620,8 +650,9 @@ impl ColorPicker {
         if let Some(err) = &self.err {
             ui.colored_label(Color32::RED, err);
         }
+        self.settings_window(ctx);
 
-        let hex = self.cur_color.as_hex();
+        let hex = self.color_hex(&self.cur_color);
 
         ui.horizontal(|ui| {
             ui.label("Current color: ");

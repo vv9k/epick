@@ -104,10 +104,14 @@ pub fn drop_target<R>(
     InnerResponse::new(ret, response)
 }
 
-pub fn color_tooltip(color: &Color) -> String {
+pub fn color_tooltip(color: &Color, uppercase_hex: bool) -> String {
     format!(
         "#{}\n\nPrimary click: set current\nMiddle click: save color\nSecondary click: copy hex",
-        color.as_hex(),
+        if uppercase_hex {
+            color.as_hex().to_uppercase()
+        } else {
+            color.as_hex()
+        },
     )
 }
 
