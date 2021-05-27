@@ -280,6 +280,38 @@ impl ColorPicker {
         }
     }
 
+    fn hex_input(&mut self, ui: &mut Ui) {
+        ui.collapsing("Text input", |ui| {
+            ui.label("Enter a hex color: ");
+            let enter_bar = ui.horizontal(|ui| {
+                let resp = ui.text_edit_singleline(&mut self.hex_color);
+                if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
+                    || ui.button("▶").on_hover_text("Use this color").clicked()
+                {
+                    if self.hex_color.len() < 6 {
+                        self.err = Some("Enter a color first (ex. ab12ff #1200ff)".to_owned());
+                    } else if let Some(color) =
+                        Color::from_hex(self.hex_color.trim_start_matches('#'))
+                    {
+                        self.set_cur_color(color);
+                        self.err = None;
+                    } else {
+                        self.err = Some("The entered hex color is not valid".to_owned());
+                    }
+                }
+                if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
+                    if !self.saved_colors.add(self.cur_color) {
+                        self.err =
+                            Some(format!("Color #{} already saved!", self.cur_color.as_hex()));
+                    } else {
+                        self.err = None;
+                    }
+                }
+            });
+            self.main_width = enter_bar.response.rect.width();
+        });
+    }
+
     pub fn ui(
         &mut self,
         ctx: &egui::CtxRef,
@@ -289,34 +321,6 @@ impl ColorPicker {
         if let Some(err) = &self.err {
             ui.colored_label(Color32::RED, err);
         }
-        ui.label("Enter a hex color: ");
-        let enter_bar = ui.horizontal(|ui| {
-            let resp = ui.text_edit_singleline(&mut self.hex_color);
-            if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
-                || ui.button("▶").on_hover_text("Use this color").clicked()
-            {
-                if self.hex_color.len() < 6 {
-                    self.err = Some("Enter a color first (ex. ab12ff #1200ff)".to_owned());
-                } else if let Some(color) = Color::from_hex(self.hex_color.trim_start_matches('#'))
-                {
-                    self.set_cur_color(color);
-                    self.err = None;
-                } else {
-                    self.err = Some("The entered hex color is not valid".to_owned());
-                }
-            }
-            if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
-                if !self.saved_colors.add(self.cur_color) {
-                    self.err = Some(format!("Color #{} already saved!", self.cur_color.as_hex()));
-                } else {
-                    self.err = None;
-                }
-            }
-        });
-
-        self.main_width = enter_bar.response.rect.width();
-
-        ui.add_space(20.);
 
         let hex = self.cur_color.as_hex();
 
@@ -348,16 +352,19 @@ impl ColorPicker {
         });
 
         self.check_color_change();
+        ui.add_space(7.);
 
         ScrollArea::auto_sized()
             .id_source("picker scroll")
-            .show(ui, |mut ui| {
+            .show(ui, |ui| {
                 self.sliders(ui);
-                self.schemes(&mut ui, tex_allocator);
-                self.shades(ctx, tex_allocator);
-                self.tints(ctx, tex_allocator);
-                self.hues(ctx, tex_allocator);
+                self.hex_input(ui);
+                self.schemes(ui, tex_allocator);
             });
+
+        self.shades(ctx, tex_allocator);
+        self.tints(ctx, tex_allocator);
+        self.hues(ctx, tex_allocator);
     }
 
     fn sliders(&mut self, ui: &mut Ui) {
@@ -376,7 +383,6 @@ impl ColorPicker {
             };
         }
         ui.vertical(|ui| {
-            ui.add_space(7.);
             ui.collapsing("RGB", |ui| {
                 slider!(ui, red, "red", u8::MIN as f32..=u8::MAX as f32, |r| {
                     Rgba::from_rgb(r, 0., 0.).into()
@@ -389,7 +395,6 @@ impl ColorPicker {
                 });
             });
 
-            ui.add_space(7.);
             ui.collapsing("CMYK", |ui| {
                 slider!(ui, c, "cyan", 0. ..=1., |c| Cmyk::new(c, 0., 0., 0.).into());
                 slider!(ui, m, "magenta", 0. ..=1., |m| Cmyk::new(0., m, 0., 0.)
@@ -402,7 +407,6 @@ impl ColorPicker {
             let mut opaque = HsvaGamma::from(self.cur_color);
             opaque.a = 1.;
 
-            ui.add_space(7.);
             ui.collapsing("HSV", |ui| {
                 slider!(ui, hue, "hue", 0. ..=1., |h| HsvaGamma { h, ..opaque }
                     .into());
