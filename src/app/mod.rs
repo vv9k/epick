@@ -226,7 +226,7 @@ impl Default for ColorPicker {
 }
 
 impl ColorPicker {
-    pub fn set_cur_color(&mut self, color: Color) {
+    fn set_cur_color(&mut self, color: Color) {
         let _color = Rgba::from(color);
         self.red = _color.r() * 255.;
         self.green = _color.g() * 255.;
@@ -279,6 +279,19 @@ impl ColorPicker {
         }
     }
 
+    fn add_color(&mut self, color: Color) {
+        if !self.saved_colors.add(color) {
+            self.err = Some(format!("Color {} already saved!", color.as_hex()));
+        } else {
+            self.err = None;
+            self.saved_panel_visible = true;
+        }
+    }
+
+    fn add_cur_color(&mut self) {
+        self.add_color(self.cur_color)
+    }
+
     fn hex_input(&mut self, ui: &mut Ui) {
         ui.collapsing("Text input", |ui| {
             ui.label("Enter a hex color: ");
@@ -304,66 +317,6 @@ impl ColorPicker {
             });
             self.main_width = enter_bar.response.rect.width();
         });
-    }
-
-    fn add_color(&mut self, color: Color) {
-        if !self.saved_colors.add(color) {
-            self.err = Some(format!("Color {} already saved!", color.as_hex()));
-        } else {
-            self.err = None;
-            self.saved_panel_visible = true;
-        }
-    }
-
-    fn add_cur_color(&mut self) {
-        self.add_color(self.cur_color)
-    }
-
-    pub fn ui(
-        &mut self,
-        ctx: &egui::CtxRef,
-        ui: &mut Ui,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-    ) {
-        if let Some(err) = &self.err {
-            ui.colored_label(Color32::RED, err);
-        }
-
-        let hex = self.cur_color.as_hex();
-
-        ui.horizontal(|ui| {
-            ui.label("Current color: ");
-            ui.monospace(format!("#{}", hex.to_uppercase()));
-            if ui
-                .button("📋")
-                .on_hover_text("Copy hex color to clipboard")
-                .clicked()
-            {
-                if let Err(e) = save_to_clipboard(format!("#{}", hex)) {
-                    self.err = Some(format!("Failed to save color to clipboard - {}", e));
-                } else {
-                    self.err = None;
-                }
-            }
-            if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
-                self.add_cur_color();
-            }
-        });
-
-        self.check_color_change();
-        ui.add_space(7.);
-
-        ScrollArea::auto_sized()
-            .id_source("picker scroll")
-            .show(ui, |ui| {
-                self.sliders(ui);
-                self.hex_input(ui);
-                self.schemes(ui, tex_allocator);
-            });
-
-        self.shades(ctx, tex_allocator);
-        self.tints(ctx, tex_allocator);
-        self.hues(ctx, tex_allocator);
     }
 
     fn sliders(&mut self, ui: &mut Ui) {
@@ -491,7 +444,7 @@ impl ColorPicker {
         }
     }
 
-    pub fn top_panel(&mut self, ctx: &egui::CtxRef) {
+    fn top_panel(&mut self, ctx: &egui::CtxRef) {
         let frame = egui::Frame {
             fill: if ctx.style().visuals.dark_mode {
                 *D_BG_00
@@ -508,7 +461,7 @@ impl ColorPicker {
             });
     }
 
-    pub fn side_panel(
+    fn side_panel(
         &mut self,
         ctx: &egui::CtxRef,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
@@ -532,7 +485,7 @@ impl ColorPicker {
             });
     }
 
-    pub fn central_panel(
+    fn central_panel(
         &mut self,
         ctx: &egui::CtxRef,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
@@ -551,7 +504,7 @@ impl ColorPicker {
         });
     }
 
-    pub fn top_ui(&mut self, ui: &mut Ui) {
+    fn top_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             self.dark_light_switch(ui);
             if ui
@@ -573,7 +526,7 @@ impl ColorPicker {
         });
     }
 
-    pub fn dark_light_switch(&mut self, ui: &mut Ui) {
+    fn dark_light_switch(&mut self, ui: &mut Ui) {
         let is_dark = ui.style().visuals.dark_mode;
         let btn = if is_dark { "☀" } else { "🌙" };
 
@@ -590,11 +543,7 @@ impl ColorPicker {
         }
     }
 
-    pub fn side_ui(
-        &mut self,
-        ui: &mut Ui,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-    ) {
+    fn side_ui(&mut self, ui: &mut Ui, tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>) {
         ui.vertical(|ui| {
             ui.horizontal(|ui| {
                 ui.heading("Saved colors");
@@ -660,5 +609,52 @@ impl ColorPicker {
                 }
             }
         });
+    }
+
+    fn ui(
+        &mut self,
+        ctx: &egui::CtxRef,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+    ) {
+        if let Some(err) = &self.err {
+            ui.colored_label(Color32::RED, err);
+        }
+
+        let hex = self.cur_color.as_hex();
+
+        ui.horizontal(|ui| {
+            ui.label("Current color: ");
+            ui.monospace(format!("#{}", hex.to_uppercase()));
+            if ui
+                .button("📋")
+                .on_hover_text("Copy hex color to clipboard")
+                .clicked()
+            {
+                if let Err(e) = save_to_clipboard(format!("#{}", hex)) {
+                    self.err = Some(format!("Failed to save color to clipboard - {}", e));
+                } else {
+                    self.err = None;
+                }
+            }
+            if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
+                self.add_cur_color();
+            }
+        });
+
+        self.check_color_change();
+        ui.add_space(7.);
+
+        ScrollArea::auto_sized()
+            .id_source("picker scroll")
+            .show(ui, |ui| {
+                self.sliders(ui);
+                self.hex_input(ui);
+                self.schemes(ui, tex_allocator);
+            });
+
+        self.shades(ctx, tex_allocator);
+        self.tints(ctx, tex_allocator);
+        self.hues(ctx, tex_allocator);
     }
 }
