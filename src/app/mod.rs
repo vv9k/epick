@@ -300,16 +300,24 @@ impl ColorPicker {
                     }
                 }
                 if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
-                    if !self.saved_colors.add(self.cur_color) {
-                        self.err =
-                            Some(format!("Color #{} already saved!", self.cur_color.as_hex()));
-                    } else {
-                        self.err = None;
-                    }
+                    self.add_cur_color()
                 }
             });
             self.main_width = enter_bar.response.rect.width();
         });
+    }
+
+    fn add_color(&mut self, color: Color) {
+        if !self.saved_colors.add(color) {
+            self.err = Some(format!("Color {} already saved!", self.cur_color.as_hex()));
+        } else {
+            self.err = None;
+            self.saved_panel_visible = true;
+        }
+    }
+
+    fn add_cur_color(&mut self) {
+        self.add_color(self.cur_color)
     }
 
     pub fn ui(
@@ -343,11 +351,7 @@ impl ColorPicker {
                 }
             }
             if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
-                if !self.saved_colors.add(self.cur_color) {
-                    self.err = Some(format!("Color {} already saved!", self.cur_color.as_hex()));
-                } else {
-                    self.err = None;
-                }
+                self.add_cur_color();
             }
         });
 
@@ -483,7 +487,7 @@ impl ColorPicker {
             }
 
             if color_box.middle_clicked() {
-                self.saved_colors.add(*color);
+                self.add_color(*color);
             }
 
             if color_box.secondary_clicked() {
