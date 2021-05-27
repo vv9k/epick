@@ -335,14 +335,6 @@ impl ColorPicker {
         ui.horizontal(|ui| {
             ui.label("Current color: ");
             ui.monospace(format!("#{}", hex.to_uppercase()));
-            ui.add_space(7.);
-            ui.add(
-                Slider::new(&mut self.color_size, MIN_COL_SIZE..=1000.)
-                    .clamp_to_range(true)
-                    .text("color size"),
-            );
-        });
-        ui.horizontal(|ui| {
             if ui
                 .button("📋")
                 .on_hover_text("Copy hex color to clipboard")
