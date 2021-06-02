@@ -703,6 +703,13 @@ impl ColorPicker {
                 if ui.button("🖹").on_hover_text("Export").clicked() {
                     self.show_export = true;
                 }
+                if ui
+                    .button("📋")
+                    .on_hover_text("Copy all colors to clipboard")
+                    .clicked()
+                {
+                    let _ = save_to_clipboard(self.saved_colors.as_text_palette());
+                }
             });
 
             let mut src_row = None;
