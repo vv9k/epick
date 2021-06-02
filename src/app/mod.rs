@@ -10,9 +10,11 @@ use crate::save_to_clipboard;
 use egui::{color::Color32, vec2, Ui};
 use egui::{
     color::{Hsva, HsvaGamma},
-    DragValue, Id, Rgba, ScrollArea, Vec2, Visuals, Window,
+    ComboBox, DragValue, Id, Rgba, ScrollArea, Vec2, Visuals, Window,
 };
 use std::borrow::Cow;
+use std::path::PathBuf;
+use std::{env, fs};
 
 static ADD_ICON: &str = "➕";
 static ADD_DESCR: &str = "Add this color to saved colors";
@@ -61,11 +63,59 @@ impl SavedColors {
     pub fn swap(&mut self, a: usize, b: usize) {
         self.0.swap(a, b);
     }
+
+    pub fn as_gimp_palette(&self, name: &str) -> String {
+        let mut gpl = format!("GIMP Palette\nName: {}.gpl\nColumns: 1\n#\n", name);
+        for (i, (_, color)) in self.0.iter().enumerate() {
+            let color = color.as_32();
+            gpl.push_str(&format!(
+                "{}\t{}\t{}\tcolor {}\n",
+                color.r(),
+                color.g(),
+                color.b(),
+                i
+            ));
+        }
+        gpl
+    }
+
+    pub fn as_text_palette(&self) -> String {
+        self.0.iter().fold(String::new(), |mut s, (hex, _)| {
+            s.push('#');
+            s.push_str(hex.as_str());
+            s.push('\n');
+            s
+        })
+    }
 }
 
 impl AsRef<[(String, Color)]> for SavedColors {
     fn as_ref(&self) -> &[(String, Color)] {
         self.0.as_ref()
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
+pub enum PaletteFormat {
+    Gimp,
+    Text,
+}
+
+impl PaletteFormat {
+    pub fn extension(&self) -> &str {
+        match self {
+            PaletteFormat::Gimp => "gpl",
+            PaletteFormat::Text => "txt",
+        }
+    }
+}
+
+impl AsRef<str> for PaletteFormat {
+    fn as_ref(&self) -> &str {
+        match self {
+            PaletteFormat::Gimp => "GIMP (gpl)",
+            PaletteFormat::Text => "Hex list (txt)",
+        }
     }
 }
 
@@ -142,7 +192,13 @@ pub struct ColorPicker {
     pub light_theme: Visuals,
     pub dark_theme: Visuals,
     pub show_settings: bool,
+    pub show_export: bool,
     pub upper_hex: bool,
+
+    pub export_path: String,
+    pub export_name: String,
+    pub export_status: Result<String, String>,
+    pub export_format: PaletteFormat,
 }
 
 impl epi::App for ColorPicker {
@@ -224,7 +280,15 @@ impl Default for ColorPicker {
             light_theme: light_visuals(),
             dark_theme: dark_visuals(),
             show_settings: false,
+            show_export: false,
             upper_hex: false,
+
+            export_format: PaletteFormat::Gimp,
+            export_name: "".to_string(),
+            export_status: Ok("".to_string()),
+            export_path: env::current_dir()
+                .map(|d| d.to_string_lossy().to_string())
+                .unwrap_or_default(),
         }
     }
 }
@@ -542,6 +606,62 @@ impl ColorPicker {
         });
     }
 
+    fn export_window(&mut self, ctx: &egui::CtxRef) {
+        if self.show_export {
+            let mut show = true;
+            Window::new("export").open(&mut show).show(ctx, |ui| {
+                ui.vertical(|ui| {
+                    ui.horizontal(|ui| {
+                        ComboBox::from_label("format")
+                            .selected_text(self.export_format.as_ref())
+                            .show_ui(ui, |ui| {
+                                ui.selectable_value(
+                                    &mut self.export_format,
+                                    PaletteFormat::Gimp,
+                                    PaletteFormat::Gimp.as_ref(),
+                                );
+                                ui.selectable_value(
+                                    &mut self.export_format,
+                                    PaletteFormat::Text,
+                                    PaletteFormat::Text.as_ref(),
+                                );
+                            });
+                    });
+                    ui.label("Export path:");
+                    ui.text_edit_singleline(&mut self.export_path);
+                    ui.label("Name:");
+                    ui.text_edit_singleline(&mut self.export_name);
+
+                    match &self.export_status {
+                        Ok(msg) => ui.colored_label(Color32::GREEN, msg),
+                        Err(msg) => ui.colored_label(Color32::RED, msg),
+                    };
+
+                    if ui.button("export").clicked() {
+                        let palette = match self.export_format {
+                            PaletteFormat::Gimp => {
+                                self.saved_colors.as_gimp_palette(&self.export_name)
+                            }
+                            PaletteFormat::Text => self.saved_colors.as_text_palette(),
+                        };
+                        let p = PathBuf::from(&self.export_path);
+                        let filename =
+                            format!("{}.{}", &self.export_name, self.export_format.extension());
+                        if let Err(e) = fs::write(p.join(&filename), palette) {
+                            self.export_status = Err(e.to_string());
+                        } else {
+                            self.export_status = Ok("export succesful".to_string());
+                        }
+                    }
+                });
+            });
+
+            if !show {
+                self.show_export = false;
+            }
+        }
+    }
+
     fn settings_window(&mut self, ctx: &egui::CtxRef) {
         if self.show_settings {
             let mut show = true;
@@ -579,6 +699,9 @@ impl ColorPicker {
                 ui.add_space(7.);
                 if ui.button("🗑").on_hover_text("Clear colors").clicked() {
                     self.saved_colors.clear();
+                }
+                if ui.button("🖹").on_hover_text("Export").clicked() {
+                    self.show_export = true;
                 }
             });
 
@@ -651,6 +774,7 @@ impl ColorPicker {
             ui.colored_label(Color32::RED, err);
         }
         self.settings_window(ctx);
+        self.export_window(ctx);
 
         let hex = self.color_hex(&self.cur_color);
 
