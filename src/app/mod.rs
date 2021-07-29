@@ -210,7 +210,10 @@ impl epi::App for ColorPicker {
         vec2(4096., 8192.)
     }
 
-    fn setup(&mut self, _ctx: &egui::CtxRef) {
+    fn setup(&mut self, _ctx: &egui::CtxRef,
+             _frame: &mut epi::Frame<'_>,
+             _storage: Option<&dyn epi::Storage>
+    ) {
         let mut fonts = egui::FontDefinitions::default();
         fonts.font_data.insert(
             "Firacode".to_string(),
@@ -531,7 +534,7 @@ impl ColorPicker {
             margin: vec2(5., 5.),
             ..Default::default()
         };
-        egui::TopPanel::top("top panel")
+        egui::TopBottomPanel::top("top panel")
             .frame(frame)
             .show(ctx, |ui| {
                 self.top_ui(ui);
@@ -553,7 +556,7 @@ impl ColorPicker {
             ..Default::default()
         };
 
-        egui::SidePanel::left("colors", 200.)
+        egui::SidePanel::left("colors")
             .frame(frame)
             .show(ctx, |ui| {
                 ScrollArea::auto_sized().show(ui, |ui| {
