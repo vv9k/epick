@@ -35,7 +35,7 @@ pub fn tex_gradient(
 ) -> Option<Response> {
     if let Some(tex_allocator) = tex_allocator {
         let resp = ui.horizontal(|ui| {
-            let tex = tex_mngr.get(*tex_allocator, &gradient);
+            let tex = tex_mngr.get(*tex_allocator, gradient);
             let texel_offset = 0.5 / (gradient.0.len() as f32);
             let uv = Rect::from_min_max(pos2(texel_offset, 0.0), pos2(1.0 - texel_offset, 1.0));
             let image = ImageButton::new(tex, size).uv(uv);

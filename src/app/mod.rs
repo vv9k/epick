@@ -27,7 +27,7 @@ pub struct SavedColors(Vec<(String, Color)>);
 impl SavedColors {
     pub fn add(&mut self, color: Color) -> bool {
         let hex = color.as_hex();
-        if self.0.iter().find(|(_hex, _)| _hex == &hex).is_none() {
+        if !self.0.iter().any(|(_hex, _)| _hex == &hex) {
             self.0.push((hex, color));
             return true;
         }
@@ -210,9 +210,11 @@ impl epi::App for ColorPicker {
         vec2(4096., 8192.)
     }
 
-    fn setup(&mut self, _ctx: &egui::CtxRef,
-             _frame: &mut epi::Frame<'_>,
-             _storage: Option<&dyn epi::Storage>
+    fn setup(
+        &mut self,
+        _ctx: &egui::CtxRef,
+        _frame: &mut epi::Frame<'_>,
+        _storage: Option<&dyn epi::Storage>,
     ) {
         let mut fonts = egui::FontDefinitions::default();
         fonts.font_data.insert(
@@ -503,7 +505,7 @@ impl ColorPicker {
             &mut self.tex_mngr,
             color.as_32(),
             size,
-            Some(&color_tooltip(&color, self.upper_hex)),
+            Some(&color_tooltip(color, self.upper_hex)),
         );
         if let Some(color_box) = color_box {
             if with_label {
@@ -721,7 +723,7 @@ impl ColorPicker {
             for (idx, (_, color)) in self.saved_colors.as_ref().to_vec().iter().enumerate() {
                 let resp = drop_target(ui, true, |ui| {
                     let color_id = Id::new("side-color").with(idx);
-                    let hex = self.color_hex(&color);
+                    let hex = self.color_hex(color);
                     ui.vertical(|mut ui| {
                         let fst = ui.horizontal(|ui| {
                             ui.monospace(format!("#{}", hex));
