@@ -17,7 +17,7 @@ $ paru -S epick
 
 Install required libraries:
 ```
-$ apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev 
+$ apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
 ```
 
 To manually build **epick** you'll need the latest Rust with `cargo`. The build command is:
