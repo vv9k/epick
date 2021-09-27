@@ -5,7 +5,7 @@ mod ui;
 use render::{color_slider_1d, tex_color, TextureManager};
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
-use crate::color::{Cmyk, Color, Hsl, Lch, Xyz};
+use crate::color::{Cmyk, Color, Hsl, Lch};
 use crate::save_to_clipboard;
 use egui::{color::Color32, vec2, Ui};
 use egui::{
@@ -169,9 +169,6 @@ pub struct ColorSliders {
     pub lch_l: f32,
     pub lch_c: f32,
     pub lch_h: f32,
-    pub xyz_x: f32,
-    pub xyz_y: f32,
-    pub xyz_z: f32,
     pub hsl_h: f32,
     pub hsl_s: f32,
     pub hsl_l: f32,
@@ -193,9 +190,6 @@ impl Default for ColorSliders {
             lch_l: 0.,
             lch_c: 0.,
             lch_h: 0.,
-            xyz_x: 0.,
-            xyz_y: 0.,
-            xyz_z: 0.,
             hsl_h: 0.,
             hsl_s: 0.,
             hsl_l: 0.,
@@ -222,10 +216,6 @@ impl ColorSliders {
         self.lch_l = lch.l;
         self.lch_h = lch.c;
         self.lch_c = lch.h;
-        let xyz = color.xyz();
-        self.xyz_x = xyz.x;
-        self.xyz_y = xyz.y;
-        self.xyz_z = xyz.z;
         let hsl = color.hsl();
         self.hsl_h = hsl.h;
         self.hsl_s = hsl.s;
@@ -241,9 +231,6 @@ impl ColorSliders {
         self.r = other.r;
         self.g = other.g;
         self.b = other.b;
-        self.xyz_x = other.xyz_x;
-        self.xyz_y = other.xyz_y;
-        self.xyz_z = other.xyz_z;
         self.hsl_h = other.hsl_h;
         self.hsl_s = other.hsl_s;
         self.hsl_l = other.hsl_l;
@@ -478,23 +465,6 @@ impl ColorPicker {
         }
     }
 
-    fn xyz_changed(&mut self) -> bool {
-        let xyz = Xyz::from(self.cur_color);
-        if (self.sliders.xyz_x - xyz.x).abs() > f32::EPSILON
-            || (self.sliders.xyz_y - xyz.y).abs() > f32::EPSILON
-            || (self.sliders.xyz_z - xyz.z).abs() > f32::EPSILON
-        {
-            self.set_cur_color(Xyz::new(
-                self.sliders.xyz_x,
-                self.sliders.xyz_y,
-                self.sliders.xyz_z,
-            ));
-            true
-        } else {
-            false
-        }
-    }
-
     fn hsl_changed(&mut self) -> bool {
         let hsl = Hsl::from(self.cur_color);
         if (self.sliders.hsl_h - hsl.h).abs() > f32::EPSILON
@@ -525,7 +495,6 @@ impl ColorPicker {
         if self.hsl_changed() {
             return;
         }
-        self.xyz_changed();
     }
 
     fn add_color(&mut self, color: Color) {
@@ -649,12 +618,6 @@ impl ColorPicker {
             //     .into());
             //     slider!(ui, lch_h, "hue", 0. ..=360., |h| Lch { h, ..opaque }.into());
             // });
-
-            ui.collapsing("XYZ", |ui| {
-                slider!(ui, xyz_x, "x", 0. ..=1., |x| Xyz { x, y: 0., z: 0. }.into());
-                slider!(ui, xyz_y, "y", 0. ..=1., |y| Xyz { x: 0., y, z: 0. }.into());
-                slider!(ui, xyz_z, "z", 0. ..=1., |z| Xyz { x: 0., y: 0., z }.into());
-            });
         });
     }
 
