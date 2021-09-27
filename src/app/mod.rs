@@ -5,7 +5,7 @@ mod ui;
 use render::{color_slider_1d, tex_color, TextureManager};
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
-use crate::color::{Cmyk, Color, Hsl, Lch, Luv, Xyz};
+use crate::color::{Cmyk, Color, Hsl, Lch, Xyz};
 use crate::save_to_clipboard;
 use egui::{color::Color32, vec2, Ui};
 use egui::{
@@ -460,6 +460,7 @@ impl ColorPicker {
         }
     }
 
+    #[allow(dead_code)]
     fn lch_changed(&mut self) -> bool {
         let lch = Lch::from(self.cur_color);
         if (self.sliders.lch_l - lch.l).abs() > f32::EPSILON
