@@ -1,6 +1,6 @@
 [package]
 name = "epick"
-version = "0.3.0"
+version = "0.4.0-alpha"
 authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
 edition = "2018"
 
@@ -8,12 +8,9 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-eframe = { git = "https://github.com/emilk/egui" }
-egui = { git = "https://github.com/emilk/egui" }
-epi = { git = "https://github.com/emilk/egui" }
-epaint = { git = "https://github.com/emilk/egui" }
+eframe = "0.14"
+egui = "0.14"
+epi = "0.14"
+epaint = "0.14"
 clipboard = "0.5"
 lazy_static = "1"
-
-# workaround for wasm build https://github.com/Amanieu/parking_lot/issues/269
-parking_lot_core = "=0.8.0"

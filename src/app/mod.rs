@@ -5,7 +5,7 @@ mod ui;
 use render::{color_slider_1d, tex_color, TextureManager};
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
-use crate::color::{Cmyk, Color};
+use crate::color::{Cmyk, Color, Hsl, Lch, Luv, Xyz};
 use crate::save_to_clipboard;
 use egui::{color::Color32, vec2, Ui};
 use egui::{
@@ -154,15 +154,11 @@ impl AsRef<str> for SchemeType {
 
 //####################################################################################################
 
-#[derive(Debug)]
-pub struct ColorPicker {
-    // picker fields
-    pub color_size: f32,
-    pub hex_color: String,
-    pub cur_color: Color,
-    pub red: f32,
-    pub green: f32,
-    pub blue: f32,
+#[derive(Debug, Clone)]
+pub struct ColorSliders {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
     pub hue: f32,
     pub sat: f32,
     pub val: f32,
@@ -170,6 +166,100 @@ pub struct ColorPicker {
     pub m: f32,
     pub y: f32,
     pub k: f32,
+    pub lch_l: f32,
+    pub lch_c: f32,
+    pub lch_h: f32,
+    pub xyz_x: f32,
+    pub xyz_y: f32,
+    pub xyz_z: f32,
+    pub hsl_h: f32,
+    pub hsl_s: f32,
+    pub hsl_l: f32,
+}
+
+impl Default for ColorSliders {
+    fn default() -> Self {
+        Self {
+            r: 0.,
+            g: 0.,
+            b: 0.,
+            hue: 0.,
+            sat: 0.,
+            val: 0.,
+            c: 0.,
+            m: 0.,
+            y: 0.,
+            k: 1.,
+            lch_l: 0.,
+            lch_c: 0.,
+            lch_h: 0.,
+            xyz_x: 0.,
+            xyz_y: 0.,
+            xyz_z: 0.,
+            hsl_h: 0.,
+            hsl_s: 0.,
+            hsl_l: 0.,
+        }
+    }
+}
+
+impl ColorSliders {
+    fn set_color(&mut self, color: Color) {
+        let rgba = color.rgba();
+        self.r = rgba.r() * u8::MAX as f32;
+        self.g = rgba.g() * u8::MAX as f32;
+        self.b = rgba.b() * u8::MAX as f32;
+        let hsva = color.hsva();
+        self.hue = hsva.h;
+        self.sat = hsva.s;
+        self.val = hsva.v;
+        let cmyk = color.cmyk();
+        self.k = cmyk.k;
+        self.c = cmyk.c;
+        self.m = cmyk.m;
+        self.y = cmyk.y;
+        let lch = color.lch();
+        self.lch_l = lch.l;
+        self.lch_h = lch.c;
+        self.lch_c = lch.h;
+        let xyz = color.xyz();
+        self.xyz_x = xyz.x;
+        self.xyz_y = xyz.y;
+        self.xyz_z = xyz.z;
+        let hsl = color.hsl();
+        self.hsl_h = hsl.h;
+        self.hsl_s = hsl.s;
+        self.hsl_l = hsl.l;
+    }
+
+    fn restore(&mut self, other: Self) {
+        self.hue = other.hue;
+        self.sat = other.sat;
+        self.c = other.c;
+        self.m = other.m;
+        self.y = other.y;
+        self.r = other.r;
+        self.g = other.g;
+        self.b = other.b;
+        self.xyz_x = other.xyz_x;
+        self.xyz_y = other.xyz_y;
+        self.xyz_z = other.xyz_z;
+        self.hsl_h = other.hsl_h;
+        self.hsl_s = other.hsl_s;
+        self.hsl_l = other.hsl_l;
+    }
+}
+
+//####################################################################################################
+
+#[derive(Debug)]
+pub struct ColorPicker {
+    // picker fields
+    pub color_size: f32,
+    pub hex_color: String,
+    pub cur_color: Color,
+    pub sliders: ColorSliders,
+    pub saved_sliders: Option<ColorSliders>,
 
     pub scheme_ty: SchemeType,
 
@@ -202,12 +292,16 @@ pub struct ColorPicker {
 }
 
 impl epi::App for ColorPicker {
-    fn name(&self) -> &str {
-        "epick"
-    }
+    fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
+        let tex_allocator = &mut Some(frame.tex_allocator());
 
-    fn max_size_points(&self) -> egui::Vec2 {
-        vec2(4096., 8192.)
+        self.top_panel(ctx);
+        if self.saved_panel_visible {
+            self.side_panel(ctx, tex_allocator);
+        }
+        self.central_panel(ctx, tex_allocator);
+
+        frame.set_window_size(ctx.used_size());
     }
 
     fn setup(
@@ -221,15 +315,12 @@ impl epi::App for ColorPicker {
             "Firacode".to_string(),
             Cow::Borrowed(include_bytes!("../../assets/FiraCode-Regular.ttf")),
         );
-        let mut def = fonts
-            .fonts_for_family
-            .get_mut(&egui::FontFamily::Monospace)
-            .map(|v| v.clone())
-            .unwrap_or_default();
-        def.push("Firacode".to_string());
         fonts
             .fonts_for_family
-            .insert(egui::FontFamily::Monospace, def);
+            .get_mut(&egui::FontFamily::Monospace)
+            .unwrap()
+            .insert(0, "Firacode".to_owned());
+
         fonts.family_and_size.insert(
             egui::TextStyle::Monospace,
             (egui::FontFamily::Monospace, 16.),
@@ -238,16 +329,12 @@ impl epi::App for ColorPicker {
         _ctx.set_visuals(dark_visuals());
     }
 
-    fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
-        let tex_allocator = &mut Some(frame.tex_allocator());
+    fn name(&self) -> &str {
+        "epick"
+    }
 
-        self.top_panel(ctx);
-        if self.saved_panel_visible {
-            self.side_panel(ctx, tex_allocator);
-        }
-        self.central_panel(ctx, tex_allocator);
-
-        frame.set_window_size(ctx.used_size());
+    fn max_size_points(&self) -> egui::Vec2 {
+        vec2(4096., 8192.)
     }
 }
 
@@ -257,16 +344,8 @@ impl Default for ColorPicker {
             color_size: 300.,
             hex_color: "".to_string(),
             cur_color: Color::black(),
-            red: 0.,
-            green: 0.,
-            blue: 0.,
-            hue: 0.,
-            sat: 0.,
-            val: 0.,
-            c: 0.,
-            m: 0.,
-            y: 0.,
-            k: 1.,
+            sliders: ColorSliders::default(),
+            saved_sliders: None,
             numof_shades: 6,
             numof_tints: 6,
             numof_hues: 4,
@@ -299,57 +378,153 @@ impl Default for ColorPicker {
 }
 
 impl ColorPicker {
-    fn set_cur_color(&mut self, color: Color) {
-        let _color = Rgba::from(color);
-        self.red = _color.r() * 255.;
-        self.green = _color.g() * 255.;
-        self.blue = _color.b() * 255.;
-        let hsva = Hsva::from(_color);
-        if hsva.s != 0. {
-            self.hue = hsva.h;
-        }
-        self.sat = hsva.s;
-        self.val = hsva.v;
-        let cmyk = Cmyk::from(_color);
-        self.c = cmyk.c;
-        self.m = cmyk.m;
-        self.y = cmyk.y;
-        self.k = cmyk.k;
+    fn set_cur_color(&mut self, color: impl Into<Color>) {
+        let color = color.into();
+        self.sliders.set_color(color);
         self.cur_color = color;
     }
 
-    fn check_color_change(&mut self) {
-        let rgb = Rgba::from(self.cur_color);
-        let r = self.red / 255.;
-        let g = self.green / 255.;
-        let b = self.blue / 255.;
+    fn restore_sliders_if_saved(&mut self) {
+        if let Some(saved) = std::mem::take(&mut self.saved_sliders) {
+            self.sliders.restore(saved);
+        }
+    }
+
+    fn save_sliders_if_unsaved(&mut self) {
+        if self.saved_sliders.is_none() {
+            self.saved_sliders = Some(self.sliders.clone());
+        }
+    }
+
+    fn rgb_changed(&mut self) -> bool {
+        let rgb = self.cur_color.rgba();
+        let r = self.sliders.r / u8::MAX as f32;
+        let g = self.sliders.g / u8::MAX as f32;
+        let b = self.sliders.b / u8::MAX as f32;
         if (r - rgb.r()).abs() > f32::EPSILON
             || (g - rgb.g()).abs() > f32::EPSILON
             || (b - rgb.b()).abs() > f32::EPSILON
         {
-            self.set_cur_color(Rgba::from_rgb(r, g, b).into());
-            return;
+            self.saved_sliders = None;
+            self.set_cur_color(Rgba::from_rgb(r, g, b));
+            true
+        } else {
+            false
         }
+    }
 
+    fn hsva_changed(&mut self) -> bool {
         let hsva = Hsva::from(self.cur_color);
-        if (self.hue - hsva.h).abs() > f32::EPSILON
-            || (self.sat - hsva.s).abs() > f32::EPSILON
-            || (self.val - hsva.v).abs() > f32::EPSILON
+        if (self.sliders.hue - hsva.h).abs() > f32::EPSILON
+            || (self.sliders.sat - hsva.s).abs() > f32::EPSILON
+            || (self.sliders.val - hsva.v).abs() > f32::EPSILON
         {
-            let new_hsva = Hsva::new(self.hue, self.sat, self.val, 1.);
-            self.set_cur_color(new_hsva.into());
+            if self.sliders.val == 0. {
+                self.save_sliders_if_unsaved();
+            } else if self.sliders.val > 0. {
+                self.restore_sliders_if_saved();
+            }
+            self.set_cur_color(Hsva::new(
+                self.sliders.hue,
+                self.sliders.sat,
+                self.sliders.val,
+                1.,
+            ));
+            true
+        } else {
+            false
+        }
+    }
+
+    fn cmyk_changed(&mut self) -> bool {
+        let cmyk = Cmyk::from(self.cur_color);
+        if (self.sliders.c - cmyk.c).abs() > f32::EPSILON
+            || (self.sliders.m - cmyk.m).abs() > f32::EPSILON
+            || (self.sliders.y - cmyk.y).abs() > f32::EPSILON
+            || (self.sliders.k - cmyk.k).abs() > f32::EPSILON
+        {
+            if (self.sliders.k - 1.).abs() < f32::EPSILON {
+                self.save_sliders_if_unsaved();
+            } else if self.sliders.k < 1. {
+                self.restore_sliders_if_saved();
+            }
+            self.set_cur_color(Cmyk::new(
+                self.sliders.c,
+                self.sliders.m,
+                self.sliders.y,
+                self.sliders.k,
+            ));
+            true
+        } else {
+            false
+        }
+    }
+
+    fn lch_changed(&mut self) -> bool {
+        let lch = Lch::from(self.cur_color);
+        if (self.sliders.lch_l - lch.l).abs() > f32::EPSILON
+            || (self.sliders.lch_c - lch.c).abs() > f32::EPSILON
+            || (self.sliders.lch_h - lch.h).abs() > f32::EPSILON
+        {
+            self.set_cur_color(Lch::new(
+                self.sliders.lch_l,
+                self.sliders.lch_c,
+                self.sliders.lch_h,
+            ));
+            true
+        } else {
+            false
+        }
+    }
+
+    fn xyz_changed(&mut self) -> bool {
+        let xyz = Xyz::from(self.cur_color);
+        if (self.sliders.xyz_x - xyz.x).abs() > f32::EPSILON
+            || (self.sliders.xyz_y - xyz.y).abs() > f32::EPSILON
+            || (self.sliders.xyz_z - xyz.z).abs() > f32::EPSILON
+        {
+            self.set_cur_color(Xyz::new(
+                self.sliders.xyz_x,
+                self.sliders.xyz_y,
+                self.sliders.xyz_z,
+            ));
+            true
+        } else {
+            false
+        }
+    }
+
+    fn hsl_changed(&mut self) -> bool {
+        let hsl = Hsl::from(self.cur_color);
+        if (self.sliders.hsl_h - hsl.h).abs() > f32::EPSILON
+            || (self.sliders.hsl_s - hsl.s).abs() > f32::EPSILON
+            || (self.sliders.hsl_l - hsl.l).abs() > f32::EPSILON
+        {
+            self.set_cur_color(Hsl::new(
+                self.sliders.hsl_h,
+                self.sliders.hsl_s,
+                self.sliders.hsl_l,
+            ));
+            true
+        } else {
+            false
+        }
+    }
+
+    fn check_color_change(&mut self) {
+        if self.rgb_changed() {
             return;
         }
-
-        let cmyk = Cmyk::from(self.cur_color);
-        if (self.c - cmyk.c).abs() > f32::EPSILON
-            || (self.m - cmyk.m).abs() > f32::EPSILON
-            || (self.y - cmyk.y).abs() > f32::EPSILON
-            || (self.k - cmyk.k).abs() > f32::EPSILON
-        {
-            let new_cmyk = Cmyk::new(self.c, self.m, self.y, self.k);
-            self.set_cur_color(new_cmyk.into());
+        if self.hsva_changed() {
+            return;
         }
+        if self.cmyk_changed() {
+            return;
+        }
+        if self.hsl_changed() {
+            return;
+        }
+        self.xyz_changed();
     }
 
     fn add_color(&mut self, color: Color) {
@@ -406,25 +581,25 @@ impl ColorPicker {
             ($ui:ident, $it:ident, $label:literal, $range:expr, $($tt:tt)+) => {
                 $ui.add_space(7.);
                 $ui.horizontal(|mut ui| {
-                    let resp = color_slider_1d(&mut ui, &mut self.$it, $range, $($tt)+).on_hover_text($label);
+                    let resp = color_slider_1d(&mut ui, &mut self.sliders.$it, $range, $($tt)+).on_hover_text($label);
                     if resp.changed() {
                         self.check_color_change();
                     }
                     ui.add_space(7.);
                     ui.label(format!("{}: ", $label));
-                    ui.add(DragValue::new(&mut self.$it).clamp_range($range));
+                    ui.add(DragValue::new(&mut self.sliders.$it).clamp_range($range));
                 });
             };
         }
         ui.vertical(|ui| {
             ui.collapsing("RGB", |ui| {
-                slider!(ui, red, "red", u8::MIN as f32..=u8::MAX as f32, |r| {
+                slider!(ui, r, "red", u8::MIN as f32..=u8::MAX as f32, |r| {
                     Rgba::from_rgb(r, 0., 0.).into()
                 });
-                slider!(ui, green, "green", u8::MIN as f32..=u8::MAX as f32, |g| {
+                slider!(ui, g, "green", u8::MIN as f32..=u8::MAX as f32, |g| {
                     Rgba::from_rgb(0., g, 0.).into()
                 });
-                slider!(ui, blue, "blue", u8::MIN as f32..=u8::MAX as f32, |b| {
+                slider!(ui, b, "blue", u8::MIN as f32..=u8::MAX as f32, |b| {
                     Rgba::from_rgb(0., 0., b).into()
                 });
             });
@@ -451,6 +626,33 @@ impl ColorPicker {
                 .into());
                 slider!(ui, val, "value", 0. ..=1., |v| HsvaGamma { v, ..opaque }
                     .into());
+            });
+
+            let opaque = Hsl::from(self.cur_color);
+
+            ui.collapsing("HSL", |ui| {
+                slider!(ui, hsl_h, "hue", 0. ..=1., |h| Hsl { h, ..opaque }.into());
+                slider!(ui, hsl_s, "saturation", 0. ..=1., |s| Hsl { s, ..opaque }
+                    .into());
+                slider!(ui, hsl_l, "light", 0. ..=1., |l| Hsl { l, ..opaque }.into());
+            });
+
+            // let opaque = Lch::from(self.cur_color);
+            // ui.collapsing("LCH", |ui| {
+            //     slider!(ui, lch_l, "lightness", 0. ..=100., |l| Lch { l, ..opaque }
+            //         .into());
+            //     slider!(ui, lch_c, "colorfulness", 0. ..=600., |c| Lch {
+            //         c,
+            //         ..opaque
+            //     }
+            //     .into());
+            //     slider!(ui, lch_h, "hue", 0. ..=360., |h| Lch { h, ..opaque }.into());
+            // });
+
+            ui.collapsing("XYZ", |ui| {
+                slider!(ui, xyz_x, "x", 0. ..=1., |x| Xyz { x, y: 0., z: 0. }.into());
+                slider!(ui, xyz_y, "y", 0. ..=1., |y| Xyz { x: 0., y, z: 0. }.into());
+                slider!(ui, xyz_z, "z", 0. ..=1., |z| Xyz { x: 0., y: 0., z }.into());
             });
         });
     }
@@ -792,7 +994,7 @@ impl ColorPicker {
 
         ui.horizontal(|ui| {
             ui.label("Current color: ");
-            ui.monospace(format!("#{}", hex.to_uppercase()));
+            ui.monospace(format!("#{}", hex));
             if ui
                 .button("📋")
                 .on_hover_text("Copy hex color to clipboard")

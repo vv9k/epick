@@ -1,5 +1,6 @@
 mod app;
 mod color;
+
 pub use app::ColorPicker as Epick;
 
 use clipboard::ClipboardContext;

@@ -11,7 +11,6 @@ impl ColorPicker {
         if let Some(SideTab::Hues) = self.side_panel_visible {
             let mut is_open = true;
             Window::new("Hues")
-                .anchor(egui::Align2::RIGHT_TOP, vec2(0., 0.))
                 .collapsible(false)
                 .scroll(true)
                 .open(&mut is_open)
@@ -58,7 +57,6 @@ impl ColorPicker {
         if let Some(SideTab::Tints) = self.side_panel_visible {
             let mut is_open = true;
             Window::new("Tints")
-                .anchor(egui::Align2::RIGHT_TOP, vec2(0., 0.))
                 .collapsible(false)
                 .scroll(true)
                 .open(&mut is_open)
@@ -96,7 +94,6 @@ impl ColorPicker {
         if let Some(SideTab::Shades) = self.side_panel_visible {
             let mut is_open = true;
             Window::new("Shades")
-                .anchor(egui::Align2::RIGHT_TOP, vec2(0., 0.))
                 .collapsible(false)
                 .scroll(true)
                 .open(&mut is_open)
