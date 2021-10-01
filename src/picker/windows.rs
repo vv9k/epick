@@ -12,20 +12,20 @@ use Windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, GetDesktopWindow};
 
 #[derive(Default, Debug)]
 pub struct WinConn {
-    device_context: HDC
+    device_context: HDC,
 }
 
 impl WinConn {
     pub fn new() -> Self {
         WinConn {
-            device_context: unsafe { GetDC(None) }
+            device_context: unsafe { GetDC(None) },
         }
     }
 
     pub fn get_cursor_pos(&self) -> Result<POINT> {
         let mut cursor_pos = POINT::default();
 
-        let success = unsafe { GetCursorPos(&mut cursor_pos as *mut POINT) } .as_bool();
+        let success = unsafe { GetCursorPos(&mut cursor_pos as *mut POINT) }.as_bool();
         if !success {
             return Err(Error::msg("failed to get cursor position"));
         }
