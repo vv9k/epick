@@ -12,6 +12,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
+          - windows-latest
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Rust
@@ -27,6 +28,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
+          - windows-latest
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Rust
@@ -41,6 +43,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
+          - windows-latest
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Rust
@@ -54,6 +57,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
+          - windows-latest
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -63,7 +67,9 @@ jobs:
           rust-version: ${{ matrix.rust }}
       - name: Checkout
         uses: actions/checkout@v1
-      - run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev 
+      - name: Install dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
       - name: Test
         run: cargo test
 
@@ -73,11 +79,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [linux]
+        build: [linux, windows-msvc]
         include:
         - build: linux
           os: ubuntu-latest
           target: x86_64-unknown-linux
+        - build: windows-msvc
+          os: windows-latest
+          target: x86_64-pc-windows-msvc
 
     steps:
       - name: Set up Rust
@@ -85,25 +94,51 @@ jobs:
       - uses: actions/checkout@master
       - name: Set version
         id: set_version
-        run: echo ::set-output name=EPICK_VERSION::${GITHUB_REF/refs\/tags\//}
+        if: matrix.os == 'ubuntu-latest'
+        run: echo "::set-output name=EPICK_VERSION::${GITHUB_REF#refs/tags/}"
+      - name: Set version
+        id: set_version_win
+        if: matrix.os == 'windows-latest'
+        run: echo "::set-output name=EPICK_VERSION::$(git describe --tags --abbrev=0)"
       - name: Set archive name
+        if: matrix.os == 'ubuntu-latest'
         id: set_name
-        run: echo ::set-output name=EPICK_ARCHIVE::epick-${{steps.set_version.outputs.EPICK_VERSION}}-${{ matrix.target}}
-      - run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev 
+        run: echo "::set-output name=EPICK_ARCHIVE::epick-${{ steps.set_version.outputs.EPICK_VERSION}}-${{ matrix.target}}"
+      - name: Set archive name
+        if: matrix.os == 'windows-latest'
+        id: set_name_win
+        run: echo "::set-output name=EPICK_ARCHIVE::epick-${{steps.set_version_win.outputs.EPICK_VERSION}}-${{ matrix.target}}"
+      - name: Install dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
       - run: cargo build --release
         name: Release build
       - name: Prepare archive directory
         run: mkdir epick
       - name: Move release files
+        if: matrix.os == 'ubuntu-latest'
         run: |
           mv target/release/epick epick/
+      - name: Move release files
+        if: matrix.os == 'windows-latest'
+        run: |
+          mv target/release/epick.exe epick/
+      - name: Move other files
+        run: |
           mv README.md epick/
           mv LICENSE epick/
       - name: Create archives
+        if: matrix.os == 'ubuntu-latest'
         run: |
           tar -zcvf ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.gz epick
           tar -Jcvf ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.xz epick
+          7z a ${{ steps.set_name_win.outputs.EPICK_ARCHIVE }}.zip epick
+      - name: Create archives
+        if: matrix.os == 'windows-latest'
+        run: |
+          7z a ${{ steps.set_name_win.outputs.EPICK_ARCHIVE }}.zip epick
       - name: Upload gz
+        if: matrix.os == 'ubuntu-latest'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_name: wojciechkepka/epick
@@ -113,6 +148,7 @@ jobs:
           tag: ${{ steps.set_version.outputs.EPICK_VERSION }}
           overwrite: true
       - name: Upload xz
+        if: matrix.os == 'ubuntu-latest'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_name: wojciechkepka/epick
@@ -120,4 +156,14 @@ jobs:
           file: ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.xz
           asset_name: ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.xz
           tag: ${{ steps.set_version.outputs.EPICK_VERSION }}
+          overwrite: true
+      - name: Upload zip
+        if: matrix.os == 'windows-latest'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_name: wojciechkepka/epick
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ steps.set_name_win.outputs.EPICK_ARCHIVE }}.zip
+          asset_name: ${{ steps.set_name_win.outputs.EPICK_ARCHIVE }}.zip
+          tag: ${{ steps.set_version_win.outputs.EPICK_VERSION }}
           overwrite: true
