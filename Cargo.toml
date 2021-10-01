@@ -5,6 +5,7 @@ authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
 edition = "2018"
 
 [lib]
+name = "libepick"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
