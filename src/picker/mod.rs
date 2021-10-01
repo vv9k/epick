@@ -1,3 +1,5 @@
+#[cfg(windows)]
+mod windows;
 #[cfg(unix)]
 mod x11;
 
@@ -14,6 +16,8 @@ pub fn init_display_picker() -> Option<Box<dyn DisplayPicker>> {
     return x11::X11Conn::new()
         .ok()
         .map(|conn| Box::new(conn) as Box<dyn DisplayPicker>);
-    #[cfg(not(unix))]
+    #[cfg(windows)]
+    return Some(Box::new(windows::WinConn::new()) as Box<dyn DisplayPicker>);
+    #[cfg(all(not(windows), not(unix)))]
     return None;
 }

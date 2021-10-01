@@ -4,4 +4,4 @@
 - Add HSL slider
 - Windows opened by tabs like `hues`, `tints` or `shades` are now free to move around
 - Monospaced text now correctly uses a custom font `FiraCode` for rendering
-- Support for displaying color under the cursor (only works with Xorg for now)
+- Support for displaying color under the cursor (X11 and Windows supported for now)
