@@ -14,3 +14,8 @@ epi = "0.14"
 epaint = "0.14"
 clipboard = "0.5"
 lazy_static = "1"
+anyhow = "1"
+
+[target.'cfg(unix)'.dependencies]
+x11rb = { version = "0.9", features = ["image"] }
+

@@ -6,6 +6,7 @@ use render::{color_slider_1d, tex_color, TextureManager};
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
 use crate::color::{Cmyk, Color, Hsl, Lch};
+use crate::picker::{self, DisplayPicker};
 use crate::save_to_clipboard;
 use egui::{color::Color32, vec2, Ui};
 use egui::{
@@ -276,6 +277,8 @@ pub struct ColorPicker {
     pub export_name: String,
     pub export_status: Result<String, String>,
     pub export_format: PaletteFormat,
+
+    pub display_picker: Option<Box<dyn DisplayPicker>>,
 }
 
 impl epi::App for ColorPicker {
@@ -289,6 +292,13 @@ impl epi::App for ColorPicker {
         self.central_panel(ctx, tex_allocator);
 
         frame.set_window_size(ctx.used_size());
+
+        if !ctx.is_pointer_over_area() {
+            // This paint request makes sure that the color displayed as color under cursor
+            // gets updated even when the pointer is not in the egui window area.
+            ctx.request_repaint();
+            std::thread::sleep(std::time::Duration::from_millis(100));
+        }
     }
 
     fn setup(
@@ -360,6 +370,8 @@ impl Default for ColorPicker {
             export_path: env::current_dir()
                 .map(|d| d.to_string_lossy().to_string())
                 .unwrap_or_default(),
+
+            display_picker: picker::init_display_picker(),
         }
     }
 }
@@ -492,9 +504,7 @@ impl ColorPicker {
         if self.cmyk_changed() {
             return;
         }
-        if self.hsl_changed() {
-            return;
-        }
+        self.hsl_changed();
     }
 
     fn add_color(&mut self, color: Color) {
@@ -974,6 +984,15 @@ impl ColorPicker {
                 self.add_cur_color();
             }
         });
+
+        if let Some(picker) = &self.display_picker {
+            if let Ok(color) = picker.get_color_under_cursor() {
+                ui.horizontal(|mut ui| {
+                    ui.label("Color at cursor: ");
+                    self.color_box_label_side(&color, vec2(25., 25.), &mut ui, tex_allocator);
+                });
+            }
+        }
 
         self.check_color_change();
         ui.add_space(7.);
