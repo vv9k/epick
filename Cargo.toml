@@ -1,6 +1,6 @@
 [package]
 name = "epick"
-version = "0.4.0-alpha"
+version = "0.4.0"
 authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
 edition = "2018"
 
