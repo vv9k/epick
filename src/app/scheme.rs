@@ -1,50 +1,53 @@
-use crate::app::{ColorPicker, SchemeType, SideTab};
+use crate::app::{App, SchemeType, TopMenuTab};
 use egui::{vec2, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
 
-impl ColorPicker {
+impl App {
     pub fn hues(
         &mut self,
         ctx: &egui::CtxRef,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
-        if let Some(SideTab::Hues) = self.side_panel_visible {
+        if let Some(TopMenuTab::Hues) = self.current_tab {
             let mut is_open = true;
             Window::new("Hues")
                 .collapsible(false)
                 .scroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
-                    let color = &self.cur_color;
-                    let hues = color.hues(self.numof_hues, self.hues_step);
+                    let color = &self.picker.current_color;
+                    let hues = color.hues(self.hues_window.num_of_hues, self.hues_window.hues_step);
                     ui.add(
-                        Slider::new(&mut self.hues_step, 0.01..=0.1)
+                        Slider::new(&mut self.hues_window.hues_step, 0.01..=0.1)
                             .clamp_to_range(true)
                             .text("step"),
                     );
-                    let max_hues = (0.5 / self.hues_step).round() as u8;
-                    if self.numof_hues > max_hues {
-                        self.numof_hues = max_hues;
+                    let max_hues = (0.5 / self.hues_window.hues_step).round() as u8;
+                    if self.hues_window.num_of_hues > max_hues {
+                        self.hues_window.num_of_hues = max_hues;
                     }
                     ui.add(
-                        Slider::new(&mut self.numof_hues, u8::MIN..=max_hues)
+                        Slider::new(&mut self.hues_window.num_of_hues, u8::MIN..=max_hues)
                             .clamp_to_range(true)
                             .text("# of hues"),
                     );
                     ui.add(
-                        Slider::new(&mut self.hue_color_size, 20.0..=200.)
+                        Slider::new(&mut self.hues_window.hue_color_size, 20.0..=200.)
                             .clamp_to_range(true)
                             .text("color size"),
                     );
 
-                    let size = vec2(self.hue_color_size, self.hue_color_size);
+                    let size = vec2(
+                        self.hues_window.hue_color_size,
+                        self.hues_window.hue_color_size,
+                    );
                     hues.iter().for_each(|hue| {
                         self.color_box_label_side(hue, size, ui, tex_allocator);
                     });
                 });
 
             if !is_open {
-                self.side_panel_visible = None;
+                self.current_tab = None;
             }
         }
     }
@@ -54,34 +57,37 @@ impl ColorPicker {
         ctx: &egui::CtxRef,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
-        if let Some(SideTab::Tints) = self.side_panel_visible {
+        if let Some(TopMenuTab::Tints) = self.current_tab {
             let mut is_open = true;
             Window::new("Tints")
                 .collapsible(false)
                 .scroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
-                    let color = &self.cur_color;
-                    let tints = color.tints(self.numof_tints);
+                    let color = &self.picker.current_color;
+                    let tints = color.tints(self.tints_window.num_of_tints);
                     ui.add(
-                        Slider::new(&mut self.numof_tints, u8::MIN..=50)
+                        Slider::new(&mut self.tints_window.num_of_tints, u8::MIN..=50)
                             .clamp_to_range(true)
                             .text("# of tints"),
                     );
                     ui.add(
-                        Slider::new(&mut self.tint_color_size, 20.0..=200.)
+                        Slider::new(&mut self.tints_window.tint_color_size, 20.0..=200.)
                             .clamp_to_range(true)
                             .text("color size"),
                     );
 
-                    let size = vec2(self.tint_color_size, self.tint_color_size);
+                    let size = vec2(
+                        self.tints_window.tint_color_size,
+                        self.tints_window.tint_color_size,
+                    );
                     tints.iter().for_each(|tint| {
                         self.color_box_label_side(tint, size, ui, tex_allocator);
                     });
                 });
 
             if !is_open {
-                self.side_panel_visible = None;
+                self.current_tab = None;
             }
         }
     }
@@ -91,34 +97,37 @@ impl ColorPicker {
         ctx: &egui::CtxRef,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
-        if let Some(SideTab::Shades) = self.side_panel_visible {
+        if let Some(TopMenuTab::Shades) = self.current_tab {
             let mut is_open = true;
             Window::new("Shades")
                 .collapsible(false)
                 .scroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
-                    let color = self.cur_color;
-                    let shades = color.shades(self.numof_shades);
+                    let color = self.picker.current_color;
+                    let shades = color.shades(self.shades_window.num_of_shades);
                     ui.add(
-                        Slider::new(&mut self.numof_shades, u8::MIN..=50)
+                        Slider::new(&mut self.shades_window.num_of_shades, u8::MIN..=50)
                             .clamp_to_range(true)
                             .text("# of shades"),
                     );
                     ui.add(
-                        Slider::new(&mut self.shade_color_size, 20.0..=200.)
+                        Slider::new(&mut self.shades_window.shade_color_size, 20.0..=200.)
                             .clamp_to_range(true)
                             .text("color size"),
                     );
 
-                    let size = vec2(self.shade_color_size, self.shade_color_size);
+                    let size = vec2(
+                        self.shades_window.shade_color_size,
+                        self.shades_window.shade_color_size,
+                    );
                     shades.iter().for_each(|shade| {
                         self.color_box_label_side(shade, size, ui, tex_allocator);
                     });
                 });
 
             if !is_open {
-                self.side_panel_visible = None;
+                self.current_tab = None;
             }
         }
     }
@@ -131,10 +140,10 @@ impl ColorPicker {
         CollapsingHeader::new("Schemes")
             .default_open(true)
             .show(ui, |ui| {
-                let size = vec2(self.scheme_color_size, self.scheme_color_size);
+                let size = vec2(self.picker.scheme_color_size, self.picker.scheme_color_size);
                 let double_size = vec2(
-                    (self.scheme_color_size + ui.spacing().item_spacing.x) * 2.,
-                    self.scheme_color_size,
+                    (self.picker.scheme_color_size + ui.spacing().item_spacing.x) * 2.,
+                    self.picker.scheme_color_size,
                 );
 
                 macro_rules! cb {
@@ -148,42 +157,42 @@ impl ColorPicker {
                     };
                 }
 
-                let color = self.cur_color;
+                let color = self.picker.current_color;
                 ComboBox::from_label("Choose a type")
-                    .selected_text(self.scheme_ty.as_ref())
+                    .selected_text(self.picker.scheme_type.as_ref())
                     .show_ui(ui, |ui| {
                         ui.selectable_value(
-                            &mut self.scheme_ty,
+                            &mut self.picker.scheme_type,
                             SchemeType::Complementary,
                             SchemeType::Complementary.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.scheme_ty,
+                            &mut self.picker.scheme_type,
                             SchemeType::Triadic,
                             SchemeType::Triadic.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.scheme_ty,
+                            &mut self.picker.scheme_type,
                             SchemeType::Tetradic,
                             SchemeType::Tetradic.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.scheme_ty,
+                            &mut self.picker.scheme_type,
                             SchemeType::Analogous,
                             SchemeType::Analogous.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.scheme_ty,
+                            &mut self.picker.scheme_type,
                             SchemeType::SplitComplementary,
                             SchemeType::SplitComplementary.as_ref(),
                         );
                     });
                 ui.add(
-                    Slider::new(&mut self.scheme_color_size, 100.0..=250.)
+                    Slider::new(&mut self.picker.scheme_color_size, 100.0..=250.)
                         .clamp_to_range(true)
                         .text("color size"),
                 );
-                match self.scheme_ty {
+                match self.picker.scheme_type {
                     SchemeType::Complementary => {
                         let compl = color.complementary();
                         ui.horizontal(|ui| {

@@ -123,7 +123,7 @@ impl AsRef<str> for PaletteFormat {
 //####################################################################################################
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum SideTab {
+pub enum TopMenuTab {
     Hues,
     Shades,
     Tints,
@@ -240,53 +240,135 @@ impl ColorSliders {
 
 //####################################################################################################
 
-#[derive(Debug)]
-pub struct ColorPicker {
-    // picker fields
-    pub color_size: f32,
-    pub hex_color: String,
-    pub cur_color: Color,
-    pub sliders: ColorSliders,
-    pub saved_sliders: Option<ColorSliders>,
-
-    pub scheme_ty: SchemeType,
-
-    // side panel
-    pub numof_shades: u8,
-    pub numof_tints: u8,
-    pub numof_hues: u8,
-    pub shade_color_size: f32,
-    pub tint_color_size: f32,
-    pub hue_color_size: f32,
-    pub scheme_color_size: f32,
-    pub hues_step: f32,
-    pub side_panel_visible: Option<SideTab>,
-
-    pub tex_mngr: TextureManager,
-    pub main_width: f32,
-    pub err: Option<String>,
-    pub saved_panel_visible: bool,
-    pub saved_colors: SavedColors,
-    pub light_theme: Visuals,
-    pub dark_theme: Visuals,
-    pub show_settings: bool,
-    pub show_export: bool,
+#[derive(Default, Debug)]
+pub struct SettingsWindow {
+    pub show: bool,
     pub upper_hex: bool,
-
-    pub export_path: String,
-    pub export_name: String,
-    pub export_status: Result<String, String>,
-    pub export_format: PaletteFormat,
-
-    pub display_picker: Option<Box<dyn DisplayPicker>>,
 }
 
-impl epi::App for ColorPicker {
+#[derive(Debug)]
+pub struct ExportWindow {
+    pub show: bool,
+    pub path: String,
+    pub name: String,
+    pub export_status: Result<String, String>,
+    pub format: PaletteFormat,
+}
+
+impl Default for ExportWindow {
+    fn default() -> Self {
+        Self {
+            show: false,
+            format: PaletteFormat::Gimp,
+            name: "".to_string(),
+            export_status: Ok("".to_string()),
+            path: env::current_dir()
+                .map(|d| d.to_string_lossy().to_string())
+                .unwrap_or_default(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ShadesWindow {
+    pub num_of_shades: u8,
+    pub shade_color_size: f32,
+}
+
+impl Default for ShadesWindow {
+    fn default() -> Self {
+        Self {
+            num_of_shades: 6,
+            shade_color_size: 100.,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct TintsWindow {
+    pub num_of_tints: u8,
+    pub tint_color_size: f32,
+}
+
+impl Default for TintsWindow {
+    fn default() -> Self {
+        Self {
+            num_of_tints: 6,
+            tint_color_size: 100.,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct HuesWindow {
+    pub num_of_hues: u8,
+    pub hue_color_size: f32,
+    pub hues_step: f32,
+}
+
+impl Default for HuesWindow {
+    fn default() -> Self {
+        Self {
+            num_of_hues: 4,
+            hue_color_size: 100.,
+            hues_step: 0.05,
+        }
+    }
+}
+
+//####################################################################################################
+
+#[derive(Debug)]
+pub struct ColorPicker {
+    pub current_color: Color,
+    pub hex_color: String,
+    pub sliders: ColorSliders,
+    pub saved_sliders: Option<ColorSliders>,
+    pub scheme_color_size: f32,
+    pub scheme_type: SchemeType,
+}
+
+impl Default for ColorPicker {
+    fn default() -> Self {
+        Self {
+            current_color: Color::black(),
+            hex_color: "".to_string(),
+            sliders: ColorSliders::default(),
+            saved_sliders: None,
+            scheme_color_size: 200.,
+            scheme_type: SchemeType::Complementary,
+        }
+    }
+}
+
+//####################################################################################################
+
+#[derive(Debug)]
+pub struct App {
+    pub picker: ColorPicker,
+    pub texture_manager: TextureManager,
+    pub display_picker: Option<Box<dyn DisplayPicker>>,
+    pub light_theme: Visuals,
+    pub dark_theme: Visuals,
+    pub saved_colors: SavedColors,
+    pub error_message: Option<String>,
+
+    pub current_tab: Option<TopMenuTab>,
+    pub show_sidepanel: bool,
+
+    pub settings_window: SettingsWindow,
+    pub export_window: ExportWindow,
+    pub hues_window: HuesWindow,
+    pub tints_window: TintsWindow,
+    pub shades_window: ShadesWindow,
+}
+
+impl epi::App for App {
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
         let tex_allocator = &mut Some(frame.tex_allocator());
 
         self.top_panel(ctx);
-        if self.saved_panel_visible {
+        if self.show_sidepanel {
             self.side_panel(ctx, tex_allocator);
         }
         self.central_panel(ctx, tex_allocator);
@@ -335,76 +417,58 @@ impl epi::App for ColorPicker {
     }
 }
 
-impl Default for ColorPicker {
+impl Default for App {
     fn default() -> Self {
         Self {
-            color_size: 300.,
-            hex_color: "".to_string(),
-            cur_color: Color::black(),
-            sliders: ColorSliders::default(),
-            saved_sliders: None,
-            numof_shades: 6,
-            numof_tints: 6,
-            numof_hues: 4,
-            shade_color_size: 100.,
-            tint_color_size: 100.,
-            hue_color_size: 100.,
-            hues_step: 0.05,
-            scheme_color_size: 200.,
-            scheme_ty: SchemeType::Complementary,
-            tex_mngr: TextureManager::default(),
-            main_width: 0.,
-            err: None,
-            side_panel_visible: None,
-            saved_panel_visible: false,
-            saved_colors: SavedColors::default(),
+            picker: ColorPicker::default(),
+            texture_manager: TextureManager::default(),
+            display_picker: picker::init_display_picker(),
             light_theme: light_visuals(),
             dark_theme: dark_visuals(),
-            show_settings: false,
-            show_export: false,
-            upper_hex: false,
+            saved_colors: SavedColors::default(),
+            error_message: None,
 
-            export_format: PaletteFormat::Gimp,
-            export_name: "".to_string(),
-            export_status: Ok("".to_string()),
-            export_path: env::current_dir()
-                .map(|d| d.to_string_lossy().to_string())
-                .unwrap_or_default(),
+            current_tab: None,
+            show_sidepanel: false,
 
-            display_picker: picker::init_display_picker(),
+            settings_window: SettingsWindow::default(),
+            export_window: ExportWindow::default(),
+            hues_window: HuesWindow::default(),
+            tints_window: TintsWindow::default(),
+            shades_window: ShadesWindow::default(),
         }
     }
 }
 
-impl ColorPicker {
+impl App {
     fn set_cur_color(&mut self, color: impl Into<Color>) {
         let color = color.into();
-        self.sliders.set_color(color);
-        self.cur_color = color;
+        self.picker.sliders.set_color(color);
+        self.picker.current_color = color;
     }
 
     fn restore_sliders_if_saved(&mut self) {
-        if let Some(saved) = std::mem::take(&mut self.saved_sliders) {
-            self.sliders.restore(saved);
+        if let Some(saved) = std::mem::take(&mut self.picker.saved_sliders) {
+            self.picker.sliders.restore(saved);
         }
     }
 
     fn save_sliders_if_unsaved(&mut self) {
-        if self.saved_sliders.is_none() {
-            self.saved_sliders = Some(self.sliders.clone());
+        if self.picker.saved_sliders.is_none() {
+            self.picker.saved_sliders = Some(self.picker.sliders.clone());
         }
     }
 
     fn rgb_changed(&mut self) -> bool {
-        let rgb = self.cur_color.rgba();
-        let r = self.sliders.r / u8::MAX as f32;
-        let g = self.sliders.g / u8::MAX as f32;
-        let b = self.sliders.b / u8::MAX as f32;
+        let rgb = self.picker.current_color.rgba();
+        let r = self.picker.sliders.r / u8::MAX as f32;
+        let g = self.picker.sliders.g / u8::MAX as f32;
+        let b = self.picker.sliders.b / u8::MAX as f32;
         if (r - rgb.r()).abs() > f32::EPSILON
             || (g - rgb.g()).abs() > f32::EPSILON
             || (b - rgb.b()).abs() > f32::EPSILON
         {
-            self.saved_sliders = None;
+            self.picker.saved_sliders = None;
             self.set_cur_color(Rgba::from_rgb(r, g, b));
             true
         } else {
@@ -413,20 +477,20 @@ impl ColorPicker {
     }
 
     fn hsva_changed(&mut self) -> bool {
-        let hsva = Hsva::from(self.cur_color);
-        if (self.sliders.hue - hsva.h).abs() > f32::EPSILON
-            || (self.sliders.sat - hsva.s).abs() > f32::EPSILON
-            || (self.sliders.val - hsva.v).abs() > f32::EPSILON
+        let hsva = Hsva::from(self.picker.current_color);
+        if (self.picker.sliders.hue - hsva.h).abs() > f32::EPSILON
+            || (self.picker.sliders.sat - hsva.s).abs() > f32::EPSILON
+            || (self.picker.sliders.val - hsva.v).abs() > f32::EPSILON
         {
-            if self.sliders.val == 0. {
+            if self.picker.sliders.val == 0. {
                 self.save_sliders_if_unsaved();
-            } else if self.sliders.val > 0. {
+            } else if self.picker.sliders.val > 0. {
                 self.restore_sliders_if_saved();
             }
             self.set_cur_color(Hsva::new(
-                self.sliders.hue,
-                self.sliders.sat,
-                self.sliders.val,
+                self.picker.sliders.hue,
+                self.picker.sliders.sat,
+                self.picker.sliders.val,
                 1.,
             ));
             true
@@ -436,22 +500,22 @@ impl ColorPicker {
     }
 
     fn cmyk_changed(&mut self) -> bool {
-        let cmyk = Cmyk::from(self.cur_color);
-        if (self.sliders.c - cmyk.c).abs() > f32::EPSILON
-            || (self.sliders.m - cmyk.m).abs() > f32::EPSILON
-            || (self.sliders.y - cmyk.y).abs() > f32::EPSILON
-            || (self.sliders.k - cmyk.k).abs() > f32::EPSILON
+        let cmyk = Cmyk::from(self.picker.current_color);
+        if (self.picker.sliders.c - cmyk.c).abs() > f32::EPSILON
+            || (self.picker.sliders.m - cmyk.m).abs() > f32::EPSILON
+            || (self.picker.sliders.y - cmyk.y).abs() > f32::EPSILON
+            || (self.picker.sliders.k - cmyk.k).abs() > f32::EPSILON
         {
-            if (self.sliders.k - 1.).abs() < f32::EPSILON {
+            if (self.picker.sliders.k - 1.).abs() < f32::EPSILON {
                 self.save_sliders_if_unsaved();
-            } else if self.sliders.k < 1. {
+            } else if self.picker.sliders.k < 1. {
                 self.restore_sliders_if_saved();
             }
             self.set_cur_color(Cmyk::new(
-                self.sliders.c,
-                self.sliders.m,
-                self.sliders.y,
-                self.sliders.k,
+                self.picker.sliders.c,
+                self.picker.sliders.m,
+                self.picker.sliders.y,
+                self.picker.sliders.k,
             ));
             true
         } else {
@@ -461,15 +525,15 @@ impl ColorPicker {
 
     #[allow(dead_code)]
     fn lch_changed(&mut self) -> bool {
-        let lch = Lch::from(self.cur_color);
-        if (self.sliders.lch_l - lch.l).abs() > f32::EPSILON
-            || (self.sliders.lch_c - lch.c).abs() > f32::EPSILON
-            || (self.sliders.lch_h - lch.h).abs() > f32::EPSILON
+        let lch = Lch::from(self.picker.current_color);
+        if (self.picker.sliders.lch_l - lch.l).abs() > f32::EPSILON
+            || (self.picker.sliders.lch_c - lch.c).abs() > f32::EPSILON
+            || (self.picker.sliders.lch_h - lch.h).abs() > f32::EPSILON
         {
             self.set_cur_color(Lch::new(
-                self.sliders.lch_l,
-                self.sliders.lch_c,
-                self.sliders.lch_h,
+                self.picker.sliders.lch_l,
+                self.picker.sliders.lch_c,
+                self.picker.sliders.lch_h,
             ));
             true
         } else {
@@ -478,15 +542,15 @@ impl ColorPicker {
     }
 
     fn hsl_changed(&mut self) -> bool {
-        let hsl = Hsl::from(self.cur_color);
-        if (self.sliders.hsl_h - hsl.h).abs() > f32::EPSILON
-            || (self.sliders.hsl_s - hsl.s).abs() > f32::EPSILON
-            || (self.sliders.hsl_l - hsl.l).abs() > f32::EPSILON
+        let hsl = Hsl::from(self.picker.current_color);
+        if (self.picker.sliders.hsl_h - hsl.h).abs() > f32::EPSILON
+            || (self.picker.sliders.hsl_s - hsl.s).abs() > f32::EPSILON
+            || (self.picker.sliders.hsl_l - hsl.l).abs() > f32::EPSILON
         {
             self.set_cur_color(Hsl::new(
-                self.sliders.hsl_h,
-                self.sliders.hsl_s,
-                self.sliders.hsl_l,
+                self.picker.sliders.hsl_h,
+                self.picker.sliders.hsl_s,
+                self.picker.sliders.hsl_l,
             ));
             true
         } else {
@@ -510,46 +574,46 @@ impl ColorPicker {
     fn add_color(&mut self, color: Color) {
         if !self.saved_colors.add(color) {
             let hex = self.color_hex(&color);
-            self.err = Some(format!("Color {} already saved!", hex));
+            self.error_message = Some(format!("Color {} already saved!", hex));
         } else {
-            self.err = None;
-            self.saved_panel_visible = true;
+            self.error_message = None;
+            self.show_sidepanel = true;
         }
     }
 
     fn add_cur_color(&mut self) {
-        self.add_color(self.cur_color)
+        self.add_color(self.picker.current_color)
     }
 
     fn hex_input(&mut self, ui: &mut Ui) {
         ui.collapsing("Text input", |ui| {
             ui.label("Enter a hex color: ");
-            let enter_bar = ui.horizontal(|ui| {
-                let resp = ui.text_edit_singleline(&mut self.hex_color);
+            ui.horizontal(|ui| {
+                let resp = ui.text_edit_singleline(&mut self.picker.hex_color);
                 if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
                     || ui.button("▶").on_hover_text("Use this color").clicked()
                 {
-                    if self.hex_color.len() < 6 {
-                        self.err = Some("Enter a color first (ex. ab12ff #1200ff)".to_owned());
+                    if self.picker.hex_color.len() < 6 {
+                        self.error_message =
+                            Some("Enter a color first (ex. ab12ff #1200ff)".to_owned());
                     } else if let Some(color) =
-                        Color::from_hex(self.hex_color.trim_start_matches('#'))
+                        Color::from_hex(self.picker.hex_color.trim_start_matches('#'))
                     {
                         self.set_cur_color(color);
-                        self.err = None;
+                        self.error_message = None;
                     } else {
-                        self.err = Some("The entered hex color is not valid".to_owned());
+                        self.error_message = Some("The entered hex color is not valid".to_owned());
                     }
                 }
                 if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
                     self.add_cur_color()
                 }
             });
-            self.main_width = enter_bar.response.rect.width();
         });
     }
 
     fn color_hex(&self, color: &Color) -> String {
-        if self.upper_hex {
+        if self.settings_window.upper_hex {
             color.as_hex().to_uppercase()
         } else {
             color.as_hex()
@@ -561,13 +625,13 @@ impl ColorPicker {
             ($ui:ident, $it:ident, $label:literal, $range:expr, $($tt:tt)+) => {
                 $ui.add_space(7.);
                 $ui.horizontal(|mut ui| {
-                    let resp = color_slider_1d(&mut ui, &mut self.sliders.$it, $range, $($tt)+).on_hover_text($label);
+                    let resp = color_slider_1d(&mut ui, &mut self.picker.sliders.$it, $range, $($tt)+).on_hover_text($label);
                     if resp.changed() {
                         self.check_color_change();
                     }
                     ui.add_space(7.);
                     ui.label(format!("{}: ", $label));
-                    ui.add(DragValue::new(&mut self.sliders.$it).clamp_range($range));
+                    ui.add(DragValue::new(&mut self.picker.sliders.$it).clamp_range($range));
                 });
             };
         }
@@ -593,7 +657,7 @@ impl ColorPicker {
                 slider!(ui, k, "key", 0. ..=1., |k| Cmyk::new(0., 0., 0., k).into());
             });
 
-            let mut opaque = HsvaGamma::from(self.cur_color);
+            let mut opaque = HsvaGamma::from(self.picker.current_color);
             opaque.a = 1.;
 
             ui.collapsing("HSV", |ui| {
@@ -608,7 +672,7 @@ impl ColorPicker {
                     .into());
             });
 
-            let opaque = Hsl::from(self.cur_color);
+            let opaque = Hsl::from(self.picker.current_color);
 
             ui.collapsing("HSL", |ui| {
                 slider!(ui, hsl_h, "hue", 0. ..=1., |h| Hsl { h, ..opaque }.into());
@@ -671,17 +735,17 @@ impl ColorPicker {
         color: &Color,
         size: Vec2,
         ui: &mut Ui,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        texture_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         with_label: bool,
     ) {
         let hex = self.color_hex(color);
         let color_box = tex_color(
             ui,
-            tex_allocator,
-            &mut self.tex_mngr,
+            texture_allocator,
+            &mut self.texture_manager,
             color.as_32(),
             size,
-            Some(&color_tooltip(color, self.upper_hex)),
+            Some(&color_tooltip(color, self.settings_window.upper_hex)),
         );
         if let Some(color_box) = color_box {
             if with_label {
@@ -766,92 +830,91 @@ impl ColorPicker {
         ui.horizontal(|ui| {
             self.dark_light_switch(ui);
             if ui.button("⚙").on_hover_text("Settings").clicked() {
-                self.show_settings = true;
+                self.settings_window.show = true;
             }
             if ui
                 .button("↔")
                 .on_hover_text("Show/hide side panel")
                 .clicked()
             {
-                self.saved_panel_visible = !self.saved_panel_visible;
+                self.show_sidepanel = !self.show_sidepanel;
             }
             ui.add_space(50.);
 
-            ui.selectable_value(&mut self.side_panel_visible, Some(SideTab::Hues), "hues");
-            ui.selectable_value(&mut self.side_panel_visible, Some(SideTab::Tints), "tints");
-            ui.selectable_value(
-                &mut self.side_panel_visible,
-                Some(SideTab::Shades),
-                "shades",
-            );
+            ui.selectable_value(&mut self.current_tab, Some(TopMenuTab::Hues), "hues");
+            ui.selectable_value(&mut self.current_tab, Some(TopMenuTab::Tints), "tints");
+            ui.selectable_value(&mut self.current_tab, Some(TopMenuTab::Shades), "shades");
         });
     }
 
     fn export_window(&mut self, ctx: &egui::CtxRef) {
-        if self.show_export {
+        if self.export_window.show {
             let mut show = true;
             Window::new("export").open(&mut show).show(ctx, |ui| {
                 ui.vertical(|ui| {
                     ui.horizontal(|ui| {
                         ComboBox::from_label("format")
-                            .selected_text(self.export_format.as_ref())
+                            .selected_text(self.export_window.format.as_ref())
                             .show_ui(ui, |ui| {
                                 ui.selectable_value(
-                                    &mut self.export_format,
+                                    &mut self.export_window.format,
                                     PaletteFormat::Gimp,
                                     PaletteFormat::Gimp.as_ref(),
                                 );
                                 ui.selectable_value(
-                                    &mut self.export_format,
+                                    &mut self.export_window.format,
                                     PaletteFormat::Text,
                                     PaletteFormat::Text.as_ref(),
                                 );
                             });
                     });
                     ui.label("Export path:");
-                    ui.text_edit_singleline(&mut self.export_path);
+                    ui.text_edit_singleline(&mut self.export_window.path);
                     ui.label("Name:");
-                    ui.text_edit_singleline(&mut self.export_name);
+                    ui.text_edit_singleline(&mut self.export_window.name);
 
-                    match &self.export_status {
+                    match &self.export_window.export_status {
                         Ok(msg) => ui.colored_label(Color32::GREEN, msg),
                         Err(msg) => ui.colored_label(Color32::RED, msg),
                     };
 
                     if ui.button("export").clicked() {
-                        let palette = match self.export_format {
+                        let palette = match self.export_window.format {
                             PaletteFormat::Gimp => {
-                                self.saved_colors.as_gimp_palette(&self.export_name)
+                                self.saved_colors.as_gimp_palette(&self.export_window.name)
                             }
                             PaletteFormat::Text => self.saved_colors.as_text_palette(),
                         };
-                        let p = PathBuf::from(&self.export_path);
-                        let filename =
-                            format!("{}.{}", &self.export_name, self.export_format.extension());
+                        let p = PathBuf::from(&self.export_window.path);
+                        let filename = format!(
+                            "{}.{}",
+                            &self.export_window.name,
+                            self.export_window.format.extension()
+                        );
                         if let Err(e) = fs::write(p.join(&filename), palette) {
-                            self.export_status = Err(e.to_string());
+                            self.export_window.export_status = Err(e.to_string());
                         } else {
-                            self.export_status = Ok("export succesful".to_string());
+                            self.export_window.export_status = Ok("export succesful".to_string());
                         }
                     }
                 });
             });
 
             if !show {
-                self.show_export = false;
+                self.export_window.show = false;
             }
         }
     }
 
     fn settings_window(&mut self, ctx: &egui::CtxRef) {
-        if self.show_settings {
+        if self.settings_window.show {
             let mut show = true;
             Window::new("settings").open(&mut show).show(ctx, |ui| {
-                ui.checkbox(&mut self.upper_hex, "Show hex as uppercase");
+                ui.checkbox(&mut self.settings_window.upper_hex, "Show hex as uppercase");
             });
 
             if !show {
-                self.show_settings = false;
+                self.settings_window.show = false;
             }
         }
     }
@@ -882,7 +945,7 @@ impl ColorPicker {
                     self.saved_colors.clear();
                 }
                 if ui.button("🖹").on_hover_text("Export").clicked() {
-                    self.show_export = true;
+                    self.export_window.show = true;
                 }
                 if ui
                     .button("📋")
@@ -922,7 +985,7 @@ impl ColorPicker {
                             tex_color(
                                 ui,
                                 tex_allocator,
-                                &mut self.tex_mngr,
+                                &mut self.texture_manager,
                                 color.as_32(),
                                 size,
                                 Some(&help),
@@ -958,13 +1021,13 @@ impl ColorPicker {
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
-        if let Some(err) = &self.err {
+        if let Some(err) = &self.error_message {
             ui.colored_label(Color32::RED, err);
         }
         self.settings_window(ctx);
         self.export_window(ctx);
 
-        let hex = self.color_hex(&self.cur_color);
+        let hex = self.color_hex(&self.picker.current_color);
 
         ui.horizontal(|ui| {
             ui.label("Current color: ");
@@ -975,9 +1038,9 @@ impl ColorPicker {
                 .clicked()
             {
                 if let Err(e) = save_to_clipboard(format!("#{}", hex)) {
-                    self.err = Some(format!("Failed to save color to clipboard - {}", e));
+                    self.error_message = Some(format!("Failed to save color to clipboard - {}", e));
                 } else {
-                    self.err = None;
+                    self.error_message = None;
                 }
             }
             if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {

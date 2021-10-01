@@ -2,7 +2,7 @@ mod app;
 mod color;
 mod picker;
 
-pub use app::ColorPicker as Epick;
+pub use app::App as Epick;
 
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
