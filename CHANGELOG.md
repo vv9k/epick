@@ -5,5 +5,5 @@
 - Windows opened by tabs like `hues`, `tints` or `shades` are now free to move around
 - Monospaced text now correctly uses a custom font `FiraCode` for rendering
 - Support for displaying color under the cursor (X11 and Windows supported for now)
-- Added Windows builds to GitHub releases
+- Added Windows and MacOS builds to GitHub releases
 - Use a native-dialog when selecting the path to export the saved colors palette
