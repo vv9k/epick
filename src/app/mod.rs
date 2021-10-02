@@ -2,12 +2,12 @@ mod render;
 mod scheme;
 mod ui;
 
-use render::{color_slider_1d, tex_color, TextureManager};
-use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
-
 use crate::color::{Cmyk, Color, Hsl, Lch};
 use crate::picker::{self, DisplayPicker};
 use crate::save_to_clipboard;
+use render::{color_slider_1d, tex_color, TextureManager};
+use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
+
 use egui::{color::Color32, vec2, Ui};
 use egui::{
     color::{Hsva, HsvaGamma},
@@ -16,6 +16,9 @@ use egui::{
 use std::borrow::Cow;
 use std::path::PathBuf;
 use std::{env, fs};
+
+#[cfg(not(target_arch = "wasm32"))]
+use egui::TextEdit;
 
 static ADD_ICON: &str = "➕";
 static ADD_DESCR: &str = "Add this color to saved colors";
@@ -253,6 +256,7 @@ pub struct ExportWindow {
     pub name: String,
     pub export_status: Result<String, String>,
     pub format: PaletteFormat,
+    pub export_path_editable: bool,
 }
 
 impl Default for ExportWindow {
@@ -265,6 +269,7 @@ impl Default for ExportWindow {
             path: env::current_dir()
                 .map(|d| d.to_string_lossy().to_string())
                 .unwrap_or_default(),
+            export_path_editable: false,
         }
     }
 }
@@ -871,7 +876,44 @@ impl App {
                             });
                     });
                     ui.label("Export path:");
-                    ui.text_edit_singleline(&mut self.export_window.path);
+                    #[cfg(not(target_arch = "wasm32"))]
+                    {
+                        if ui
+                            .add(
+                                TextEdit::singleline(&mut self.export_window.path)
+                                    .enabled(self.export_window.export_path_editable),
+                            )
+                            .clicked()
+                            && !self.export_window.export_path_editable
+                        {
+                            let location = if let Ok(path) = std::env::current_dir() {
+                                path.to_string_lossy().to_string()
+                            } else {
+                                "".into()
+                            };
+
+                            match native_dialog::FileDialog::new()
+                                .set_location(&location)
+                                .add_filter("GIMP Palette", &["gpl"])
+                                .add_filter("Text file", &["txt"])
+                                .show_save_single_file()
+                            {
+                                Ok(Some(path)) => {
+                                    self.export_window.path = path.to_string_lossy().to_string()
+                                }
+                                Err(e) => {
+                                    self.export_window.export_path_editable = true;
+                                    self.error_message = Some(e.to_string())
+                                }
+                                Ok(None) => {}
+                            }
+                        };
+                    }
+                    #[cfg(target_arch = "wasm32")]
+                    {
+                        ui.text_edit_singleline(&mut self.export_window.path);
+                    }
+
                     ui.label("Name:");
                     ui.text_edit_singleline(&mut self.export_window.name);
 

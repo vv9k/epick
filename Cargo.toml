@@ -25,3 +25,5 @@ windows = "0.21"
 [target.'cfg(windows)'.build-dependencies]
 windows = "0.21"
 
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+native-dialog = "0.5"
