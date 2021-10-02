@@ -375,6 +375,8 @@ impl epi::App for App {
 
         frame.set_window_size(ctx.used_size());
 
+        // No need to repaint in wasm, there is no way to pick color from under the cursor anyway
+        #[cfg(not(target_arch = "wasm32"))]
         if !ctx.is_pointer_over_area() {
             // This paint request makes sure that the color displayed as color under cursor
             // gets updated even when the pointer is not in the egui window area.
