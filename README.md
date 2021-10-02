@@ -25,9 +25,9 @@ To manually build **epick** you'll need the latest Rust with `cargo`. The build 
 $ cargo build --release
 ```
 
-## Screenshot
+## Demo
 
-![Screenshot of UI](https://github.com/vv9k/epick/blob/master/assets/ui.png)
+![Demo GIF](https://github.com/vv9k/epick/blob/master/assets/epick.gif)
 
 ## License
 [GPLv3](https://github.com/vv9k/epick/blob/master/LICENSE)
