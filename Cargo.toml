@@ -5,7 +5,6 @@ authors = ["wojciechkepka <wojtek.kepka@protonmail.com>"]
 edition = "2018"
 
 [lib]
-name = "libepick"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
@@ -25,3 +24,4 @@ windows = "0.21"
 
 [target.'cfg(windows)'.build-dependencies]
 windows = "0.21"
+
