@@ -13,6 +13,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Rust
@@ -29,6 +30,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Rust
@@ -44,6 +46,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Rust
@@ -58,6 +61,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          - macos-latest
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -87,6 +91,9 @@ jobs:
         - build: windows-msvc
           os: windows-latest
           target: x86_64-pc-windows-msvc
+        - build: macos
+          os: macos-latest
+          target: aarch64-apple-darwin
 
     steps:
       - name: Set up Rust
@@ -94,14 +101,14 @@ jobs:
       - uses: actions/checkout@master
       - name: Set version
         id: set_version
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         run: echo "::set-output name=EPICK_VERSION::${GITHUB_REF#refs/tags/}"
       - name: Set version
         id: set_version_win
         if: matrix.os == 'windows-latest'
         run: echo "::set-output name=EPICK_VERSION::$(git describe --tags --abbrev=0)"
       - name: Set archive name
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         id: set_name
         run: echo "::set-output name=EPICK_ARCHIVE::epick-${{ steps.set_version.outputs.EPICK_VERSION}}-${{ matrix.target}}"
       - name: Set archive name
@@ -116,7 +123,7 @@ jobs:
       - name: Prepare archive directory
         run: mkdir epick
       - name: Move release files
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         run: |
           mv target/release/epick epick/
       - name: Move release files
@@ -128,17 +135,16 @@ jobs:
           mv README.md epick/
           mv LICENSE epick/
       - name: Create archives
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         run: |
           tar -zcvf ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.gz epick
           tar -Jcvf ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.xz epick
-          7z a ${{ steps.set_name_win.outputs.EPICK_ARCHIVE }}.zip epick
       - name: Create archives
         if: matrix.os == 'windows-latest'
         run: |
           7z a ${{ steps.set_name_win.outputs.EPICK_ARCHIVE }}.zip epick
       - name: Upload gz
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_name: wojciechkepka/epick
@@ -148,7 +154,7 @@ jobs:
           tag: ${{ steps.set_version.outputs.EPICK_VERSION }}
           overwrite: true
       - name: Upload xz
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_name: wojciechkepka/epick
