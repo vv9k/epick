@@ -17,7 +17,8 @@ lazy_static = "1"
 anyhow = "1"
 
 [target.'cfg(unix)'.dependencies]
-x11rb = { version = "0.9", features = ["image"] }
+x11rb = { version = "0.9", features = ["image", "cursor", "resource_manager"] }
+image = "0.23"
 
 [target.'cfg(windows)'.dependencies]
 windows = "0.21"

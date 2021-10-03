@@ -3,7 +3,7 @@ mod scheme;
 mod ui;
 
 use crate::color::{Cmyk, Color, Hsl, Lch};
-use crate::picker::{self, DisplayPicker};
+use crate::picker::{self, DisplayPickerExt};
 use crate::save_to_clipboard;
 use render::{color_slider_1d, tex_color, TextureManager};
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
@@ -15,7 +15,11 @@ use egui::{
 };
 use std::borrow::Cow;
 use std::path::PathBuf;
+use std::rc::Rc;
 use std::{env, fs};
+
+#[cfg(unix)]
+use x11rb::protocol::xproto;
 
 #[cfg(not(target_arch = "wasm32"))]
 use egui::TextEdit;
@@ -352,7 +356,7 @@ impl Default for ColorPicker {
 pub struct App {
     pub picker: ColorPicker,
     pub texture_manager: TextureManager,
-    pub display_picker: Option<Box<dyn DisplayPicker>>,
+    pub display_picker: Option<Rc<dyn DisplayPickerExt>>,
     pub light_theme: Visuals,
     pub dark_theme: Visuals,
     pub saved_colors: SavedColors,
@@ -366,6 +370,9 @@ pub struct App {
     pub hues_window: HuesWindow,
     pub tints_window: TintsWindow,
     pub shades_window: ShadesWindow,
+
+    #[cfg(unix)]
+    pub picker_window: Option<(xproto::Window, xproto::Gcontext)>,
 }
 
 impl epi::App for App {
@@ -386,7 +393,20 @@ impl epi::App for App {
             // This paint request makes sure that the color displayed as color under cursor
             // gets updated even when the pointer is not in the egui window area.
             ctx.request_repaint();
-            std::thread::sleep(std::time::Duration::from_millis(100));
+
+            const SLEEP_DURATION: u64 = 100; // ms
+            let sleep_duration = if cfg!(unix) {
+                if self.picker_window.is_some() {
+                    // Quicker repaints so that the zoomed window doesn't lag behind
+                    SLEEP_DURATION / 4
+                } else {
+                    SLEEP_DURATION
+                }
+            } else {
+                SLEEP_DURATION
+            };
+
+            std::thread::sleep(std::time::Duration::from_millis(sleep_duration));
         }
     }
 
@@ -443,6 +463,9 @@ impl Default for App {
             hues_window: HuesWindow::default(),
             tints_window: TintsWindow::default(),
             shades_window: ShadesWindow::default(),
+
+            #[cfg(unix)]
+            picker_window: None,
         }
     }
 }
@@ -1092,14 +1115,7 @@ impl App {
             }
         });
 
-        if let Some(picker) = &self.display_picker {
-            if let Ok(color) = picker.get_color_under_cursor() {
-                ui.horizontal(|mut ui| {
-                    ui.label("Color at cursor: ");
-                    self.color_box_label_side(&color, vec2(25., 25.), &mut ui, tex_allocator);
-                });
-            }
-        }
+        self.handle_display_picker(ui, tex_allocator);
 
         self.check_color_change();
         ui.add_space(7.);
@@ -1115,5 +1131,88 @@ impl App {
         self.shades(ctx, tex_allocator);
         self.tints(ctx, tex_allocator);
         self.hues(ctx, tex_allocator);
+    }
+
+    fn handle_display_picker(
+        &mut self,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+    ) {
+        if let Some(picker) = &self.display_picker {
+            const ZOOM_SCALE: f32 = 10.;
+            const ZOOM_WIN_WIDTH: u16 = 160;
+            const ZOOM_WIN_HEIGHT: u16 = 160;
+            const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
+            const ZOOM_IMAGE_HEIGHT: u16 = ZOOM_WIN_HEIGHT / ZOOM_SCALE as u16;
+            const ZOOM_WIN_OFFSET: i32 = 50;
+            const ZOOM_WIN_POINTER_DIAMETER: u16 = 10;
+            const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
+            const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
+            const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as i32;
+            let picker = Rc::clone(picker);
+            let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
+
+            if let Ok(color) = picker.get_color_under_cursor() {
+                ui.horizontal(|mut ui| {
+                    ui.label("Color at cursor: ");
+                    self.color_box_label_side(&color, vec2(25., 25.), &mut ui, tex_allocator);
+
+                    #[cfg(unix)]
+                    if ui.button("💉").clicked() {
+                        if self.picker_window.is_none() {
+                            if let Ok(window) = picker.spawn_window(
+                                "epick - cursor picker",
+                                (cursor_pos.0 + ZOOM_WIN_OFFSET) as i16,
+                                (cursor_pos.1 + ZOOM_WIN_OFFSET) as i16,
+                                ZOOM_WIN_WIDTH,
+                                ZOOM_WIN_HEIGHT,
+                                picker.screen_num(),
+                                crate::picker::x11::WindowType::Dialog,
+                            ) {
+                                self.picker_window = Some(window);
+                            }
+                        } else {
+                            // Close the window on second click
+                            let _ = picker.destroy_window(self.picker_window.unwrap().0);
+                            self.picker_window = None;
+                        }
+                    } else if let Some((window, gc)) = self.picker_window {
+                        if let Ok(img) = picker.get_image(
+                            picker.screen().root,
+                            (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET) as i16,
+                            (cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET) as i16,
+                            ZOOM_IMAGE_WIDTH,
+                            ZOOM_IMAGE_HEIGHT,
+                        ) {
+                            let img = crate::picker::x11::resize_image(&img, ZOOM_SCALE);
+                            if let Err(e) = img.put(picker.conn(), window, gc, 0, 0) {
+                                self.error_message = Some(e.to_string());
+                                return;
+                            };
+                            if let Err(e) = picker.draw_circle(
+                                window,
+                                gc,
+                                ((ZOOM_WIN_WIDTH / 2) - ZOOM_WIN_POINTER_RADIUS) as i16,
+                                ((ZOOM_WIN_HEIGHT / 2) - ZOOM_WIN_POINTER_RADIUS) as i16,
+                                ZOOM_WIN_POINTER_DIAMETER,
+                            ) {
+                                self.error_message = Some(e.to_string());
+                            };
+                        }
+                        if let Err(e) = picker.update_window_pos(
+                            window,
+                            cursor_pos.0 + ZOOM_WIN_OFFSET,
+                            cursor_pos.1 + ZOOM_WIN_OFFSET,
+                        ) {
+                            self.error_message = Some(e.to_string());
+                            return;
+                        }
+                        if let Err(e) = picker.flush() {
+                            self.error_message = Some(e.to_string());
+                        }
+                    }
+                });
+            }
+        };
     }
 }

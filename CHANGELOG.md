@@ -1,3 +1,6 @@
+# 0.5.0
+- Add ability to spawn a window that will follow the cursor and display a zoomed in image with a pointer to a pixel (Only X11)
+
 # 0.4.0
 
 - When moving the value slider of HSV or key slider of CMYK to edge values - 0 and 1 respectively, all other values would get reset to 0. Now the values are saved and when the value or key is brought back a little bit the values are restored
