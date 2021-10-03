@@ -3,6 +3,8 @@ pub mod windows;
 #[cfg(unix)]
 pub mod x11;
 
+#[cfg(windows)]
+pub use self::windows::DisplayPickerExt;
 #[cfg(unix)]
 pub use x11::DisplayPickerExt;
 
@@ -11,7 +13,6 @@ use anyhow::Result;
 use std::{fmt::Debug, rc::Rc};
 
 #[cfg(not(unix))]
-pub trait DisplayPickerExt: DisplayPicker {}
 
 pub trait DisplayPicker: Debug {
     fn get_cursor_pos(&self) -> Result<(i32, i32)>;

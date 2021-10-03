@@ -395,16 +395,15 @@ impl epi::App for App {
             ctx.request_repaint();
 
             const SLEEP_DURATION: u64 = 100; // ms
-            let sleep_duration = if cfg!(unix) {
-                if self.picker_window.is_some() {
-                    // Quicker repaints so that the zoomed window doesn't lag behind
-                    SLEEP_DURATION / 4
-                } else {
-                    SLEEP_DURATION
-                }
+            #[cfg(unix)]
+            let sleep_duration = if self.picker_window.is_some() {
+                // Quicker repaints so that the zoomed window doesn't lag behind
+                SLEEP_DURATION / 4
             } else {
                 SLEEP_DURATION
             };
+            #[cfg(not(unix))]
+            let sleep_duration = SLEEP_DURATION;
 
             std::thread::sleep(std::time::Duration::from_millis(sleep_duration));
         }
@@ -1139,80 +1138,90 @@ impl App {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
         if let Some(picker) = &self.display_picker {
-            const ZOOM_SCALE: f32 = 10.;
-            const ZOOM_WIN_WIDTH: u16 = 160;
-            const ZOOM_WIN_HEIGHT: u16 = 160;
-            const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
-            const ZOOM_IMAGE_HEIGHT: u16 = ZOOM_WIN_HEIGHT / ZOOM_SCALE as u16;
-            const ZOOM_WIN_OFFSET: i32 = 50;
-            const ZOOM_WIN_POINTER_DIAMETER: u16 = 10;
-            const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
-            const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
-            const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as i32;
             let picker = Rc::clone(picker);
-            let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
+
+            #[cfg(unix)]
+            self.handle_zoom_picker(ui, tex_allocator, picker);
 
             if let Ok(color) = picker.get_color_under_cursor() {
                 ui.horizontal(|mut ui| {
                     ui.label("Color at cursor: ");
                     self.color_box_label_side(&color, vec2(25., 25.), &mut ui, tex_allocator);
-
-                    #[cfg(unix)]
-                    if ui.button("💉").clicked() {
-                        if self.picker_window.is_none() {
-                            if let Ok(window) = picker.spawn_window(
-                                "epick - cursor picker",
-                                (cursor_pos.0 + ZOOM_WIN_OFFSET) as i16,
-                                (cursor_pos.1 + ZOOM_WIN_OFFSET) as i16,
-                                ZOOM_WIN_WIDTH,
-                                ZOOM_WIN_HEIGHT,
-                                picker.screen_num(),
-                                crate::picker::x11::WindowType::Dialog,
-                            ) {
-                                self.picker_window = Some(window);
-                            }
-                        } else {
-                            // Close the window on second click
-                            let _ = picker.destroy_window(self.picker_window.unwrap().0);
-                            self.picker_window = None;
-                        }
-                    } else if let Some((window, gc)) = self.picker_window {
-                        if let Ok(img) = picker.get_image(
-                            picker.screen().root,
-                            (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET) as i16,
-                            (cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET) as i16,
-                            ZOOM_IMAGE_WIDTH,
-                            ZOOM_IMAGE_HEIGHT,
-                        ) {
-                            let img = crate::picker::x11::resize_image(&img, ZOOM_SCALE);
-                            if let Err(e) = img.put(picker.conn(), window, gc, 0, 0) {
-                                self.error_message = Some(e.to_string());
-                                return;
-                            };
-                            if let Err(e) = picker.draw_circle(
-                                window,
-                                gc,
-                                ((ZOOM_WIN_WIDTH / 2) - ZOOM_WIN_POINTER_RADIUS) as i16,
-                                ((ZOOM_WIN_HEIGHT / 2) - ZOOM_WIN_POINTER_RADIUS) as i16,
-                                ZOOM_WIN_POINTER_DIAMETER,
-                            ) {
-                                self.error_message = Some(e.to_string());
-                            };
-                        }
-                        if let Err(e) = picker.update_window_pos(
-                            window,
-                            cursor_pos.0 + ZOOM_WIN_OFFSET,
-                            cursor_pos.1 + ZOOM_WIN_OFFSET,
-                        ) {
-                            self.error_message = Some(e.to_string());
-                            return;
-                        }
-                        if let Err(e) = picker.flush() {
-                            self.error_message = Some(e.to_string());
-                        }
-                    }
                 });
             }
         };
+    }
+
+    #[cfg(unix)]
+    fn handle_zoom_picker(
+        &mut self,
+        ui: &mut Ui,
+        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        picker: Rc<dyn DisplayPickerExt>,
+    ) {
+        const ZOOM_SCALE: f32 = 10.;
+        const ZOOM_WIN_WIDTH: u16 = 160;
+        const ZOOM_WIN_HEIGHT: u16 = 160;
+        const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
+        const ZOOM_IMAGE_HEIGHT: u16 = ZOOM_WIN_HEIGHT / ZOOM_SCALE as u16;
+        const ZOOM_WIN_OFFSET: i32 = 50;
+        const ZOOM_WIN_POINTER_DIAMETER: u16 = 10;
+        const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
+        const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
+        const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as i32;
+
+        if ui.button("💉").clicked() {
+            if self.picker_window.is_none() {
+                if let Ok(window) = picker.spawn_window(
+                    "epick - cursor picker",
+                    (cursor_pos.0 + ZOOM_WIN_OFFSET) as i16,
+                    (cursor_pos.1 + ZOOM_WIN_OFFSET) as i16,
+                    ZOOM_WIN_WIDTH,
+                    ZOOM_WIN_HEIGHT,
+                    picker.screen_num(),
+                    crate::picker::x11::WindowType::Dialog,
+                ) {
+                    self.picker_window = Some(window);
+                }
+            } else {
+                // Close the window on second click
+                let _ = picker.destroy_window(self.picker_window.unwrap().0);
+                self.picker_window = None;
+            }
+        } else if let Some((window, gc)) = self.picker_window {
+            if let Ok(img) = picker.get_image(
+                picker.screen().root,
+                (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET) as i16,
+                (cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET) as i16,
+                ZOOM_IMAGE_WIDTH,
+                ZOOM_IMAGE_HEIGHT,
+            ) {
+                let img = crate::picker::x11::resize_image(&img, ZOOM_SCALE);
+                if let Err(e) = img.put(picker.conn(), window, gc, 0, 0) {
+                    self.error_message = Some(e.to_string());
+                    return;
+                };
+                if let Err(e) = picker.draw_circle(
+                    window,
+                    gc,
+                    ((ZOOM_WIN_WIDTH / 2) - ZOOM_WIN_POINTER_RADIUS) as i16,
+                    ((ZOOM_WIN_HEIGHT / 2) - ZOOM_WIN_POINTER_RADIUS) as i16,
+                    ZOOM_WIN_POINTER_DIAMETER,
+                ) {
+                    self.error_message = Some(e.to_string());
+                };
+            }
+            if let Err(e) = picker.update_window_pos(
+                window,
+                cursor_pos.0 + ZOOM_WIN_OFFSET,
+                cursor_pos.1 + ZOOM_WIN_OFFSET,
+            ) {
+                self.error_message = Some(e.to_string());
+                return;
+            }
+            if let Err(e) = picker.flush() {
+                self.error_message = Some(e.to_string());
+            }
+        }
     }
 }

@@ -10,6 +10,8 @@ use Windows::Win32::Foundation::POINT;
 use Windows::Win32::Graphics::Gdi::{GetDC, GetPixel, ReleaseDC, CLR_INVALID, HDC};
 use Windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, GetDesktopWindow};
 
+pub trait DisplayPickerExt: DisplayPicker {}
+
 #[derive(Default, Debug, Clone)]
 pub struct WinConn {
     device_context: HDC,
@@ -49,7 +51,7 @@ impl Drop for WinConn {
 }
 
 impl DisplayPicker for WinConn {
-    fn get_cursor_xy(&self) -> Result<(i16, i16)> {
+    fn get_cursor_pos(&self) -> Result<(i32, i32)> {
         self.get_cursor_pos().map(|pos| (pos.x, pos.y))
     }
 
@@ -65,3 +67,5 @@ impl DisplayPicker for WinConn {
         Ok(Color::from(Color32::from_rgb(r, g, b)))
     }
 }
+
+impl DisplayPickerExt for WinConn {}
