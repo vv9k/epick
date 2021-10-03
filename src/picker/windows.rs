@@ -2,25 +2,52 @@
 
 windows::include_bindings!();
 
+use std::ptr::{null, null_mut};
+
 use crate::color::Color;
 use crate::picker::DisplayPicker;
 use anyhow::{Error, Result};
 use egui::Color32;
-use Windows::Win32::Foundation::POINT;
-use Windows::Win32::Graphics::Gdi::{GetDC, GetPixel, ReleaseDC, CLR_INVALID, HDC};
-use Windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, GetDesktopWindow};
+use Windows::Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, POINT, PWSTR, WPARAM};
+use Windows::Win32::Graphics::Gdi::{GetDC, GetPixel, ReleaseDC, UpdateWindow, CLR_INVALID, HDC};
+use Windows::Win32::System::LibraryLoader::GetModuleHandleW;
+use Windows::Win32::UI::WindowsAndMessaging::{
+    CreateWindowExW, DefWindowProcW, GetCursorPos, GetDesktopWindow, MoveWindow, RegisterClassExW,
+    ShowWindow, WNDCLASSEXW,
+};
 
-pub trait DisplayPickerExt: DisplayPicker {}
+pub use Windows::Win32::Foundation::HWND;
+pub use Windows::Win32::UI::WindowsAndMessaging::{SHOW_WINDOW_CMD, WINDOW_EX_STYLE, WINDOW_STYLE};
+
+pub trait DisplayPickerExt: DisplayPicker {
+    #[allow(clippy::too_many_arguments)]
+    fn spawn_window(
+        &self,
+        class_name: &str,
+        window_name: &str,
+        x: i32,
+        y: i32,
+        width: i32,
+        height: i32,
+        style: WINDOW_STYLE,
+    ) -> Result<HWND>;
+
+    fn show_window(&self, hwnd: HWND, display_mode: SHOW_WINDOW_CMD) -> Result<()>;
+    fn update_window(&self, hwnd: HWND) -> Result<()>;
+    fn move_window(&self, hwnd: HWND, x: i32, y: i32, width: i32, height: i32) -> Result<()>;
+}
 
 #[derive(Default, Debug, Clone)]
 pub struct WinConn {
     device_context: HDC,
+    hinstance: HINSTANCE,
 }
 
 impl WinConn {
     pub fn new() -> Self {
         WinConn {
             device_context: unsafe { GetDC(None) },
+            hinstance: unsafe { GetModuleHandleW(PWSTR(null_mut())) },
         }
     }
 
@@ -68,4 +95,76 @@ impl DisplayPicker for WinConn {
     }
 }
 
-impl DisplayPickerExt for WinConn {}
+impl DisplayPickerExt for WinConn {
+    fn spawn_window(
+        &self,
+        class_name: &str,
+        window_name: &str,
+        x: i32,
+        y: i32,
+        width: i32,
+        height: i32,
+        style: WINDOW_STYLE,
+    ) -> Result<HWND> {
+        let mut class_name = class_name.encode_utf16().collect::<Vec<_>>();
+
+        let mut class = WNDCLASSEXW {
+            cbSize: std::mem::size_of::<WNDCLASSEXW>() as u32,
+            ..Default::default()
+        };
+        class.lpszClassName = PWSTR(class_name.as_mut_ptr());
+        class.hInstance = self.hinstance;
+        class.lpfnWndProc = Some(wnd_proc);
+
+        let mut window_name = window_name.encode_utf16().collect::<Vec<_>>();
+
+        unsafe { RegisterClassExW(&class as *const WNDCLASSEXW) };
+
+        unsafe {
+            Ok(CreateWindowExW(
+                WINDOW_EX_STYLE(0),
+                PWSTR(class_name.as_mut_ptr()),
+                PWSTR(window_name.as_mut_ptr()),
+                style,
+                x,
+                y,
+                width,
+                height,
+                None,
+                None,
+                self.hinstance,
+                null(),
+            ))
+        }
+    }
+
+    fn show_window(&self, hwnd: HWND, display_mode: SHOW_WINDOW_CMD) -> Result<()> {
+        if !unsafe { ShowWindow(hwnd, display_mode) }.as_bool() {
+            return Err(Error::msg(format!("failed to show window {:?}", hwnd)));
+        }
+        Ok(())
+    }
+
+    fn update_window(&self, hwnd: HWND) -> Result<()> {
+        if !unsafe { UpdateWindow(hwnd) }.as_bool() {
+            return Err(Error::msg(format!("failed to update window {:?}", hwnd)));
+        }
+        Ok(())
+    }
+
+    fn move_window(&self, hwnd: HWND, x: i32, y: i32, width: i32, height: i32) -> Result<()> {
+        if !unsafe { MoveWindow(hwnd, x, y, width, height, true) }.as_bool() {
+            return Err(Error::msg(format!("failed to move window {:?}", hwnd)));
+        }
+        Ok(())
+    }
+}
+
+unsafe extern "system" fn wnd_proc(
+    param0: HWND,
+    param1: u32,
+    param2: WPARAM,
+    param3: LPARAM,
+) -> LRESULT {
+    DefWindowProcW(param0, param1, param2, param3)
+}
