@@ -12,8 +12,6 @@ use crate::color::Color;
 use anyhow::Result;
 use std::{fmt::Debug, rc::Rc};
 
-#[cfg(not(unix))]
-
 pub trait DisplayPicker: Debug {
     fn get_cursor_pos(&self) -> Result<(i32, i32)>;
     fn get_color_under_cursor(&self) -> Result<Color>;
