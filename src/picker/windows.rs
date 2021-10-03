@@ -12,12 +12,14 @@ use Windows::Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, POINT, PWSTR, WPARA
 use Windows::Win32::Graphics::Gdi::{GetDC, GetPixel, ReleaseDC, UpdateWindow, CLR_INVALID, HDC};
 use Windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use Windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DefWindowProcW, GetCursorPos, GetDesktopWindow, MoveWindow, RegisterClassExW,
-    ShowWindow, WNDCLASSEXW,
+    CreateWindowExW, DefWindowProcW, DestroyWindow, GetCursorPos, GetDesktopWindow, MoveWindow,
+    RegisterClassExW, ShowWindow, WNDCLASSEXW,
 };
 
 pub use Windows::Win32::Foundation::HWND;
-pub use Windows::Win32::UI::WindowsAndMessaging::{SHOW_WINDOW_CMD, WINDOW_EX_STYLE, WINDOW_STYLE};
+pub use Windows::Win32::UI::WindowsAndMessaging::{
+    SHOW_WINDOW_CMD, SW_SHOWDEFAULT, WINDOW_EX_STYLE, WINDOW_STYLE, WS_BORDER, WS_POPUP,
+};
 
 pub trait DisplayPickerExt: DisplayPicker {
     #[allow(clippy::too_many_arguments)]
@@ -33,6 +35,7 @@ pub trait DisplayPickerExt: DisplayPicker {
     ) -> Result<HWND>;
 
     fn show_window(&self, hwnd: HWND, display_mode: SHOW_WINDOW_CMD) -> Result<()>;
+    fn destroy_window(&self, hwnd: HWND) -> Result<()>;
     fn update_window(&self, hwnd: HWND) -> Result<()>;
     fn move_window(&self, hwnd: HWND, x: i32, y: i32, width: i32, height: i32) -> Result<()>;
 }
@@ -141,6 +144,13 @@ impl DisplayPickerExt for WinConn {
     fn show_window(&self, hwnd: HWND, display_mode: SHOW_WINDOW_CMD) -> Result<()> {
         if !unsafe { ShowWindow(hwnd, display_mode) }.as_bool() {
             return Err(Error::msg(format!("failed to show window {:?}", hwnd)));
+        }
+        Ok(())
+    }
+
+    fn destroy_window(&self, hwnd: HWND) -> Result<()> {
+        if !unsafe { DestroyWindow(hwnd) }.as_bool() {
+            return Err(Error::msg(format!("failed to close window {:?}", hwnd)));
         }
         Ok(())
     }

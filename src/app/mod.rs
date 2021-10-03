@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 mod render;
 mod scheme;
 mod ui;
@@ -21,11 +22,26 @@ use std::{env, fs};
 #[cfg(unix)]
 use x11rb::protocol::xproto;
 
+#[cfg(windows)]
+use crate::picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
+
 #[cfg(not(target_arch = "wasm32"))]
 use egui::TextEdit;
 
 static ADD_ICON: &str = "➕";
+static ZOOM_PICKER_ICON: &str = "💉";
 static ADD_DESCR: &str = "Add this color to saved colors";
+static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";
+const ZOOM_SCALE: f32 = 10.;
+const ZOOM_WIN_WIDTH: u16 = 160;
+const ZOOM_WIN_HEIGHT: u16 = 160;
+const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
+const ZOOM_IMAGE_HEIGHT: u16 = ZOOM_WIN_HEIGHT / ZOOM_SCALE as u16;
+const ZOOM_WIN_OFFSET: i32 = 50;
+const ZOOM_WIN_POINTER_DIAMETER: u16 = 10;
+const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
+const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
+const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as i32;
 
 //####################################################################################################
 
@@ -373,6 +389,8 @@ pub struct App {
 
     #[cfg(unix)]
     pub picker_window: Option<(xproto::Window, xproto::Gcontext)>,
+    #[cfg(windows)]
+    pub picker_window: Option<HWND>,
 }
 
 impl epi::App for App {
@@ -395,14 +413,14 @@ impl epi::App for App {
             ctx.request_repaint();
 
             const SLEEP_DURATION: u64 = 100; // ms
-            #[cfg(unix)]
+            #[cfg(any(unix, windows))]
             let sleep_duration = if self.picker_window.is_some() {
                 // Quicker repaints so that the zoomed window doesn't lag behind
                 SLEEP_DURATION / 4
             } else {
                 SLEEP_DURATION
             };
-            #[cfg(not(unix))]
+            #[cfg(not(any(unix, windows)))]
             let sleep_duration = SLEEP_DURATION;
 
             std::thread::sleep(std::time::Duration::from_millis(sleep_duration));
@@ -464,6 +482,8 @@ impl Default for App {
             shades_window: ShadesWindow::default(),
 
             #[cfg(unix)]
+            picker_window: None,
+            #[cfg(windows)]
             picker_window: None,
         }
     }
@@ -1137,16 +1157,15 @@ impl App {
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
-        if let Some(picker) = &self.display_picker {
-            let picker = Rc::clone(picker);
-
-            #[cfg(unix)]
-            self.handle_zoom_picker(ui, tex_allocator, picker);
-
+        if let Some(picker) = self.display_picker.clone() {
             if let Ok(color) = picker.get_color_under_cursor() {
                 ui.horizontal(|mut ui| {
                     ui.label("Color at cursor: ");
                     self.color_box_label_side(&color, vec2(25., 25.), &mut ui, tex_allocator);
+                    #[cfg(unix)]
+                    self.handle_zoom_picker(ui, tex_allocator, picker);
+                    #[cfg(windows)]
+                    self.handle_zoom_picker(ui, picker);
                 });
             }
         };
@@ -1159,21 +1178,11 @@ impl App {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         picker: Rc<dyn DisplayPickerExt>,
     ) {
-        const ZOOM_SCALE: f32 = 10.;
-        const ZOOM_WIN_WIDTH: u16 = 160;
-        const ZOOM_WIN_HEIGHT: u16 = 160;
-        const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
-        const ZOOM_IMAGE_HEIGHT: u16 = ZOOM_WIN_HEIGHT / ZOOM_SCALE as u16;
-        const ZOOM_WIN_OFFSET: i32 = 50;
-        const ZOOM_WIN_POINTER_DIAMETER: u16 = 10;
-        const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
-        const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
-        const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as i32;
-
-        if ui.button("💉").clicked() {
+        let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
+        if ui.button(ZOOM_PICKER_ICON).clicked() {
             if self.picker_window.is_none() {
                 if let Ok(window) = picker.spawn_window(
-                    "epick - cursor picker",
+                    CURSOR_PICKER_WINDOW_NAME,
                     (cursor_pos.0 + ZOOM_WIN_OFFSET) as i16,
                     (cursor_pos.1 + ZOOM_WIN_OFFSET) as i16,
                     ZOOM_WIN_WIDTH,
@@ -1220,6 +1229,45 @@ impl App {
                 return;
             }
             if let Err(e) = picker.flush() {
+                self.error_message = Some(e.to_string());
+            }
+        }
+    }
+
+    #[cfg(windows)]
+    fn handle_zoom_picker(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
+        let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
+        if ui.button(ZOOM_PICKER_ICON).clicked() {
+            if self.picker_window.is_none() {
+                if let Ok(window) = picker.spawn_window(
+                    "EPICK_DIALOG",
+                    CURSOR_PICKER_WINDOW_NAME,
+                    (cursor_pos.0 + ZOOM_WIN_OFFSET) as i32,
+                    (cursor_pos.1 + ZOOM_WIN_OFFSET) as i32,
+                    ZOOM_WIN_WIDTH as i32,
+                    ZOOM_WIN_HEIGHT as i32,
+                    WS_POPUP | WS_BORDER,
+                ) {
+                    self.picker_window = Some(window);
+                    if let Err(e) = picker.show_window(window, SW_SHOWDEFAULT) {
+                        self.error_message = Some(e.to_string());
+                    }
+                }
+            } else {
+                // Close the window on second click
+                if let Err(e) = picker.destroy_window(self.picker_window.unwrap()) {
+                    self.error_message = Some(e.to_string());
+                }
+                self.picker_window = None;
+            }
+        } else if let Some(window) = self.picker_window {
+            if let Err(e) = picker.move_window(
+                window,
+                (cursor_pos.0 + ZOOM_WIN_OFFSET) as i32,
+                (cursor_pos.1 + ZOOM_WIN_OFFSET) as i32,
+                ZOOM_WIN_WIDTH as i32,
+                ZOOM_WIN_HEIGHT as i32,
+            ) {
                 self.error_message = Some(e.to_string());
             }
         }
