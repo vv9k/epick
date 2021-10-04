@@ -7,6 +7,8 @@ pub mod x11;
 pub use self::windows::DisplayPickerExt;
 #[cfg(unix)]
 pub use x11::DisplayPickerExt;
+#[cfg(not(any(unix, windows)))]
+pub trait DisplayPickerExt: DisplayPicker {}
 
 use crate::color::Color;
 use anyhow::Result;
