@@ -63,6 +63,29 @@ pub fn contrast_color(color: impl Into<Rgba>) -> Color32 {
 
 //################################################################################
 
+#[derive(Debug, PartialEq)]
+pub enum SchemeType {
+    Complementary,
+    Triadic,
+    Tetradic,
+    Analogous,
+    SplitComplementary,
+}
+
+impl AsRef<str> for SchemeType {
+    fn as_ref(&self) -> &str {
+        match &self {
+            SchemeType::Complementary => "complementary",
+            SchemeType::Triadic => "triadic",
+            SchemeType::Tetradic => "tetradic",
+            SchemeType::Analogous => "analogous",
+            SchemeType::SplitComplementary => "split complementary",
+        }
+    }
+}
+
+//################################################################################
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Color {
     Cmyk(Cmyk),
