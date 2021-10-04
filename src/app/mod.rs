@@ -28,9 +28,20 @@ use x11rb::protocol::xproto;
 use crate::picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 
 static ADD_ICON: &str = "➕";
+static COPY_ICON: &str = "📋";
 static ZOOM_PICKER_ICON: &str = "💉";
+static SETTINGS_ICON: &str = "⚙";
+static EXPAND_ICON: &str = "↔";
+static EXPORT_ICON: &str = "🖹";
+static CLEAR_ICON: &str = "🗑";
+static DELETE_ICON: &str = "❌";
+static PLAY_ICON: &str = "▶";
+static DARK_MODE_ICON: &str = "🌙";
+static LIGHT_MODE_ICON: &str = "☀";
+
 static ADD_DESCR: &str = "Add this color to saved colors";
 static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";
+
 const ZOOM_SCALE: f32 = 10.;
 const ZOOM_WIN_WIDTH: u16 = 160;
 const ZOOM_WIN_HEIGHT: u16 = 160;
@@ -196,7 +207,7 @@ impl App {
             ui.horizontal(|ui| {
                 let resp = ui.text_edit_singleline(&mut self.picker.hex_color);
                 if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
-                    || ui.button("▶").on_hover_text("Use this color").clicked()
+                    || ui.button(PLAY_ICON).on_hover_text("Use this color").clicked()
                 {
                     if self.picker.hex_color.len() < 6 {
                         self.error_message =
@@ -359,11 +370,11 @@ impl App {
     fn top_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             self.dark_light_switch(ui);
-            if ui.button("⚙").on_hover_text("Settings").clicked() {
+            if ui.button(SETTINGS_ICON).on_hover_text("Settings").clicked() {
                 self.settings_window.show = true;
             }
             if ui
-                .button("↔")
+                .button(EXPAND_ICON)
                 .on_hover_text("Show/hide side panel")
                 .clicked()
             {
@@ -379,7 +390,7 @@ impl App {
 
     fn dark_light_switch(&mut self, ui: &mut Ui) {
         let is_dark = ui.style().visuals.dark_mode;
-        let btn = if is_dark { "☀" } else { "🌙" };
+        let btn = if is_dark { LIGHT_MODE_ICON } else { DARK_MODE_ICON };
 
         if ui
             .button(btn)
@@ -399,14 +410,14 @@ impl App {
             ui.horizontal(|ui| {
                 ui.heading("Saved colors");
                 ui.add_space(7.);
-                if ui.button("🗑").on_hover_text("Clear colors").clicked() {
+                if ui.button(CLEAR_ICON).on_hover_text("Clear colors").clicked() {
                     self.saved_colors.clear();
                 }
-                if ui.button("🖹").on_hover_text("Export").clicked() {
+                if ui.button(EXPORT_ICON).on_hover_text("Export").clicked() {
                     self.export_window.show = true;
                 }
                 if ui
-                    .button("📋")
+                    .button(COPY_ICON)
                     .on_hover_text("Copy all colors to clipboard")
                     .clicked()
                 {
@@ -424,13 +435,17 @@ impl App {
                     ui.vertical(|mut ui| {
                         let fst = ui.horizontal(|ui| {
                             ui.monospace(format!("#{}", hex));
-                            if ui.button("❌").on_hover_text("Delete this color").clicked() {
+                            if ui.button(DELETE_ICON).on_hover_text("Delete this color").clicked() {
                                 self.saved_colors.remove(color);
                             }
-                            if ui.button("📋").on_hover_text("Copy hex color").clicked() {
+                            if ui
+                                .button(COPY_ICON)
+                                .on_hover_text("Copy hex color")
+                                .clicked()
+                            {
                                 let _ = save_to_clipboard(hex.clone());
                             }
-                            if ui.button("▶").on_hover_text("Use this color").clicked() {
+                            if ui.button(PLAY_ICON).on_hover_text("Use this color").clicked() {
                                 self.picker.set_cur_color(*color);
                             }
                         });
@@ -493,7 +508,7 @@ impl App {
             ui.label("Current color: ");
             ui.monospace(format!("#{}", hex));
             if ui
-                .button("📋")
+                .button(COPY_ICON)
                 .on_hover_text("Copy hex color to clipboard")
                 .clicked()
             {
