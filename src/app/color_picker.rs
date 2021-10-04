@@ -178,25 +178,27 @@ impl ColorPicker {
             };
         }
         ui.vertical(|ui| {
+            let opaque = Rgba::from(self.current_color);
+
             ui.collapsing("RGB", |ui| {
                 slider!(ui, r, "red", u8::MIN as f32..=u8::MAX as f32, |r| {
-                    Rgba::from_rgb(r, 0., 0.).into()
+                    Rgba::from_rgb(r, opaque.g(), opaque.b()).into()
                 });
                 slider!(ui, g, "green", u8::MIN as f32..=u8::MAX as f32, |g| {
-                    Rgba::from_rgb(0., g, 0.).into()
+                    Rgba::from_rgb(opaque.r(), g, opaque.b()).into()
                 });
                 slider!(ui, b, "blue", u8::MIN as f32..=u8::MAX as f32, |b| {
-                    Rgba::from_rgb(0., 0., b).into()
+                    Rgba::from_rgb(opaque.r(), opaque.g(), b).into()
                 });
             });
 
+            let opaque = Cmyk::from(self.current_color);
+
             ui.collapsing("CMYK", |ui| {
-                slider!(ui, c, "cyan", 0. ..=1., |c| Cmyk::new(c, 0., 0., 0.).into());
-                slider!(ui, m, "magenta", 0. ..=1., |m| Cmyk::new(0., m, 0., 0.)
-                    .into());
-                slider!(ui, y, "yellow", 0. ..=1., |y| Cmyk::new(0., 0., y, 0.)
-                    .into());
-                slider!(ui, k, "key", 0. ..=1., |k| Cmyk::new(0., 0., 0., k).into());
+                slider!(ui, c, "cyan", 0. ..=1., |c| Cmyk { c, ..opaque }.into());
+                slider!(ui, m, "magenta", 0. ..=1., |m| Cmyk { m, ..opaque }.into());
+                slider!(ui, y, "yellow", 0. ..=1., |y| Cmyk { y, ..opaque }.into());
+                slider!(ui, k, "key", 0. ..=1., |k| Cmyk { k, ..opaque }.into());
             });
 
             let mut opaque = HsvaGamma::from(self.current_color);
