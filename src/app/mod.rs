@@ -207,7 +207,10 @@ impl App {
             ui.horizontal(|ui| {
                 let resp = ui.text_edit_singleline(&mut self.picker.hex_color);
                 if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
-                    || ui.button(PLAY_ICON).on_hover_text("Use this color").clicked()
+                    || ui
+                        .button(PLAY_ICON)
+                        .on_hover_text("Use this color")
+                        .clicked()
                 {
                     if self.picker.hex_color.len() < 6 {
                         self.error_message =
@@ -390,7 +393,11 @@ impl App {
 
     fn dark_light_switch(&mut self, ui: &mut Ui) {
         let is_dark = ui.style().visuals.dark_mode;
-        let btn = if is_dark { LIGHT_MODE_ICON } else { DARK_MODE_ICON };
+        let btn = if is_dark {
+            LIGHT_MODE_ICON
+        } else {
+            DARK_MODE_ICON
+        };
 
         if ui
             .button(btn)
@@ -410,7 +417,11 @@ impl App {
             ui.horizontal(|ui| {
                 ui.heading("Saved colors");
                 ui.add_space(7.);
-                if ui.button(CLEAR_ICON).on_hover_text("Clear colors").clicked() {
+                if ui
+                    .button(CLEAR_ICON)
+                    .on_hover_text("Clear colors")
+                    .clicked()
+                {
                     self.saved_colors.clear();
                 }
                 if ui.button(EXPORT_ICON).on_hover_text("Export").clicked() {
@@ -435,7 +446,11 @@ impl App {
                     ui.vertical(|mut ui| {
                         let fst = ui.horizontal(|ui| {
                             ui.monospace(format!("#{}", hex));
-                            if ui.button(DELETE_ICON).on_hover_text("Delete this color").clicked() {
+                            if ui
+                                .button(DELETE_ICON)
+                                .on_hover_text("Delete this color")
+                                .clicked()
+                            {
                                 self.saved_colors.remove(color);
                             }
                             if ui
@@ -445,7 +460,11 @@ impl App {
                             {
                                 let _ = save_to_clipboard(hex.clone());
                             }
-                            if ui.button(PLAY_ICON).on_hover_text("Use this color").clicked() {
+                            if ui
+                                .button(PLAY_ICON)
+                                .on_hover_text("Use this color")
+                                .clicked()
+                            {
                                 self.picker.set_cur_color(*color);
                             }
                         });
