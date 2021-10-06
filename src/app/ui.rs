@@ -1,4 +1,4 @@
-use crate::color::Color;
+use crate::color::{Color, DisplayFormat};
 
 use egui::{
     color,
@@ -104,14 +104,10 @@ pub fn drop_target<R>(
     InnerResponse::new(ret, response)
 }
 
-pub fn color_tooltip(color: &Color, uppercase_hex: bool) -> String {
+pub fn color_tooltip(color: &Color, display_format: DisplayFormat) -> String {
     format!(
-        "#{}\n\nPrimary click: set current\nMiddle click: save color\nSecondary click: copy hex",
-        if uppercase_hex {
-            color.as_hex().to_uppercase()
-        } else {
-            color.as_hex()
-        },
+        "{}\n\nPrimary click: set current\nMiddle click: save color\nSecondary click: copy color",
+        color.display(display_format)
     )
 }
 

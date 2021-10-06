@@ -189,8 +189,8 @@ impl Default for App {
 impl App {
     fn add_color(&mut self, color: Color) {
         if !self.saved_colors.add(color) {
-            let hex = self.color_hex(&color);
-            self.error_message = Some(format!("Color {} already saved!", hex));
+            let color_str = self.display_color(&color);
+            self.error_message = Some(format!("Color {} already saved!", color_str));
         } else {
             self.error_message = None;
             self.show_sidepanel = true;
@@ -231,12 +231,8 @@ impl App {
         });
     }
 
-    fn color_hex(&self, color: &Color) -> String {
-        if self.settings_window.upper_hex {
-            color.as_hex().to_uppercase()
-        } else {
-            color.as_hex()
-        }
+    fn display_color(&self, color: &Color) -> String {
+        color.display(self.settings_window.color_display_format)
     }
 
     fn color_box_label_under(
@@ -282,18 +278,21 @@ impl App {
         texture_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         with_label: bool,
     ) {
-        let hex = self.color_hex(color);
+        let color_str = self.display_color(color);
         let color_box = tex_color(
             ui,
             texture_allocator,
             &mut self.texture_manager,
             color.as_32(),
             size,
-            Some(&color_tooltip(color, self.settings_window.upper_hex)),
+            Some(&color_tooltip(
+                color,
+                self.settings_window.color_display_format,
+            )),
         );
         if let Some(color_box) = color_box {
             if with_label {
-                ui.monospace(format!("#{}", hex));
+                ui.monospace(format!("{}", color_str));
             }
 
             if color_box.clicked() {
@@ -305,7 +304,7 @@ impl App {
             }
 
             if color_box.secondary_clicked() {
-                let _ = save_to_clipboard(hex);
+                let _ = save_to_clipboard(color_str);
             }
         }
     }
@@ -442,10 +441,10 @@ impl App {
             for (idx, (_, color)) in self.saved_colors.as_ref().to_vec().iter().enumerate() {
                 let resp = drop_target(ui, true, |ui| {
                     let color_id = Id::new("side-color").with(idx);
-                    let hex = self.color_hex(color);
+                    let color_str = self.display_color(color);
                     ui.vertical(|mut ui| {
                         let fst = ui.horizontal(|ui| {
-                            ui.monospace(format!("#{}", hex));
+                            ui.monospace(format!("{}", color_str));
                             if ui
                                 .button(DELETE_ICON)
                                 .on_hover_text("Delete this color")
@@ -453,12 +452,8 @@ impl App {
                             {
                                 self.saved_colors.remove(color);
                             }
-                            if ui
-                                .button(COPY_ICON)
-                                .on_hover_text("Copy hex color")
-                                .clicked()
-                            {
-                                let _ = save_to_clipboard(hex.clone());
+                            if ui.button(COPY_ICON).on_hover_text("Copy color").clicked() {
+                                let _ = save_to_clipboard(color_str.clone());
                             }
                             if ui
                                 .button(PLAY_ICON)
@@ -468,8 +463,10 @@ impl App {
                                 self.picker.set_cur_color(*color);
                             }
                         });
-                        let help =
-                            format!("#{}\n\nDrag and drop to change the order of colors", hex);
+                        let help = format!(
+                            "{}\n\nDrag and drop to change the order of colors",
+                            color_str
+                        );
 
                         let w = fst.response.rect.width();
                         let size = vec2(w, w / 2.);
@@ -521,17 +518,17 @@ impl App {
             self.error_message = Some(e.to_string());
         }
 
-        let hex = self.color_hex(&self.picker.current_color);
+        let color_str = self.display_color(&self.picker.current_color);
 
         ui.horizontal(|ui| {
             ui.label("Current color: ");
-            ui.monospace(format!("#{}", hex));
+            ui.monospace(format!("{}", color_str));
             if ui
                 .button(COPY_ICON)
-                .on_hover_text("Copy hex color to clipboard")
+                .on_hover_text("Copy color to clipboard")
                 .clicked()
             {
-                if let Err(e) = save_to_clipboard(format!("#{}", hex)) {
+                if let Err(e) = save_to_clipboard(format!("{}", color_str)) {
                     self.error_message = Some(format!("Failed to save color to clipboard - {}", e));
                 } else {
                     self.error_message = None;

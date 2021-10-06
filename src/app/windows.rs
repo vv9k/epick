@@ -1,4 +1,5 @@
 use crate::app::saved_colors::{PaletteFormat, SavedColors};
+use crate::color::DisplayFormat;
 
 use anyhow::Result;
 use egui::color::Color32;
@@ -9,10 +10,19 @@ use std::{env, fs};
 #[cfg(not(target_arch = "wasm32"))]
 use egui::TextEdit;
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct SettingsWindow {
     pub show: bool,
-    pub upper_hex: bool,
+    pub color_display_format: DisplayFormat,
+}
+
+impl Default for SettingsWindow {
+    fn default() -> Self {
+        Self {
+            show: false,
+            color_display_format: DisplayFormat::Hex,
+        }
+    }
 }
 
 impl SettingsWindow {
@@ -20,7 +30,30 @@ impl SettingsWindow {
         if self.show {
             let mut show = true;
             Window::new("settings").open(&mut show).show(ctx, |ui| {
-                ui.checkbox(&mut self.upper_hex, "Show hex as uppercase");
+                ComboBox::from_label("Color display format")
+                    .selected_text(self.color_display_format.as_ref())
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut self.color_display_format,
+                            DisplayFormat::Hex,
+                            DisplayFormat::Hex.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.color_display_format,
+                            DisplayFormat::HexUpercase,
+                            DisplayFormat::HexUpercase.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.color_display_format,
+                            DisplayFormat::CssRgb,
+                            DisplayFormat::CssRgb.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.color_display_format,
+                            DisplayFormat::CssHsl,
+                            DisplayFormat::CssHsl.as_ref(),
+                        );
+                    });
             });
 
             if !show {
