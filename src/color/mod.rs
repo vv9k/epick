@@ -86,6 +86,27 @@ impl AsRef<str> for SchemeType {
 
 //################################################################################
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DisplayFormat {
+    Hex,
+    HexUpercase,
+    CssRgb,
+    CssHsl,
+}
+
+impl AsRef<str> for DisplayFormat {
+    fn as_ref(&self) -> &str {
+        match &self {
+            DisplayFormat::Hex => "hex",
+            DisplayFormat::HexUpercase => "hex uppercase",
+            DisplayFormat::CssRgb => "css rgb",
+            DisplayFormat::CssHsl => "css hsl",
+        }
+    }
+}
+
+//################################################################################
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Color {
     Cmyk(Cmyk),
@@ -108,7 +129,31 @@ impl Color {
 
     pub fn as_hex(&self) -> String {
         let color = Color32::from(*self);
-        format!("{:02x}{:02x}{:02x}", color.r(), color.g(), color.b())
+        format!("#{:02x}{:02x}{:02x}", color.r(), color.g(), color.b())
+    }
+
+    pub fn as_css_rgb(&self) -> String {
+        let color = Color32::from(*self);
+        format!("rgb({}, {}, {})", color.r(), color.g(), color.b())
+    }
+
+    pub fn as_css_hsl(&self) -> String {
+        let color = self.hsl();
+        format!(
+            "hsl({}, {}%, {}%)",
+            (color.h * 360.) as u16,
+            (color.s * 100.) as u16,
+            (color.l * 100.) as u16
+        )
+    }
+
+    pub fn display(&self, format: DisplayFormat) -> String {
+        match format {
+            DisplayFormat::Hex => self.as_hex(),
+            DisplayFormat::HexUpercase => self.as_hex().to_uppercase(),
+            DisplayFormat::CssRgb => self.as_css_rgb(),
+            DisplayFormat::CssHsl => self.as_css_hsl(),
+        }
     }
 
     pub fn from_hex(hex: &str) -> Option<Self> {
