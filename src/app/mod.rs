@@ -7,6 +7,7 @@ mod sliders;
 mod ui;
 mod windows;
 
+use self::windows::{ExportWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
 use crate::color::{Color, SchemeType};
 use crate::picker::{self, DisplayPickerExt};
 use crate::save_to_clipboard;
@@ -14,7 +15,6 @@ use color_picker::ColorPicker;
 use render::{tex_color, TextureManager};
 use saved_colors::SavedColors;
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
-use windows::{ExportWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
 
 use egui::{color::Color32, vec2, Ui};
 use egui::{Id, ScrollArea, Vec2, Visuals};
@@ -664,6 +664,33 @@ impl App {
                 self.picker_window = None;
             }
         } else if let Some(window) = self.picker_window {
+            match picker.get_screenshot(
+                (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET) as i32,
+                (cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET) as i32,
+                (ZOOM_WIN_WIDTH as f32 / ZOOM_SCALE) as i32,
+                (ZOOM_WIN_HEIGHT as f32 / ZOOM_SCALE) as i32,
+            ) {
+                Ok(bitmap) => {
+                    if let Err(e) = picker.render_bitmap(&bitmap, window, 0, 0, ZOOM_SCALE) {
+                        self.error_message = Some(e.to_string());
+                    }
+                    let left = ((ZOOM_WIN_WIDTH / 2) - ZOOM_WIN_POINTER_RADIUS) as i32;
+                    let top = ((ZOOM_WIN_HEIGHT / 2) - ZOOM_WIN_POINTER_RADIUS) as i32;
+                    if let Err(e) = picker.draw_rectangle(
+                        window,
+                        left,
+                        top,
+                        left + ZOOM_WIN_POINTER_DIAMETER as i32,
+                        top + ZOOM_WIN_POINTER_DIAMETER as i32,
+                        true,
+                    ) {
+                        self.error_message = Some(e.to_string());
+                    }
+                }
+                Err(e) => {
+                    self.error_message = Some(e.to_string());
+                }
+            }
             if let Err(e) = picker.move_window(
                 window,
                 (cursor_pos.0 + ZOOM_WIN_OFFSET) as i32,

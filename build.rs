@@ -1,11 +1,16 @@
 fn main() {
     #[cfg(windows)]
     windows::build! {
-        Windows::Win32::Graphics::Gdi::{GetDC, GetPixel, ReleaseDC, CLR_INVALID, HDC, UpdateWindow},
-        Windows::Win32::UI::WindowsAndMessaging::{GetCursorPos, GetDesktopWindow, CreateWindowExW, WINDOW_STYLE, WINDOW_EX_STYLE, HMENU, ShowWindow, WNDCLASSEXW, RegisterClassExW, CW_USEDEFAULT, DefWindowProcW, SHOW_WINDOW_CMD, DestroyWindow, MoveWindow},
-        Windows::Win32::Foundation::{PWSTR, HWND, POINT, WPARAM, LPARAM, LRESULT},
-        Windows::Win32::System::{
-            LibraryLoader::GetModuleHandleW,
+        Windows::Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, POINT, PWSTR, WPARAM, HWND},
+        Windows::Win32::Graphics::Gdi::{
+            BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, GetDC, GetPixel, ReleaseDC,
+            SelectObject, SetStretchBltMode, UpdateWindow, CLR_INVALID, HBITMAP, HDC,
+            StretchBlt, Rectangle
         },
-    };
+        Windows::Win32::System::LibraryLoader::GetModuleHandleW,
+        Windows::Win32::UI::WindowsAndMessaging::{
+            CreateWindowExW, DefWindowProcW, DestroyWindow, GetCursorPos, GetDesktopWindow, MoveWindow,
+            SHOW_WINDOW_CMD, WINDOW_EX_STYLE, WINDOW_STYLE, RegisterClassExW, ShowWindow, WNDCLASSEXW,
+        }
+    }
 }
