@@ -1,12 +1,12 @@
 # epick
 
-[![Build Status](https://github.com/vv9k/epick/workflows/epick%20CI/badge.svg)](https://github.com/wojciechkepka/epick/actions?query=workflow%3A%22epic+CI%22)
+[![Build Status](https://github.com/vv9k/epick/workflows/epick%20CI/badge.svg)](https://github.com/vv9k/epick/actions?query=workflow%3A%22epick+CI%22)
 
 Simple color picker that lets the user create harmonic palettes with ease.
 
 ## Get it
 
-You can checkout the web demo over [here](https://vv9k.github.io/epick/) or get a native binary from the [GitHub release page](https://github.com/wojciechkepka/epick/releases).
+You can checkout the web demo over [here](https://vv9k.github.io/epick/) or get a native binary from the [GitHub release page](https://github.com/vv9k/epick/releases).
 
 If you happen to use Arch Linux you can grab **epick** from AUR using your favorite package manager:
 ```bash
