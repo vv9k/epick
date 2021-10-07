@@ -133,7 +133,9 @@ impl epi::App for App {
         let mut fonts = egui::FontDefinitions::default();
         fonts.font_data.insert(
             "Firacode".to_string(),
-            Cow::Borrowed(include_bytes!("../../assets/FiraCode-Regular.ttf")),
+            Cow::Borrowed(include_bytes!(
+                "../../assets/fonts/FiraCode/FiraCode-Regular.ttf"
+            )),
         );
         fonts
             .fonts_for_family
