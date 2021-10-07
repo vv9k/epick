@@ -86,6 +86,27 @@ impl AsRef<str> for SchemeType {
 
 //################################################################################
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum DisplayFormat {
+    Hex,
+    HexUpercase,
+    CssRgb,
+    CssHsl,
+}
+
+impl AsRef<str> for DisplayFormat {
+    fn as_ref(&self) -> &str {
+        match &self {
+            DisplayFormat::Hex => "hex",
+            DisplayFormat::HexUpercase => "hex uppercase",
+            DisplayFormat::CssRgb => "css rgb",
+            DisplayFormat::CssHsl => "css hsl",
+        }
+    }
+}
+
+//################################################################################
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Color {
     Cmyk(Cmyk),
@@ -107,16 +128,36 @@ impl Color {
     }
 
     pub fn as_hex(&self) -> String {
-        let color = Color32::from(*self);
-        format!("{:02x}{:02x}{:02x}", color.r(), color.g(), color.b())
+        let color = self.as_rgb_triplet();
+        format!("#{:02x}{:02x}{:02x}", color.0, color.1, color.2)
+    }
+
+    pub fn as_css_rgb(&self) -> String {
+        let color = self.as_rgb_triplet();
+        format!("rgb({}, {}, {})", color.0, color.1, color.2)
+    }
+
+    pub fn as_css_hsl(&self) -> String {
+        let color = self.hsl();
+        format!(
+            "hsl({}, {}%, {}%)",
+            (color.h * 360.) as u16,
+            (color.s * 100.) as u16,
+            (color.l * 100.) as u16
+        )
+    }
+
+    pub fn display(&self, format: DisplayFormat) -> String {
+        match format {
+            DisplayFormat::Hex => self.as_hex(),
+            DisplayFormat::HexUpercase => self.as_hex().to_uppercase(),
+            DisplayFormat::CssRgb => self.as_css_rgb(),
+            DisplayFormat::CssHsl => self.as_css_hsl(),
+        }
     }
 
     pub fn from_hex(hex: &str) -> Option<Self> {
         parse_hex(hex).map(|(r, g, b)| Color::Rgb(Color32::from_rgb(r, g, b).into()))
-    }
-
-    pub fn as_32(&self) -> Color32 {
-        Color32::from(*self)
     }
 
     pub fn as_hue_offset(&self, offset: f32) -> Color {
@@ -124,6 +165,19 @@ impl Color {
 
         hsv.h = (hsv.h + offset) % 1.;
         Self::Hsv(hsv)
+    }
+
+    pub fn as_rgb_triplet(&self) -> (u8, u8, u8) {
+        let color = self.rgba();
+        (
+            (color.r() * u8::MAX as f32) as u8,
+            (color.g() * u8::MAX as f32) as u8,
+            (color.b() * u8::MAX as f32) as u8,
+        )
+    }
+
+    pub fn color32(&self) -> Color32 {
+        Color32::from(*self)
     }
 
     pub fn rgba(&self) -> Rgba {
@@ -155,7 +209,7 @@ impl Color {
     }
 
     pub fn shades(&self, total: u8) -> Vec<Color> {
-        let base = self.as_32();
+        let base = self.color32();
         if total == 0 {
             return vec![*self];
         }
@@ -183,7 +237,7 @@ impl Color {
     }
 
     pub fn tints(&self, total: u8) -> Vec<Color> {
-        let base = self.as_32();
+        let base = self.color32();
         if total == 0 {
             return vec![*self];
         }
@@ -229,7 +283,7 @@ impl Color {
     }
 
     pub fn complementary(&self) -> Color {
-        let color = self.as_32();
+        let color = self.color32();
         if color == Color32::BLACK {
             return Color32::WHITE.into();
         } else if color == Color32::WHITE {
