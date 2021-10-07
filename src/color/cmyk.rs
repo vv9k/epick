@@ -1,6 +1,8 @@
 use egui::color::{Color32, Hsva, Rgba};
 use std::cmp::Ordering;
 
+use super::U8_MAX;
+
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Cmyk {
     pub c: f32,
@@ -45,9 +47,9 @@ impl From<Rgba> for Cmyk {
 #[allow(clippy::many_single_char_names)]
 impl From<Color32> for Cmyk {
     fn from(color: Color32) -> Self {
-        let r: f32 = 1. - (color.r() as f32 / u8::MAX as f32);
-        let g: f32 = 1. - (color.g() as f32 / u8::MAX as f32);
-        let b: f32 = 1. - (color.b() as f32 / u8::MAX as f32);
+        let r: f32 = 1. - (color.r() as f32 / U8_MAX);
+        let g: f32 = 1. - (color.g() as f32 / U8_MAX);
+        let b: f32 = 1. - (color.b() as f32 / U8_MAX);
         let rgb = [r, g, b];
         let k = rgb
             .iter()

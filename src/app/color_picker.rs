@@ -1,6 +1,6 @@
 use crate::app::render::color_slider_1d;
 use crate::app::sliders::ColorSliders;
-use crate::color::{Cmyk, Color, Hsl, Lch, SchemeType};
+use crate::color::{Cmyk, Color, Hsl, Lch, SchemeType, U8_MAX, U8_MIN};
 
 use egui::Ui;
 use egui::{
@@ -52,9 +52,9 @@ impl ColorPicker {
 
     fn rgb_changed(&mut self) -> bool {
         let rgb = self.current_color.rgba();
-        let r = self.sliders.r / u8::MAX as f32;
-        let g = self.sliders.g / u8::MAX as f32;
-        let b = self.sliders.b / u8::MAX as f32;
+        let r = self.sliders.r / U8_MAX;
+        let g = self.sliders.g / U8_MAX;
+        let b = self.sliders.b / U8_MAX;
         if (r - rgb.r()).abs() > f32::EPSILON
             || (g - rgb.g()).abs() > f32::EPSILON
             || (b - rgb.b()).abs() > f32::EPSILON
@@ -181,13 +181,13 @@ impl ColorPicker {
             let opaque = Rgba::from(self.current_color);
 
             ui.collapsing("RGB", |ui| {
-                slider!(ui, r, "red", u8::MIN as f32..=u8::MAX as f32, |r| {
+                slider!(ui, r, "red", U8_MIN..=U8_MAX, |r| {
                     Rgba::from_rgb(r, opaque.g(), opaque.b()).into()
                 });
-                slider!(ui, g, "green", u8::MIN as f32..=u8::MAX as f32, |g| {
+                slider!(ui, g, "green", U8_MIN..=U8_MAX, |g| {
                     Rgba::from_rgb(opaque.r(), g, opaque.b()).into()
                 });
-                slider!(ui, b, "blue", u8::MIN as f32..=u8::MAX as f32, |b| {
+                slider!(ui, b, "blue", U8_MIN..=U8_MAX, |b| {
                     Rgba::from_rgb(opaque.r(), opaque.g(), b).into()
                 });
             });

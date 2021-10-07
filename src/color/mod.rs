@@ -23,6 +23,8 @@ pub const D65_U: f32 = 4. * D65_X / (D65_X + 15. * D65_Y + 3. * D65_Z);
 pub const D65_V: f32 = 9. * D65_X / (D65_X + 15. * D65_Y + 3. * D65_Z);
 pub const CIE_E: f32 = 216. / 24389.;
 pub const CIE_K: f32 = 24389. / 27.;
+pub const U8_MAX: f32 = u8::MAX as f32;
+pub const U8_MIN: f32 = u8::MIN as f32;
 
 //################################################################################
 
@@ -157,7 +159,13 @@ impl Color {
     }
 
     pub fn from_hex(hex: &str) -> Option<Self> {
-        parse_hex(hex).map(|(r, g, b)| Color::Rgb(Color32::from_rgb(r, g, b).into()))
+        parse_hex(hex).map(|(r, g, b)| {
+            Color::Rgb(Rgba::from_rgb(
+                r as f32 / U8_MAX,
+                g as f32 / U8_MAX,
+                b as f32 / U8_MAX,
+            ))
+        })
     }
 
     pub fn as_hue_offset(&self, offset: f32) -> Color {
@@ -170,9 +178,9 @@ impl Color {
     pub fn as_rgb_triplet(&self) -> (u8, u8, u8) {
         let color = self.rgba();
         (
-            (color.r() * u8::MAX as f32) as u8,
-            (color.g() * u8::MAX as f32) as u8,
-            (color.b() * u8::MAX as f32) as u8,
+            (color.r() * U8_MAX) as u8,
+            (color.g() * U8_MAX) as u8,
+            (color.b() * U8_MAX) as u8,
         )
     }
 

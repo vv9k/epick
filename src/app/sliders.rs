@@ -1,4 +1,4 @@
-use crate::color::Color;
+use crate::color::{Color, U8_MAX};
 
 #[derive(Debug, Clone)]
 pub struct ColorSliders {
@@ -46,9 +46,9 @@ impl Default for ColorSliders {
 impl ColorSliders {
     pub fn set_color(&mut self, color: Color) {
         let rgba = color.rgba();
-        self.r = rgba.r() * u8::MAX as f32;
-        self.g = rgba.g() * u8::MAX as f32;
-        self.b = rgba.b() * u8::MAX as f32;
+        self.r = rgba.r() * U8_MAX;
+        self.g = rgba.g() * U8_MAX;
+        self.b = rgba.b() * U8_MAX;
         let hsva = color.hsva();
         self.hue = hsva.h;
         self.sat = hsva.s;

@@ -1,5 +1,7 @@
 use egui::color::{Color32, Hsva, Rgba};
 
+use super::U8_MAX;
+
 pub type RgbSpaceMatrix = [[f32; 3]; 3];
 
 pub const ADOBE_RGB: RgbSpaceMatrix = [
@@ -39,9 +41,9 @@ impl Xyz {
 
     #[allow(clippy::many_single_char_names)]
     pub fn from_rgb(color: Color32, space_matrix: RgbSpaceMatrix) -> Self {
-        let r = color.r() as f32 / u8::MAX as f32;
-        let g = color.g() as f32 / u8::MAX as f32;
-        let b = color.b() as f32 / u8::MAX as f32;
+        let r = color.r() as f32 / U8_MAX;
+        let g = color.g() as f32 / U8_MAX;
+        let b = color.b() as f32 / U8_MAX;
 
         let x = r * space_matrix[0][0] + g * space_matrix[0][1] + b * space_matrix[0][2];
         let y = r * space_matrix[1][0] + g * space_matrix[1][1] + b * space_matrix[1][2];

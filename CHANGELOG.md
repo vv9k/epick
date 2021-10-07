@@ -2,6 +2,7 @@
 - Add ability to spawn a window that will follow the cursor and display a zoomed in image with a pointer to a pixel (Only X11 and Windows)
 - Make RGB and CMYK sliders adjust color when values change
 - Add different display formats like: 'css rgb', 'css hsl' and previously available 'hex', 'hex uppercase'
+- Fix hex input conversion to RGB
 
 # 0.4.0
 
