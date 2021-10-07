@@ -40,7 +40,7 @@ impl From<Xyz> for Luv {
         let z = color.z;
 
         let u = 4. * x / (x + 15. * y + 3. * z);
-        let v = 9. * x / (x + 15. * y + 3. * z);
+        let v = 9. * y / (x + 15. * y + 3. * z);
 
         let yr = y / D65_Y;
 
