@@ -46,7 +46,7 @@ impl SavedColors {
     pub fn as_gimp_palette(&self, name: &str) -> String {
         let mut gpl = format!("GIMP Palette\nName: {}.gpl\nColumns: 1\n#\n", name);
         for (i, (_, color)) in self.0.iter().enumerate() {
-            let color = color.as_32();
+            let color = color.color32();
             gpl.push_str(&format!(
                 "{}\t{}\t{}\tcolor {}\n",
                 color.r(),
@@ -58,7 +58,7 @@ impl SavedColors {
         gpl
     }
 
-    pub fn as_text_palette(&self) -> String {
+    pub fn as_hex_list(&self) -> String {
         self.0.iter().fold(String::new(), |mut s, (hex, _)| {
             s.push('#');
             s.push_str(hex.as_str());

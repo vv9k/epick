@@ -283,7 +283,7 @@ impl App {
             ui,
             texture_allocator,
             &mut self.texture_manager,
-            color.as_32(),
+            color.color32(),
             size,
             Some(&color_tooltip(
                 color,
@@ -292,7 +292,7 @@ impl App {
         );
         if let Some(color_box) = color_box {
             if with_label {
-                ui.monospace(format!("{}", color_str));
+                ui.monospace(&color_str);
             }
 
             if color_box.clicked() {
@@ -431,7 +431,7 @@ impl App {
                     .on_hover_text("Copy all colors to clipboard")
                     .clicked()
                 {
-                    let _ = save_to_clipboard(self.saved_colors.as_text_palette());
+                    let _ = save_to_clipboard(self.saved_colors.as_hex_list());
                 }
             });
 
@@ -444,7 +444,7 @@ impl App {
                     let color_str = self.display_color(color);
                     ui.vertical(|mut ui| {
                         let fst = ui.horizontal(|ui| {
-                            ui.monospace(format!("{}", color_str));
+                            ui.monospace(&color_str);
                             if ui
                                 .button(DELETE_ICON)
                                 .on_hover_text("Delete this color")
@@ -475,7 +475,7 @@ impl App {
                                 ui,
                                 tex_allocator,
                                 &mut self.texture_manager,
-                                color.as_32(),
+                                color.color32(),
                                 size,
                                 Some(&help),
                             );
@@ -522,13 +522,13 @@ impl App {
 
         ui.horizontal(|ui| {
             ui.label("Current color: ");
-            ui.monospace(format!("{}", color_str));
+            ui.monospace(&color_str);
             if ui
                 .button(COPY_ICON)
                 .on_hover_text("Copy color to clipboard")
                 .clicked()
             {
-                if let Err(e) = save_to_clipboard(format!("{}", color_str)) {
+                if let Err(e) = save_to_clipboard(color_str.clone()) {
                     self.error_message = Some(format!("Failed to save color to clipboard - {}", e));
                 } else {
                     self.error_message = None;

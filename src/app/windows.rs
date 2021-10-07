@@ -157,7 +157,7 @@ impl ExportWindow {
                     if ui.button("export").clicked() {
                         let palette = match self.format {
                             PaletteFormat::Gimp => saved_colors.as_gimp_palette(&self.name),
-                            PaletteFormat::Text => saved_colors.as_text_palette(),
+                            PaletteFormat::Text => saved_colors.as_hex_list(),
                         };
                         let p = PathBuf::from(&self.path);
                         let filename = format!("{}.{}", &self.name, self.format.extension());
