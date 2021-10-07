@@ -104,7 +104,23 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: test
+
+  test_web:
+    name: Test web build
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Install dependencies
+        run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
       - name: Install web build dependencies
         run: cargo install wasm-bindgen-cli
+      - name: Add wasm target
+        run: rustup target add wasm32-unknown-unknown
       - name: Test web build
         run: ./scripts/build_web.sh
