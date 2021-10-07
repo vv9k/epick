@@ -105,6 +105,6 @@ jobs:
         with:
           command: test
       - name: Install web build dependencies
-        run: cargo install wasm-bindgen
+        run: cargo install wasm-bindgen-cli
       - name: Test web build
         run: ./scripts/build_web.sh

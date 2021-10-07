@@ -18,6 +18,8 @@ fi
 
 OUT_DIR=docs
 OUT_FILE="${CRATE_NAME_SNAKE_CASE}.wasm"
+BINDGEN_OUT_FILE="${OUT_FILE//.wasm/_bg.wasm}"
+JS_OUT_FILE="${CRATE_NAME_SNAKE_CASE}.js"
 WASM_FLAGS="--out-dir ${OUT_DIR} \
             --target no-modules  \
             --no-typescript      \
@@ -32,7 +34,7 @@ export RUSTFLAGS=--cfg=web_sys_unstable_apis
 
 
 # Clear output from old stuff:
-rm -f ${OUT_DIR}/$OUT_FILE
+rm -f $OUT_DIR/$BINDGEN_OUT_FILE  $OUT_DIR/$JS_OUT_FILE
 
 
 echo "Building rust…"
@@ -41,4 +43,4 @@ cargo build $CARGO_BUILD_FLAGS
 echo "Generating JS bindings for wasm…"
 wasm-bindgen "target/${TARGET}/${BUILD}/${OUT_FILE}" $WASM_FLAGS
 
-echo "Finished: ${OUT_DIR}/${OUT_FILE//.wasm/_bg.wasm}"
+echo "Finished: ${OUT_DIR}/${BINDGEN_OUT_FILE} ${OUT_DIR}/${JS_OUT_FILE}"
