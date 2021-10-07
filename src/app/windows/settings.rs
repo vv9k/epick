@@ -3,9 +3,29 @@ use crate::color::DisplayFormat;
 use egui::{ComboBox, Window};
 
 #[derive(Debug)]
+pub struct ColorSpaceSettings {
+    pub rgb: bool,
+    pub cmyk: bool,
+    pub hsv: bool,
+    pub hsl: bool,
+}
+
+impl Default for ColorSpaceSettings {
+    fn default() -> Self {
+        Self {
+            rgb: true,
+            cmyk: true,
+            hsv: true,
+            hsl: true,
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct SettingsWindow {
     pub show: bool,
     pub color_display_format: DisplayFormat,
+    pub colorspaces: ColorSpaceSettings,
 }
 
 impl Default for SettingsWindow {
@@ -13,6 +33,7 @@ impl Default for SettingsWindow {
         Self {
             show: false,
             color_display_format: DisplayFormat::Hex,
+            colorspaces: ColorSpaceSettings::default(),
         }
     }
 }
@@ -46,6 +67,16 @@ impl SettingsWindow {
                             DisplayFormat::CssHsl.as_ref(),
                         );
                     });
+
+                ui.label("Colorspaces:");
+                ui.horizontal(|ui| {
+                    ui.checkbox(&mut self.colorspaces.rgb, "RGB");
+                    ui.checkbox(&mut self.colorspaces.cmyk, "CMYK");
+                });
+                ui.horizontal(|ui| {
+                    ui.checkbox(&mut self.colorspaces.hsv, "HSV");
+                    ui.checkbox(&mut self.colorspaces.hsl, "HSL");
+                });
             });
 
             if !show {
