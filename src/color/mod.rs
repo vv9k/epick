@@ -1,6 +1,8 @@
 mod cmyk;
+mod colorspace;
 mod gradient;
 mod hsl;
+mod illuminant;
 mod lch;
 mod luv;
 mod xyz;
