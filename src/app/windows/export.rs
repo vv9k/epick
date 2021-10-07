@@ -1,5 +1,4 @@
 use crate::app::saved_colors::{PaletteFormat, SavedColors};
-use crate::color::DisplayFormat;
 
 use anyhow::Result;
 use egui::color::Color32;
@@ -9,59 +8,6 @@ use std::{env, fs};
 
 #[cfg(not(target_arch = "wasm32"))]
 use egui::TextEdit;
-
-#[derive(Debug)]
-pub struct SettingsWindow {
-    pub show: bool,
-    pub color_display_format: DisplayFormat,
-}
-
-impl Default for SettingsWindow {
-    fn default() -> Self {
-        Self {
-            show: false,
-            color_display_format: DisplayFormat::Hex,
-        }
-    }
-}
-
-impl SettingsWindow {
-    pub fn display(&mut self, ctx: &egui::CtxRef) {
-        if self.show {
-            let mut show = true;
-            Window::new("settings").open(&mut show).show(ctx, |ui| {
-                ComboBox::from_label("Color display format")
-                    .selected_text(self.color_display_format.as_ref())
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(
-                            &mut self.color_display_format,
-                            DisplayFormat::Hex,
-                            DisplayFormat::Hex.as_ref(),
-                        );
-                        ui.selectable_value(
-                            &mut self.color_display_format,
-                            DisplayFormat::HexUpercase,
-                            DisplayFormat::HexUpercase.as_ref(),
-                        );
-                        ui.selectable_value(
-                            &mut self.color_display_format,
-                            DisplayFormat::CssRgb,
-                            DisplayFormat::CssRgb.as_ref(),
-                        );
-                        ui.selectable_value(
-                            &mut self.color_display_format,
-                            DisplayFormat::CssHsl,
-                            DisplayFormat::CssHsl.as_ref(),
-                        );
-                    });
-            });
-
-            if !show {
-                self.show = false;
-            }
-        }
-    }
-}
 
 #[derive(Debug)]
 pub struct ExportWindow {
@@ -176,52 +122,5 @@ impl ExportWindow {
         }
 
         Ok(())
-    }
-}
-
-#[derive(Debug)]
-pub struct ShadesWindow {
-    pub num_of_shades: u8,
-    pub shade_color_size: f32,
-}
-
-impl Default for ShadesWindow {
-    fn default() -> Self {
-        Self {
-            num_of_shades: 6,
-            shade_color_size: 100.,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct TintsWindow {
-    pub num_of_tints: u8,
-    pub tint_color_size: f32,
-}
-
-impl Default for TintsWindow {
-    fn default() -> Self {
-        Self {
-            num_of_tints: 6,
-            tint_color_size: 100.,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct HuesWindow {
-    pub num_of_hues: u8,
-    pub hue_color_size: f32,
-    pub hues_step: f32,
-}
-
-impl Default for HuesWindow {
-    fn default() -> Self {
-        Self {
-            num_of_hues: 4,
-            hue_color_size: 100.,
-            hues_step: 0.05,
-        }
     }
 }
