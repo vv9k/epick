@@ -17,9 +17,9 @@ pub mod colors {
         pub static ref D_BG_2: Color32 = Color32::from_rgb(0x31, 0x3f, 0x4e);
         pub static ref D_BG_3: Color32 = Color32::from_rgb(0x41, 0x53, 0x67);
         pub static ref D_FG_0: Color32 = Color32::from_rgb(0xe5, 0xde, 0xd6);
-        pub static ref L_BG_0: Color32 = Color32::from_rgb(0xa7, 0xa6, 0xa7);
-        pub static ref L_BG_1: Color32 = Color32::from_rgb(0xb6, 0xb5, 0xb6);
-        pub static ref L_BG_2: Color32 = Color32::from_rgb(0xc5, 0xc4, 0xc5);
+        pub static ref L_BG_0: Color32 = Color32::from_rgb(0xbf, 0xbf, 0xbf);
+        pub static ref L_BG_1: Color32 = Color32::from_rgb(0xd9, 0xd9, 0xd9);
+        pub static ref L_BG_2: Color32 = Color32::from_rgb(0xef, 0xef, 0xef);
         pub static ref L_BG_3: Color32 = Color32::from_rgb(0xd4, 0xd3, 0xd4);
         pub static ref L_BG_4: Color32 = Color32::from_rgb(0xf2, 0xf1, 0xf2);
         pub static ref L_BG_5: Color32 = Color32::from_rgb(0xff, 0xff, 0xff);
