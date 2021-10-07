@@ -8,6 +8,21 @@ use egui::{
     DragValue, Rgba,
 };
 
+macro_rules! slider {
+    ($it:ident, $ui:ident, $field:ident, $label:literal, $range:expr, $($tt:tt)+) => {
+        $ui.add_space(7.);
+        $ui.horizontal(|mut ui| {
+            let resp = color_slider_1d(&mut ui, &mut $it.sliders.$field, $range, $($tt)+).on_hover_text($label);
+            if resp.changed() {
+                $it.check_color_change();
+            }
+            ui.add_space(7.);
+            ui.label(format!("{}: ", $label));
+            ui.add(DragValue::new(&mut $it.sliders.$field).clamp_range($range));
+        });
+    };
+}
+
 #[derive(Debug)]
 pub struct ColorPicker {
     pub current_color: Color,
@@ -162,80 +177,67 @@ impl ColorPicker {
         self.hsl_changed();
     }
 
-    pub fn sliders(&mut self, ui: &mut Ui) {
-        macro_rules! slider {
-            ($ui:ident, $it:ident, $label:literal, $range:expr, $($tt:tt)+) => {
-                $ui.add_space(7.);
-                $ui.horizontal(|mut ui| {
-                    let resp = color_slider_1d(&mut ui, &mut self.sliders.$it, $range, $($tt)+).on_hover_text($label);
-                    if resp.changed() {
-                        self.check_color_change();
-                    }
-                    ui.add_space(7.);
-                    ui.label(format!("{}: ", $label));
-                    ui.add(DragValue::new(&mut self.sliders.$it).clamp_range($range));
-                });
-            };
-        }
-        ui.vertical(|ui| {
-            let opaque = Rgba::from(self.current_color);
-
-            ui.collapsing("RGB", |ui| {
-                slider!(ui, r, "red", U8_MIN..=U8_MAX, |r| {
-                    Rgba::from_rgb(r, opaque.g(), opaque.b()).into()
-                });
-                slider!(ui, g, "green", U8_MIN..=U8_MAX, |g| {
-                    Rgba::from_rgb(opaque.r(), g, opaque.b()).into()
-                });
-                slider!(ui, b, "blue", U8_MIN..=U8_MAX, |b| {
-                    Rgba::from_rgb(opaque.r(), opaque.g(), b).into()
-                });
+    pub fn rgb_sliders(&mut self, ui: &mut Ui) {
+        let opaque = Rgba::from(self.current_color);
+        ui.collapsing("RGB", |ui| {
+            slider!(self, ui, r, "red", U8_MIN..=U8_MAX, |r| {
+                Rgba::from_rgb(r, opaque.g(), opaque.b()).into()
             });
-
-            let opaque = Cmyk::from(self.current_color);
-
-            ui.collapsing("CMYK", |ui| {
-                slider!(ui, c, "cyan", 0. ..=1., |c| Cmyk { c, ..opaque }.into());
-                slider!(ui, m, "magenta", 0. ..=1., |m| Cmyk { m, ..opaque }.into());
-                slider!(ui, y, "yellow", 0. ..=1., |y| Cmyk { y, ..opaque }.into());
-                slider!(ui, k, "key", 0. ..=1., |k| Cmyk { k, ..opaque }.into());
+            slider!(self, ui, g, "green", U8_MIN..=U8_MAX, |g| {
+                Rgba::from_rgb(opaque.r(), g, opaque.b()).into()
             });
+            slider!(self, ui, b, "blue", U8_MIN..=U8_MAX, |b| {
+                Rgba::from_rgb(opaque.r(), opaque.g(), b).into()
+            });
+        });
+    }
 
-            let mut opaque = HsvaGamma::from(self.current_color);
-            opaque.a = 1.;
-
-            ui.collapsing("HSV", |ui| {
-                slider!(ui, hue, "hue", 0. ..=1., |h| HsvaGamma { h, ..opaque }
-                    .into());
-                slider!(ui, sat, "saturation", 0. ..=1., |s| HsvaGamma {
-                    s,
-                    ..opaque
-                }
+    pub fn cmyk_sliders(&mut self, ui: &mut Ui) {
+        let opaque = Cmyk::from(self.current_color);
+        ui.collapsing("CMYK", |ui| {
+            slider!(self, ui, c, "cyan", 0. ..=1., |c| Cmyk { c, ..opaque }
                 .into());
-                slider!(ui, val, "value", 0. ..=1., |v| HsvaGamma { v, ..opaque }
-                    .into());
-            });
-
-            let opaque = Hsl::from(self.current_color);
-
-            ui.collapsing("HSL", |ui| {
-                slider!(ui, hsl_h, "hue", 0. ..=1., |h| Hsl { h, ..opaque }.into());
-                slider!(ui, hsl_s, "saturation", 0. ..=1., |s| Hsl { s, ..opaque }
-                    .into());
-                slider!(ui, hsl_l, "light", 0. ..=1., |l| Hsl { l, ..opaque }.into());
-            });
-
-            // let opaque = Lch::from(self.cur_color);
-            // ui.collapsing("LCH", |ui| {
-            //     slider!(ui, lch_l, "lightness", 0. ..=100., |l| Lch { l, ..opaque }
-            //         .into());
-            //     slider!(ui, lch_c, "colorfulness", 0. ..=600., |c| Lch {
-            //         c,
-            //         ..opaque
-            //     }
-            //     .into());
-            //     slider!(ui, lch_h, "hue", 0. ..=360., |h| Lch { h, ..opaque }.into());
-            // });
+            slider!(self, ui, m, "magenta", 0. ..=1., |m| Cmyk { m, ..opaque }
+                .into());
+            slider!(self, ui, y, "yellow", 0. ..=1., |y| Cmyk { y, ..opaque }
+                .into());
+            slider!(self, ui, k, "key", 0. ..=1., |k| Cmyk { k, ..opaque }
+                .into());
+        });
+    }
+    pub fn hsv_sliders(&mut self, ui: &mut Ui) {
+        let mut opaque = HsvaGamma::from(self.current_color);
+        opaque.a = 1.;
+        ui.collapsing("HSV", |ui| {
+            slider!(self, ui, hue, "hue", 0. ..=1., |h| HsvaGamma {
+                h,
+                ..opaque
+            }
+            .into());
+            slider!(self, ui, sat, "saturation", 0. ..=1., |s| HsvaGamma {
+                s,
+                ..opaque
+            }
+            .into());
+            slider!(self, ui, val, "value", 0. ..=1., |v| HsvaGamma {
+                v,
+                ..opaque
+            }
+            .into());
+        });
+    }
+    pub fn hsl_sliders(&mut self, ui: &mut Ui) {
+        let opaque = Hsl::from(self.current_color);
+        ui.collapsing("HSL", |ui| {
+            slider!(self, ui, hsl_h, "hue", 0. ..=1., |h| Hsl { h, ..opaque }
+                .into());
+            slider!(self, ui, hsl_s, "saturation", 0. ..=1., |s| Hsl {
+                s,
+                ..opaque
+            }
+            .into());
+            slider!(self, ui, hsl_l, "light", 0. ..=1., |l| Hsl { l, ..opaque }
+                .into());
         });
     }
 }

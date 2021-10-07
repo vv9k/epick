@@ -549,7 +549,7 @@ impl App {
         ScrollArea::auto_sized()
             .id_source("picker scroll")
             .show(ui, |ui| {
-                self.picker.sliders(ui);
+                self.sliders(ui);
                 self.hex_input(ui);
                 self.schemes(ui, tex_allocator);
             });
@@ -557,6 +557,23 @@ impl App {
         self.shades(ctx, tex_allocator);
         self.tints(ctx, tex_allocator);
         self.hues(ctx, tex_allocator);
+    }
+
+    fn sliders(&mut self, ui: &mut Ui) {
+        ui.vertical(|ui| {
+            if self.settings_window.colorspaces.rgb {
+                self.picker.rgb_sliders(ui);
+            }
+            if self.settings_window.colorspaces.cmyk {
+                self.picker.cmyk_sliders(ui);
+            }
+            if self.settings_window.colorspaces.hsv {
+                self.picker.hsv_sliders(ui);
+            }
+            if self.settings_window.colorspaces.hsl {
+                self.picker.hsl_sliders(ui);
+            }
+        });
     }
 
     fn handle_display_picker(
