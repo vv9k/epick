@@ -34,4 +34,10 @@ impl Illuminant {
             Illuminant::F11 => Xyz { x: 1.00962, y: 1., z: 0.64350},
         }
     }
+    pub fn reference_u(&self) -> f32 {
+        self.xyz().u()
+    }
+    pub fn reference_v(&self) -> f32 {
+        self.xyz().v()
+    }
 }

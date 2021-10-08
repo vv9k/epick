@@ -1,4 +1,5 @@
-use crate::color::{Xyz, CIE_E, CIE_K, D65_U, D65_V, D65_Y};
+use crate::color::illuminant::Illuminant;
+use crate::color::{Xyz, CIE_E, CIE_K};
 use egui::color::{Color32, Hsva, Rgba};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -35,14 +36,12 @@ impl From<Rgba> for Luv {
 #[allow(clippy::many_single_char_names)]
 impl From<Xyz> for Luv {
     fn from(color: Xyz) -> Self {
-        let x = color.x;
         let y = color.y;
-        let z = color.z;
 
-        let u = 4. * x / (x + 15. * y + 3. * z);
-        let v = 9. * y / (x + 15. * y + 3. * z);
+        let u = color.u();
+        let v = color.v();
 
-        let yr = y / D65_Y;
+        let yr = y / Illuminant::D65.xyz().y;
 
         let l = if yr > CIE_E {
             116. * yr.cbrt() - 16.
@@ -50,8 +49,8 @@ impl From<Xyz> for Luv {
             CIE_K * yr
         };
 
-        let u = 13. * l * (u - D65_U);
-        let v = 13. * l * (v - D65_V);
+        let u = 13. * l * (u - Illuminant::D65.reference_u());
+        let v = 13. * l * (v - Illuminant::D65.reference_v());
 
         Luv {
             l: if l.is_nan() { 0. } else { l },
@@ -74,10 +73,10 @@ impl From<Luv> for Xyz {
             l / CIE_K
         };
 
-        let a = ((52. * l / (u + 13. * l * D65_U)) - 1.) / 3.;
+        let a = ((52. * l / (u + 13. * l * Illuminant::D65.reference_u())) - 1.) / 3.;
         let b = -5. * y;
         let c = -(1.0f32 / 3.);
-        let d = y * ((39. * l / (v + 13. * l * D65_V)) - 5.);
+        let d = y * ((39. * l / (v + 13. * l * Illuminant::D65.reference_v())) - 5.);
 
         let x = (d - b) / (a - c);
         let z = x * a + b;

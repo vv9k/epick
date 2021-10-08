@@ -19,12 +19,6 @@ pub use xyz::Xyz;
 
 use egui::color::{Color32, Hsva, HsvaGamma, Rgba};
 
-// Reference D65 whitepoint
-pub const D65_X: f32 = 95.047;
-pub const D65_Y: f32 = 100.;
-pub const D65_Z: f32 = 108.883;
-pub const D65_U: f32 = 4. * D65_X / (D65_X + 15. * D65_Y + 3. * D65_Z);
-pub const D65_V: f32 = 9. * D65_Y / (D65_X + 15. * D65_Y + 3. * D65_Z);
 pub const CIE_E: f32 = 216. / 24389.;
 pub const CIE_K: f32 = 24389. / 27.;
 pub const U8_MAX: f32 = u8::MAX as f32;

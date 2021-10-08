@@ -64,6 +64,13 @@ impl Xyz {
 
         Xyz { x, y, z }
     }
+
+    pub fn u(&self) -> f32 {
+        4. * self.x / (self.x + 15. * self.y + 3. * self.z)
+    }
+    pub fn v(&self) -> f32 {
+        9. * self.y / (self.x + 15. * self.y + 3. * self.z)
+    }
 }
 
 impl From<Xyz> for Rgba {
