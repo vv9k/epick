@@ -21,7 +21,7 @@ use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
 use std::rc::Rc;
 
-#[cfg(unix)]
+#[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;
 
 #[cfg(windows)]
@@ -84,7 +84,7 @@ pub struct App {
     pub tints_window: TintsWindow,
     pub shades_window: ShadesWindow,
 
-    #[cfg(unix)]
+    #[cfg(target_os = "linux")]
     pub picker_window: Option<(xproto::Window, xproto::Gcontext)>,
     #[cfg(windows)]
     pub picker_window: Option<HWND>,
@@ -110,14 +110,14 @@ impl epi::App for App {
             ctx.request_repaint();
 
             const SLEEP_DURATION: u64 = 100; // ms
-            #[cfg(any(unix, windows))]
+            #[cfg(any(target_os = "linux", windows))]
             let sleep_duration = if self.picker_window.is_some() {
                 // Quicker repaints so that the zoomed window doesn't lag behind
                 SLEEP_DURATION / 4
             } else {
                 SLEEP_DURATION
             };
-            #[cfg(not(any(unix, windows)))]
+            #[cfg(not(any(target_os = "linux", windows)))]
             let sleep_duration = SLEEP_DURATION;
 
             std::thread::sleep(std::time::Duration::from_millis(sleep_duration));
@@ -180,7 +180,7 @@ impl Default for App {
             tints_window: TintsWindow::default(),
             shades_window: ShadesWindow::default(),
 
-            #[cfg(unix)]
+            #[cfg(target_os = "linux")]
             picker_window: None,
             #[cfg(windows)]
             picker_window: None,
@@ -586,7 +586,7 @@ impl App {
                 ui.horizontal(|mut ui| {
                     ui.label("Color at cursor: ");
                     self.color_box_label_side(&color, vec2(25., 25.), &mut ui, tex_allocator);
-                    #[cfg(unix)]
+                    #[cfg(target_os = "linux")]
                     self.handle_zoom_picker(ui, picker);
                     #[cfg(windows)]
                     self.handle_zoom_picker(ui, picker);
@@ -595,7 +595,7 @@ impl App {
         };
     }
 
-    #[cfg(unix)]
+    #[cfg(target_os = "linux")]
     fn handle_zoom_picker(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
         let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
         if ui.button(ZOOM_PICKER_ICON).clicked() {

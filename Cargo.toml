@@ -16,7 +16,7 @@ clipboard = "0.5"
 lazy_static = "1"
 anyhow = "1"
 
-[target.'cfg(unix)'.dependencies]
+[target.'cfg(target_os = "linux")'.dependencies]
 x11rb = { version = "0.9", features = ["image", "cursor", "resource_manager"] }
 image = "0.23"
 
