@@ -2,9 +2,11 @@ mod cmyk;
 mod colorspace;
 mod gradient;
 mod hsl;
+mod hsv;
 mod illuminant;
 mod lch;
 mod luv;
+mod rgb;
 mod xyz;
 
 pub use gradient::Gradient;
