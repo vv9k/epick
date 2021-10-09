@@ -70,6 +70,7 @@ pub enum SchemeType {
     Tetradic,
     Analogous,
     SplitComplementary,
+    Square,
 }
 
 impl AsRef<str> for SchemeType {
@@ -80,6 +81,7 @@ impl AsRef<str> for SchemeType {
             SchemeType::Tetradic => "tetradic",
             SchemeType::Analogous => "analogous",
             SchemeType::SplitComplementary => "split complementary",
+            SchemeType::Square => "square",
         }
     }
 }
@@ -296,21 +298,18 @@ impl Color {
             return Color32::BLACK.into();
         }
 
-        self.as_hue_offset(0.5)
+        self.as_hue_offset(6. / 12.)
     }
 
     pub fn triadic(&self) -> (Color, Color) {
-        (
-            self.as_hue_offset(120. / 360.),
-            self.as_hue_offset(240. / 360.),
-        )
+        (self.as_hue_offset(4. / 12.), self.as_hue_offset(8. / 12.))
     }
 
     pub fn tetradic(&self) -> (Color, Color, Color) {
         (
-            self.as_hue_offset(0.25),
+            self.as_hue_offset(2. / 12.),
             self.complementary(),
-            self.as_hue_offset(0.75),
+            self.as_hue_offset(8. / 12.),
         )
     }
 
@@ -319,9 +318,14 @@ impl Color {
     }
 
     pub fn split_complementary(&self) -> (Color, Color) {
+        (self.as_hue_offset(5. / 12.), self.as_hue_offset(7. / 12.))
+    }
+
+    pub fn square(&self) -> (Color, Color, Color) {
         (
-            self.as_hue_offset(150. / 360.),
-            self.as_hue_offset(240. / 360.),
+            self.as_hue_offset(3. / 12.),
+            self.complementary(),
+            self.as_hue_offset(9. / 12.),
         )
     }
 }

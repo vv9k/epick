@@ -186,6 +186,11 @@ impl App {
                             SchemeType::SplitComplementary,
                             SchemeType::SplitComplementary.as_ref(),
                         );
+                        ui.selectable_value(
+                            &mut self.picker.scheme_type,
+                            SchemeType::Square,
+                            SchemeType::Square.as_ref(),
+                        );
                     });
                 ui.add(
                     Slider::new(&mut self.picker.scheme_color_size, 100.0..=250.)
@@ -249,6 +254,22 @@ impl App {
                             ui.horizontal(|ui| {
                                 cb!(c1, ui);
                                 cb!(c2, ui);
+                            });
+                        });
+                    }
+                    SchemeType::Square => {
+                        let s = color.square();
+                        ui.vertical(|ui| {
+                            let c1 = s.0;
+                            let c2 = s.1;
+                            let c3 = s.2;
+                            ui.horizontal(|ui| {
+                                cb!(color, ui);
+                                cb!(c1, ui);
+                            });
+                            ui.horizontal(|ui| {
+                                cb!(c2, ui);
+                                cb!(c3, ui);
                             });
                         });
                     }

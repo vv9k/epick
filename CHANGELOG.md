@@ -5,6 +5,7 @@
 - Fix hex input conversion to RGB
 - Add settings to disable each colorspace [#13](https://github.com/vv9k/epick/pull/13)
 - Updated light theme colors
+- Add square colors
 
 # 0.4.0
 
