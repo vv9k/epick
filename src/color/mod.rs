@@ -71,6 +71,7 @@ pub enum SchemeType {
     Analogous,
     SplitComplementary,
     Square,
+    Monochromatic,
 }
 
 impl AsRef<str> for SchemeType {
@@ -82,6 +83,7 @@ impl AsRef<str> for SchemeType {
             SchemeType::Analogous => "analogous",
             SchemeType::SplitComplementary => "split complementary",
             SchemeType::Square => "square",
+            SchemeType::Monochromatic => "monochromatic",
         }
     }
 }
@@ -172,6 +174,13 @@ impl Color {
         let mut hsv = Hsva::from(*self);
 
         hsv.h = (hsv.h + offset) % 1.;
+        Self::Hsv(hsv)
+    }
+
+    pub fn as_saturation_offset(&self, offset: f32) -> Color {
+        let mut hsv = Hsva::from(*self);
+
+        hsv.s = (hsv.s + offset) % 1.;
         Self::Hsv(hsv)
     }
 
@@ -326,6 +335,14 @@ impl Color {
             self.as_hue_offset(3. / 12.),
             self.complementary(),
             self.as_hue_offset(9. / 12.),
+        )
+    }
+
+    pub fn monochromatic(&self) -> (Color, Color, Color) {
+        (
+            self.as_saturation_offset(-3. / 12.),
+            self.as_saturation_offset(-6. / 12.),
+            self.as_saturation_offset(-9. / 12.),
         )
     }
 }
