@@ -8,7 +8,7 @@ mod ui;
 mod windows;
 
 use self::windows::{ExportWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
-use crate::color::{Color, SchemeType};
+use crate::color::{Color, ColorHarmony};
 use crate::picker::{self, DisplayPickerExt};
 use crate::save_to_clipboard;
 use color_picker::ColorPicker;
@@ -551,7 +551,7 @@ impl App {
             .show(ui, |ui| {
                 self.sliders(ui);
                 self.hex_input(ui);
-                self.schemes(ui, tex_allocator);
+                self.harmonies(ui, tex_allocator);
             });
 
         self.shades(ctx, tex_allocator);

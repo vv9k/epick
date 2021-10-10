@@ -1,6 +1,6 @@
 use crate::app::render::color_slider_1d;
 use crate::app::sliders::ColorSliders;
-use crate::color::{Cmyk, Color, Hsl, Lch, SchemeType, U8_MAX, U8_MIN};
+use crate::color::{Cmyk, Color, ColorHarmony, Hsl, Lch, U8_MAX, U8_MIN};
 
 use egui::Ui;
 use egui::{
@@ -30,7 +30,7 @@ pub struct ColorPicker {
     pub sliders: ColorSliders,
     pub saved_sliders: Option<ColorSliders>,
     pub scheme_color_size: f32,
-    pub scheme_type: SchemeType,
+    pub color_harmony: ColorHarmony,
 }
 
 impl Default for ColorPicker {
@@ -41,7 +41,7 @@ impl Default for ColorPicker {
             sliders: ColorSliders::default(),
             saved_sliders: None,
             scheme_color_size: 200.,
-            scheme_type: SchemeType::Complementary,
+            color_harmony: ColorHarmony::Complementary,
         }
     }
 }

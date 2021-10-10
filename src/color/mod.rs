@@ -64,7 +64,7 @@ pub fn contrast_color(color: impl Into<Rgba>) -> Color32 {
 //################################################################################
 
 #[derive(Debug, PartialEq)]
-pub enum SchemeType {
+pub enum ColorHarmony {
     Complementary,
     Triadic,
     Tetradic,
@@ -74,16 +74,16 @@ pub enum SchemeType {
     Monochromatic,
 }
 
-impl AsRef<str> for SchemeType {
+impl AsRef<str> for ColorHarmony {
     fn as_ref(&self) -> &str {
         match &self {
-            SchemeType::Complementary => "complementary",
-            SchemeType::Triadic => "triadic",
-            SchemeType::Tetradic => "tetradic",
-            SchemeType::Analogous => "analogous",
-            SchemeType::SplitComplementary => "split complementary",
-            SchemeType::Square => "square",
-            SchemeType::Monochromatic => "monochromatic",
+            ColorHarmony::Complementary => "complementary",
+            ColorHarmony::Triadic => "triadic",
+            ColorHarmony::Tetradic => "tetradic",
+            ColorHarmony::Analogous => "analogous",
+            ColorHarmony::SplitComplementary => "split complementary",
+            ColorHarmony::Square => "square",
+            ColorHarmony::Monochromatic => "monochromatic",
         }
     }
 }

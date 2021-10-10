@@ -1,4 +1,4 @@
-use crate::app::{App, SchemeType, TopMenuTab};
+use crate::app::{App, ColorHarmony, TopMenuTab};
 use egui::{vec2, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
 
@@ -132,12 +132,12 @@ impl App {
         }
     }
 
-    pub fn schemes(
+    pub fn harmonies(
         &mut self,
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
-        CollapsingHeader::new("Schemes")
+        CollapsingHeader::new("Harmonies")
             .default_open(true)
             .show(ui, |ui| {
                 let size = vec2(self.picker.scheme_color_size, self.picker.scheme_color_size);
@@ -159,42 +159,42 @@ impl App {
 
                 let color = self.picker.current_color;
                 ComboBox::from_label("Choose a type")
-                    .selected_text(self.picker.scheme_type.as_ref())
+                    .selected_text(self.picker.color_harmony.as_ref())
                     .show_ui(ui, |ui| {
                         ui.selectable_value(
-                            &mut self.picker.scheme_type,
-                            SchemeType::Complementary,
-                            SchemeType::Complementary.as_ref(),
+                            &mut self.picker.color_harmony,
+                            ColorHarmony::Complementary,
+                            ColorHarmony::Complementary.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.scheme_type,
-                            SchemeType::Triadic,
-                            SchemeType::Triadic.as_ref(),
+                            &mut self.picker.color_harmony,
+                            ColorHarmony::Triadic,
+                            ColorHarmony::Triadic.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.scheme_type,
-                            SchemeType::Tetradic,
-                            SchemeType::Tetradic.as_ref(),
+                            &mut self.picker.color_harmony,
+                            ColorHarmony::Tetradic,
+                            ColorHarmony::Tetradic.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.scheme_type,
-                            SchemeType::Analogous,
-                            SchemeType::Analogous.as_ref(),
+                            &mut self.picker.color_harmony,
+                            ColorHarmony::Analogous,
+                            ColorHarmony::Analogous.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.scheme_type,
-                            SchemeType::SplitComplementary,
-                            SchemeType::SplitComplementary.as_ref(),
+                            &mut self.picker.color_harmony,
+                            ColorHarmony::SplitComplementary,
+                            ColorHarmony::SplitComplementary.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.scheme_type,
-                            SchemeType::Square,
-                            SchemeType::Square.as_ref(),
+                            &mut self.picker.color_harmony,
+                            ColorHarmony::Square,
+                            ColorHarmony::Square.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.scheme_type,
-                            SchemeType::Monochromatic,
-                            SchemeType::Monochromatic.as_ref(),
+                            &mut self.picker.color_harmony,
+                            ColorHarmony::Monochromatic,
+                            ColorHarmony::Monochromatic.as_ref(),
                         );
                     });
                 ui.add(
@@ -202,15 +202,15 @@ impl App {
                         .clamp_to_range(true)
                         .text("color size"),
                 );
-                match self.picker.scheme_type {
-                    SchemeType::Complementary => {
+                match self.picker.color_harmony {
+                    ColorHarmony::Complementary => {
                         let compl = color.complementary();
                         ui.horizontal(|ui| {
                             cb!(color, ui);
                             cb!(compl, ui);
                         });
                     }
-                    SchemeType::Triadic => {
+                    ColorHarmony::Triadic => {
                         let tri = color.triadic();
                         ui.vertical(|ui| {
                             let c1 = tri.0;
@@ -222,7 +222,7 @@ impl App {
                             });
                         });
                     }
-                    SchemeType::Tetradic => {
+                    ColorHarmony::Tetradic => {
                         let tetr = color.tetradic();
                         ui.vertical(|ui| {
                             let c1 = &tetr.0;
@@ -238,7 +238,7 @@ impl App {
                             });
                         });
                     }
-                    SchemeType::Analogous => {
+                    ColorHarmony::Analogous => {
                         let an = color.analogous();
                         ui.vertical(|ui| {
                             let c1 = an.0;
@@ -250,7 +250,7 @@ impl App {
                             });
                         });
                     }
-                    SchemeType::SplitComplementary => {
+                    ColorHarmony::SplitComplementary => {
                         let sc = color.split_complementary();
                         ui.vertical(|ui| {
                             let c1 = sc.0;
@@ -262,7 +262,7 @@ impl App {
                             });
                         });
                     }
-                    SchemeType::Square => {
+                    ColorHarmony::Square => {
                         let s = color.square();
                         ui.vertical(|ui| {
                             let c1 = s.0;
@@ -278,7 +278,7 @@ impl App {
                             });
                         });
                     }
-                    SchemeType::Monochromatic => {
+                    ColorHarmony::Monochromatic => {
                         let mono = color.monochromatic();
                         ui.vertical(|ui| {
                             let c1 = mono.0;

@@ -7,6 +7,7 @@
 - Updated light theme colors
 - Add square colors
 - Add monochromatic colors
+- Rename `schemes` to `harmonies`
 
 # 0.4.0
 
