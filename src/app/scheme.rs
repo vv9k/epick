@@ -15,32 +15,15 @@ impl App {
                 .scroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
+                    self.hues_window.sliders(ui);
+
                     let color = &self.picker.current_color;
                     let hues = color.hues(self.hues_window.num_of_hues, self.hues_window.hues_step);
-                    ui.add(
-                        Slider::new(&mut self.hues_window.hues_step, 0.01..=0.1)
-                            .clamp_to_range(true)
-                            .text("step"),
-                    );
-                    let max_hues = (0.5 / self.hues_window.hues_step).round() as u8;
-                    if self.hues_window.num_of_hues > max_hues {
-                        self.hues_window.num_of_hues = max_hues;
-                    }
-                    ui.add(
-                        Slider::new(&mut self.hues_window.num_of_hues, u8::MIN..=max_hues)
-                            .clamp_to_range(true)
-                            .text("# of hues"),
-                    );
-                    ui.add(
-                        Slider::new(&mut self.hues_window.hue_color_size, 20.0..=200.)
-                            .clamp_to_range(true)
-                            .text("color size"),
-                    );
-
                     let size = vec2(
                         self.hues_window.hue_color_size,
                         self.hues_window.hue_color_size,
                     );
+
                     hues.iter().for_each(|hue| {
                         self.color_box_label_side(hue, size, ui, tex_allocator);
                     });
@@ -64,19 +47,10 @@ impl App {
                 .scroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
+                    self.tints_window.sliders(ui);
+
                     let color = &self.picker.current_color;
                     let tints = color.tints(self.tints_window.num_of_tints);
-                    ui.add(
-                        Slider::new(&mut self.tints_window.num_of_tints, u8::MIN..=50)
-                            .clamp_to_range(true)
-                            .text("# of tints"),
-                    );
-                    ui.add(
-                        Slider::new(&mut self.tints_window.tint_color_size, 20.0..=200.)
-                            .clamp_to_range(true)
-                            .text("color size"),
-                    );
-
                     let size = vec2(
                         self.tints_window.tint_color_size,
                         self.tints_window.tint_color_size,
@@ -104,23 +78,15 @@ impl App {
                 .scroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
+                    self.shades_window.sliders(ui);
+
                     let color = self.picker.current_color;
                     let shades = color.shades(self.shades_window.num_of_shades);
-                    ui.add(
-                        Slider::new(&mut self.shades_window.num_of_shades, u8::MIN..=50)
-                            .clamp_to_range(true)
-                            .text("# of shades"),
-                    );
-                    ui.add(
-                        Slider::new(&mut self.shades_window.shade_color_size, 20.0..=200.)
-                            .clamp_to_range(true)
-                            .text("color size"),
-                    );
-
                     let size = vec2(
                         self.shades_window.shade_color_size,
                         self.shades_window.shade_color_size,
                     );
+
                     shades.iter().for_each(|shade| {
                         self.color_box_label_side(shade, size, ui, tex_allocator);
                     });
