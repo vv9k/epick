@@ -181,15 +181,15 @@ impl From<Rgb> for Cmyk {
         let g: f32 = color.g();
         let b: f32 = color.b();
         let rgb = [r, g, b];
-        let k = rgb.iter().copied().fold(f32::MAX, f32::min);
+        let k = 1. - rgb.iter().copied().fold(f32::NAN, f32::max);
 
         if (k - 1.).abs() < f32::EPSILON {
             return Cmyk::new(0., 0., 0., k);
         }
 
-        let c = (r - k) / (1. - k);
-        let m = (g - k) / (1. - k);
-        let y = (b - k) / (1. - k);
+        let c = (1. - r - k) / (1. - k);
+        let m = (1. - g - k) / (1. - k);
+        let y = (1. - b - k) / (1. - k);
 
         Cmyk::new(c, m, y, k)
     }

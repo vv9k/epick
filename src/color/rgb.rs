@@ -149,9 +149,10 @@ impl From<&Color> for Rgb {
 
 impl From<Cmyk> for Rgb {
     fn from(cmyk: Cmyk) -> Self {
-        let r = 1. - (cmyk.c() * (1. - cmyk.k()) + cmyk.k());
-        let g = 1. - (cmyk.m() * (1. - cmyk.k()) + cmyk.k());
-        let b = 1. - (cmyk.y() * (1. - cmyk.k()) + cmyk.k());
+        let k = cmyk.k();
+        let r = (1. - cmyk.c()) * (1. - k);
+        let g = (1. - cmyk.m()) * (1. - k);
+        let b = (1. - cmyk.y()) * (1. - k);
         Rgb::new(r, g, b)
     }
 }
