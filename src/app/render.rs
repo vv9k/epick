@@ -87,10 +87,10 @@ pub fn color_slider_1d(
 ) -> Response {
     #![allow(clippy::identity_op)]
 
-    let desired_size = vec2(
-        ui.spacing().slider_width * 2.5,
-        ui.spacing().interact_size.y * 2.,
-    );
+    let width = ui.spacing().slider_width * 2.5;
+    let range_end = *range.end();
+
+    let desired_size = vec2(width, ui.spacing().interact_size.y * 2.);
     let (rect, response) = ui.allocate_at_least(desired_size, Sense::click_and_drag());
 
     if let Some(mpos) = response.interact_pointer_pos() {
@@ -122,10 +122,10 @@ pub fn color_slider_1d(
 
     {
         // Show where the slider is at:
-        let x = if *value >= 0. && *value <= 1.0 {
+        let x = if *value >= 0. && *value <= 1. {
             lerp(rect.left()..=rect.right(), *value)
         } else {
-            rect.left() + *value
+            rect.left() + (*value / range_end) * width
         };
         let r = rect.height() / 4.0;
         let picked_color = color_at(*value);
