@@ -205,3 +205,92 @@ impl From<Xyz> for Rgb {
         color.as_rgb(ColorSpace::SRGB.rgb_matrix())
     }
 }
+
+//####################################################################################################
+
+#[cfg(test)]
+mod tests {
+    use crate::color::{Cmyk, Hsv, Rgb};
+
+    #[test]
+    fn cmyk_to_rgb() {
+        macro_rules! test_case {
+            (Cmyk: $c:expr, $m:expr, $y:expr, $k:expr ;Rgb: $r:expr, $g:expr, $b:expr) => {
+                let cmyk = Cmyk::new($c, $m, $y, $k);
+                let expected = Rgb::new($r, $g, $b);
+                let got = Rgb::from(cmyk);
+                assert_eq!(got, expected);
+            };
+        }
+
+        test_case!(
+            Cmyk: 0., 0., 0., 1.;
+            Rgb: 0., 0., 0.
+        );
+        test_case!(
+            Cmyk: 0., 0., 0., 0.;
+            Rgb: 1., 1., 1.
+        );
+        test_case!(
+            Cmyk: 0.93, 0.33, 0., 0.;
+            Rgb: 0.06999999, 0.66999996, 1.
+        );
+        test_case!(
+            Cmyk: 0.08, 0., 0.06, 0.27;
+            Rgb: 0.67160004, 0.73, 0.6862
+        );
+    }
+
+    #[test]
+    fn hsv_to_rgb() {
+        macro_rules! test_case {
+            (Hsv: $h:expr, $s:expr, $v:expr ;Rgb: $r:expr, $g:expr, $b:expr) => {
+                let hsv = Hsv::new($h, $s, $v);
+                let expected = Rgb::new($r, $g, $b);
+                let got = Rgb::from(hsv);
+                assert_eq!(got, expected);
+            };
+        }
+
+        test_case!(
+            Hsv: 0., 0., 0.;
+            Rgb: 0., 0., 0.
+        );
+        test_case!(
+            Hsv: 0.5, 0., 0.;
+            Rgb: 0., 0., 0.
+        );
+        test_case!(
+            Hsv: 1., 0., 0.;
+            Rgb: 0., 0., 0.
+        );
+        test_case!(
+            Hsv: 1., 1., 0.;
+            Rgb: 0., 0., 0.
+        );
+        test_case!(
+            Hsv: 0., 1., 1.;
+            Rgb: 255., 0., 0.
+        );
+        test_case!(
+            Hsv: 1./6., 1., 1.;
+            Rgb: 255., 255., 0.
+        );
+        test_case!(
+            Hsv: 1./3., 1., 1.;
+            Rgb: 0., 255., 0.
+        );
+        test_case!(
+            Hsv: 1./2., 1., 1.;
+            Rgb: 0., 255., 255.
+        );
+        test_case!(
+            Hsv: 2./3., 1., 1.;
+            Rgb: 0., 0., 255.
+        );
+        test_case!(
+            Hsv: 1., 1., 1.;
+            Rgb: 255., 0., 0.
+        );
+    }
+}

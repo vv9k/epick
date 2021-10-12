@@ -476,3 +476,26 @@ impl From<Xyz> for Color {
         Color::Xyz(c)
     }
 }
+
+//##################################################################################################
+
+#[cfg(test)]
+mod tests {
+    use super::parse_hex;
+    #[test]
+    fn parses_hex() {
+        macro_rules! test_case {
+            ($hex:literal, $r:expr, $g:expr, $b:expr) => {
+                let parsed = parse_hex($hex).unwrap();
+                assert_eq!($r, parsed.0);
+                assert_eq!($g, parsed.1);
+                assert_eq!($b, parsed.2);
+            };
+        }
+
+        test_case!("000000", 0, 0, 0);
+        test_case!("ffffff", 255, 255, 255);
+        test_case!("abbaaf", 171, 186, 175);
+        test_case!("12abff", 18, 171, 255);
+    }
+}
