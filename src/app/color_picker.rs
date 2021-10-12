@@ -1,12 +1,9 @@
 use crate::app::render::color_slider_1d;
 use crate::app::sliders::ColorSliders;
-use crate::color::{Cmyk, Color, ColorHarmony, Hsl, Lch, U8_MAX, U8_MIN};
+use crate::color::{Cmyk, Color, ColorHarmony, Hsl, Hsv, Lch, Rgb, U8_MAX, U8_MIN};
 
 use egui::Ui;
-use egui::{
-    color::{Hsva, HsvaGamma},
-    DragValue, Rgba,
-};
+use egui::{color::Hsva, DragValue};
 
 macro_rules! slider {
     ($it:ident, $ui:ident, $field:ident, $label:literal, $range:expr, $($tt:tt)+) => {
@@ -66,27 +63,27 @@ impl ColorPicker {
     }
 
     fn rgb_changed(&mut self) -> bool {
-        let rgb = self.current_color.rgba();
-        let r = self.sliders.r / U8_MAX;
-        let g = self.sliders.g / U8_MAX;
-        let b = self.sliders.b / U8_MAX;
-        if (r - rgb.r()).abs() > f32::EPSILON
-            || (g - rgb.g()).abs() > f32::EPSILON
-            || (b - rgb.b()).abs() > f32::EPSILON
+        let rgb = self.current_color.rgb();
+        let r = self.sliders.r;
+        let g = self.sliders.g;
+        let b = self.sliders.b;
+        if (r - rgb.r_scaled()).abs() > f32::EPSILON
+            || (g - rgb.g_scaled()).abs() > f32::EPSILON
+            || (b - rgb.b_scaled()).abs() > f32::EPSILON
         {
             self.saved_sliders = None;
-            self.set_cur_color(Rgba::from_rgb(r, g, b));
+            self.set_cur_color(Rgb::new(r, g, b));
             true
         } else {
             false
         }
     }
 
-    fn hsva_changed(&mut self) -> bool {
-        let hsva = Hsva::from(self.current_color);
-        if (self.sliders.hue - hsva.h).abs() > f32::EPSILON
-            || (self.sliders.sat - hsva.s).abs() > f32::EPSILON
-            || (self.sliders.val - hsva.v).abs() > f32::EPSILON
+    fn hsv_changed(&mut self) -> bool {
+        let hsv = Hsv::from(self.current_color);
+        if (self.sliders.hue - hsv.h_scaled()).abs() > f32::EPSILON
+            || (self.sliders.sat - hsv.s_scaled()).abs() > f32::EPSILON
+            || (self.sliders.val - hsv.v_scaled()).abs() > f32::EPSILON
         {
             if self.sliders.val == 0. {
                 self.save_sliders_if_unsaved();
@@ -107,10 +104,10 @@ impl ColorPicker {
 
     fn cmyk_changed(&mut self) -> bool {
         let cmyk = Cmyk::from(self.current_color);
-        if (self.sliders.c - cmyk.c).abs() > f32::EPSILON
-            || (self.sliders.m - cmyk.m).abs() > f32::EPSILON
-            || (self.sliders.y - cmyk.y).abs() > f32::EPSILON
-            || (self.sliders.k - cmyk.k).abs() > f32::EPSILON
+        if (self.sliders.c - cmyk.c_scaled()).abs() > f32::EPSILON
+            || (self.sliders.m - cmyk.m_scaled()).abs() > f32::EPSILON
+            || (self.sliders.y - cmyk.y_scaled()).abs() > f32::EPSILON
+            || (self.sliders.k - cmyk.k_scaled()).abs() > f32::EPSILON
         {
             if (self.sliders.k - 1.).abs() < f32::EPSILON {
                 self.save_sliders_if_unsaved();
@@ -149,9 +146,9 @@ impl ColorPicker {
 
     fn hsl_changed(&mut self) -> bool {
         let hsl = Hsl::from(self.current_color);
-        if (self.sliders.hsl_h - hsl.h).abs() > f32::EPSILON
-            || (self.sliders.hsl_s - hsl.s).abs() > f32::EPSILON
-            || (self.sliders.hsl_l - hsl.l).abs() > f32::EPSILON
+        if (self.sliders.hsl_h - hsl.h_scaled()).abs() > f32::EPSILON
+            || (self.sliders.hsl_s - hsl.s_scaled()).abs() > f32::EPSILON
+            || (self.sliders.hsl_l - hsl.l_scaled()).abs() > f32::EPSILON
         {
             self.set_cur_color(Hsl::new(
                 self.sliders.hsl_h,
@@ -168,7 +165,7 @@ impl ColorPicker {
         if self.rgb_changed() {
             return;
         }
-        if self.hsva_changed() {
+        if self.hsv_changed() {
             return;
         }
         if self.cmyk_changed() {
@@ -178,66 +175,67 @@ impl ColorPicker {
     }
 
     pub fn rgb_sliders(&mut self, ui: &mut Ui) {
-        let opaque = Rgba::from(self.current_color);
+        let opaque = self.current_color.rgb();
         ui.collapsing("RGB", |ui| {
             slider!(self, ui, r, "red", U8_MIN..=U8_MAX, |r| {
-                Rgba::from_rgb(r, opaque.g(), opaque.b()).into()
+                Rgb::new(r, opaque.g(), opaque.b()).into()
             });
             slider!(self, ui, g, "green", U8_MIN..=U8_MAX, |g| {
-                Rgba::from_rgb(opaque.r(), g, opaque.b()).into()
+                Rgb::new(opaque.r(), g, opaque.b()).into()
             });
             slider!(self, ui, b, "blue", U8_MIN..=U8_MAX, |b| {
-                Rgba::from_rgb(opaque.r(), opaque.g(), b).into()
+                Rgb::new(opaque.r(), opaque.g(), b).into()
             });
         });
     }
 
     pub fn cmyk_sliders(&mut self, ui: &mut Ui) {
-        let opaque = Cmyk::from(self.current_color);
+        let opaque = self.current_color.cmyk();
         ui.collapsing("CMYK", |ui| {
-            slider!(self, ui, c, "cyan", 0. ..=1., |c| Cmyk { c, ..opaque }
-                .into());
-            slider!(self, ui, m, "magenta", 0. ..=1., |m| Cmyk { m, ..opaque }
-                .into());
-            slider!(self, ui, y, "yellow", 0. ..=1., |y| Cmyk { y, ..opaque }
-                .into());
-            slider!(self, ui, k, "key", 0. ..=1., |k| Cmyk { k, ..opaque }
-                .into());
+            slider!(self, ui, c, "cyan", 0. ..=100., |c| {
+                Cmyk::new(c, opaque.m(), opaque.y(), opaque.k()).into()
+            });
+            slider!(self, ui, m, "magenta", 0. ..=100., |m| {
+                Cmyk::new(opaque.c(), m, opaque.y(), opaque.k()).into()
+            });
+            slider!(self, ui, y, "yellow", 0. ..=100., |y| {
+                Cmyk::new(opaque.c(), opaque.m(), y, opaque.k()).into()
+            });
+            slider!(self, ui, k, "key", 0. ..=100., |k| Cmyk::new(
+                opaque.c(),
+                opaque.m(),
+                opaque.y(),
+                k
+            )
+            .into());
         });
     }
     pub fn hsv_sliders(&mut self, ui: &mut Ui) {
-        let mut opaque = HsvaGamma::from(self.current_color);
-        opaque.a = 1.;
+        let opaque = self.current_color.hsv();
         ui.collapsing("HSV", |ui| {
-            slider!(self, ui, hue, "hue", 0. ..=1., |h| HsvaGamma {
-                h,
-                ..opaque
-            }
-            .into());
-            slider!(self, ui, sat, "saturation", 0. ..=1., |s| HsvaGamma {
-                s,
-                ..opaque
-            }
-            .into());
-            slider!(self, ui, val, "value", 0. ..=1., |v| HsvaGamma {
-                v,
-                ..opaque
-            }
-            .into());
+            slider!(self, ui, hue, "hue", 0. ..=360., |h| {
+                Hsv::new(h, opaque.s(), opaque.v()).into()
+            });
+            slider!(self, ui, sat, "saturation", 0. ..=100., |s| {
+                Hsv::new(opaque.h(), s, opaque.v()).into()
+            });
+            slider!(self, ui, val, "value", 0. ..=100., |v| {
+                Hsv::new(opaque.h(), opaque.s(), v).into()
+            });
         });
     }
     pub fn hsl_sliders(&mut self, ui: &mut Ui) {
-        let opaque = Hsl::from(self.current_color);
+        let opaque = self.current_color.hsl();
         ui.collapsing("HSL", |ui| {
-            slider!(self, ui, hsl_h, "hue", 0. ..=1., |h| Hsl { h, ..opaque }
-                .into());
-            slider!(self, ui, hsl_s, "saturation", 0. ..=1., |s| Hsl {
-                s,
-                ..opaque
-            }
-            .into());
-            slider!(self, ui, hsl_l, "light", 0. ..=1., |l| Hsl { l, ..opaque }
-                .into());
+            slider!(self, ui, hsl_h, "hue", 0. ..=360., |h| {
+                Hsl::new(h, opaque.s(), opaque.l()).into()
+            });
+            slider!(self, ui, hsl_s, "saturation", 0. ..=100., |s| {
+                Hsl::new(opaque.h(), s, opaque.l()).into()
+            });
+            slider!(self, ui, hsl_l, "light", 0. ..=100., |l| {
+                Hsl::new(opaque.h(), opaque.s(), l).into()
+            });
         });
     }
 }

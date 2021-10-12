@@ -1,74 +1,202 @@
 use egui::color::{Color32, Hsva, Rgba};
-use std::cmp::Ordering;
 
-use super::U8_MAX;
+use crate::color::hsv::Hsv;
+use crate::color::rgb::Rgb;
+use crate::color::{Color, Hsl, Lch, Luv, Xyz};
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Cmyk {
-    pub c: f32,
-    pub m: f32,
-    pub y: f32,
-    pub k: f32,
+    c: f32,
+    m: f32,
+    y: f32,
+    k: f32,
 }
 
 impl Cmyk {
     pub fn new(c: f32, m: f32, y: f32, k: f32) -> Self {
+        let c = if c.is_nan() {
+            0.
+        } else if c > 1. {
+            c / 100.
+        } else {
+            c
+        };
+        let m = if m.is_nan() {
+            0.
+        } else if m > 1. {
+            m / 100.
+        } else {
+            m
+        };
+        let y = if y.is_nan() {
+            0.
+        } else if y > 1. {
+            y / 100.
+        } else {
+            y
+        };
+        let k = if k.is_nan() {
+            0.
+        } else if k > 1. {
+            k / 100.
+        } else {
+            k
+        };
         Self { c, m, y, k }
+    }
+
+    #[inline(always)]
+    /// Returns Cyan value in the range of 0.0 ..= 1.0
+    pub fn c(&self) -> f32 {
+        self.c
+    }
+
+    #[inline(always)]
+    /// Returns Magenta value in the range of 0.0 ..= 1.0
+    pub fn m(&self) -> f32 {
+        self.m
+    }
+
+    #[inline(always)]
+    /// Returns Yellow value in the range of 0.0 ..= 1.0
+    pub fn y(&self) -> f32 {
+        self.y
+    }
+
+    #[inline(always)]
+    /// Returns Key value in the range of 0.0 ..= 1.0
+    pub fn k(&self) -> f32 {
+        self.k
+    }
+
+    /// Returns Cyan value in the range of 0.0 ..= 100.0
+    pub fn c_scaled(&self) -> f32 {
+        self.c * 100.
+    }
+
+    /// Returns Magenta value in the range of 0.0 ..= 100.0
+    pub fn m_scaled(&self) -> f32 {
+        self.m * 100.
+    }
+
+    /// Returns Yellow value in the range of 0.0 ..= 100.0
+    pub fn y_scaled(&self) -> f32 {
+        self.y * 100.
+    }
+
+    /// Returns Key value in the range of 0.0 ..= 100.0
+    pub fn k_scaled(&self) -> f32 {
+        self.k * 100.
+    }
+}
+
+//####################################################################################################
+
+impl From<Cmyk> for Hsva {
+    fn from(color: Cmyk) -> Hsva {
+        Rgb::from(color).into()
+    }
+}
+
+impl From<Hsva> for Cmyk {
+    fn from(color: Hsva) -> Cmyk {
+        Rgb::from(color).into()
+    }
+}
+
+impl From<Color32> for Cmyk {
+    fn from(color: Color32) -> Self {
+        Rgb::from(color).into()
     }
 }
 
 impl From<Cmyk> for Color32 {
-    fn from(cmyk: Cmyk) -> Self {
-        let r = (255. * (1. - (cmyk.c * (1. - cmyk.k) + cmyk.k))).round() as u8;
-        let g = (255. * (1. - (cmyk.m * (1. - cmyk.k) + cmyk.k))).round() as u8;
-        let b = (255. * (1. - (cmyk.y * (1. - cmyk.k) + cmyk.k))).round() as u8;
-        Color32::from_rgb(r, g, b)
+    fn from(color: Cmyk) -> Self {
+        Rgb::from(color).into()
     }
 }
 
 impl From<Cmyk> for Rgba {
-    fn from(cmyk: Cmyk) -> Rgba {
-        Color32::from(cmyk).into()
-    }
-}
-
-impl From<Cmyk> for Hsva {
-    fn from(cmyk: Cmyk) -> Hsva {
-        Color32::from(cmyk).into()
+    fn from(color: Cmyk) -> Rgba {
+        Rgb::from(color).into()
     }
 }
 
 impl From<Rgba> for Cmyk {
-    fn from(rgba: Rgba) -> Cmyk {
-        Color32::from(rgba).into()
+    fn from(color: Rgba) -> Cmyk {
+        Rgb::from(color).into()
+    }
+}
+
+//####################################################################################################
+
+impl From<Color> for Cmyk {
+    fn from(c: Color) -> Cmyk {
+        match c {
+            Color::Cmyk(c) => c,
+            Color::Rgb(c) => c.into(),
+            Color::Hsv(c) => Rgb::from(c).into(),
+            Color::Luv(c) => Rgb::from(c).into(),
+            Color::Xyz(c) => Rgb::from(c).into(),
+            Color::Lch(c) => Rgb::from(c).into(),
+            Color::Hsl(c) => Rgb::from(c).into(),
+        }
+    }
+}
+
+impl From<&Color> for Cmyk {
+    fn from(c: &Color) -> Self {
+        (*c).into()
+    }
+}
+
+impl From<Hsl> for Cmyk {
+    fn from(color: Hsl) -> Self {
+        Rgb::from(color).into()
+    }
+}
+
+impl From<Hsv> for Cmyk {
+    fn from(color: Hsv) -> Self {
+        Rgb::from(color).into()
+    }
+}
+
+impl From<Lch> for Cmyk {
+    fn from(color: Lch) -> Self {
+        Rgb::from(color).into()
+    }
+}
+
+impl From<Luv> for Cmyk {
+    fn from(color: Luv) -> Self {
+        Rgb::from(color).into()
     }
 }
 
 #[allow(clippy::many_single_char_names)]
-impl From<Color32> for Cmyk {
-    fn from(color: Color32) -> Self {
-        let r: f32 = 1. - (color.r() as f32 / U8_MAX);
-        let g: f32 = 1. - (color.g() as f32 / U8_MAX);
-        let b: f32 = 1. - (color.b() as f32 / U8_MAX);
+impl From<Rgb> for Cmyk {
+    fn from(color: Rgb) -> Self {
+        let r: f32 = color.r();
+        let g: f32 = color.g();
+        let b: f32 = color.b();
         let rgb = [r, g, b];
-        let k = rgb
-            .iter()
-            .min_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal))
-            .unwrap();
+        let k = rgb.iter().copied().fold(f32::MAX, f32::min);
 
-        if (*k - 1.).abs() < f32::EPSILON {
-            return Cmyk::new(0., 0., 0., *k);
+        if (k - 1.).abs() < f32::EPSILON {
+            return Cmyk::new(0., 0., 0., k);
         }
 
         let c = (r - k) / (1. - k);
         let m = (g - k) / (1. - k);
         let y = (b - k) / (1. - k);
 
-        Cmyk::new(
-            if c.is_nan() { 0. } else { c },
-            if m.is_nan() { 0. } else { m },
-            if y.is_nan() { 0. } else { y },
-            if k.is_nan() { 0. } else { *k },
-        )
+        Cmyk::new(c, m, y, k)
+    }
+}
+
+impl From<Xyz> for Cmyk {
+    fn from(color: Xyz) -> Self {
+        Rgb::from(color).into()
     }
 }

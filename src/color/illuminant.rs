@@ -21,17 +21,17 @@ impl Illuminant {
     #[rustfmt::skip]
     pub fn xyz(&self) -> Xyz {
         match self {
-            Illuminant::A   => Xyz { x: 1.0985 , y: 1., z: 0.35585},
-            Illuminant::B   => Xyz { x: 0.99072, y: 1., z: 0.85223},
-            Illuminant::C   => Xyz { x: 0.98074, y: 1., z: 1.18232},
-            Illuminant::D50 => Xyz { x: 0.96422, y: 1., z: 0.82521},
-            Illuminant::D55 => Xyz { x: 0.95682, y: 1., z: 0.92149},
-            Illuminant::D65 => Xyz { x: 0.95047, y: 1., z: 1.08883},
-            Illuminant::D75 => Xyz { x: 0.94972, y: 1., z: 1.22638},
-            Illuminant::E   => Xyz { x: 1.     , y: 1., z: 1.     },
-            Illuminant::F2  => Xyz { x: 0.99186, y: 1., z: 0.67393},
-            Illuminant::F7  => Xyz { x: 0.95041, y: 1., z: 1.08747},
-            Illuminant::F11 => Xyz { x: 1.00962, y: 1., z: 0.64350},
+            Illuminant::A   => Xyz::new(1.0985 , 1., 0.35585),
+            Illuminant::B   => Xyz::new(0.99072, 1., 0.85223),
+            Illuminant::C   => Xyz::new(0.98074, 1., 1.18232),
+            Illuminant::D50 => Xyz::new(0.96422, 1., 0.82521),
+            Illuminant::D55 => Xyz::new(0.95682, 1., 0.92149),
+            Illuminant::D65 => Xyz::new(0.95047, 1., 1.08883),
+            Illuminant::D75 => Xyz::new(0.94972, 1., 1.22638),
+            Illuminant::E   => Xyz::new(1.     , 1., 1.     ),
+            Illuminant::F2  => Xyz::new(0.99186, 1., 0.67393),
+            Illuminant::F7  => Xyz::new(0.95041, 1., 1.08747),
+            Illuminant::F11 => Xyz::new(1.00962, 1., 0.64350),
         }
     }
     pub fn reference_u(&self) -> f32 {
