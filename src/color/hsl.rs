@@ -1,40 +1,152 @@
+use crate::color::hsv::Hsv;
+use crate::color::rgb::Rgb;
+use crate::color::{Cmyk, Color, Lch, Luv, Xyz};
 use egui::color::{Color32, Hsva, Rgba};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Hsl {
-    pub h: f32,
-    pub s: f32,
-    pub l: f32,
+    h: f32,
+    s: f32,
+    l: f32,
 }
 
 impl Hsl {
+    /// Takes in values in the range 0.0 ..= 1.0 and returns an HSL color
     pub fn new(hue: f32, saturation: f32, light: f32) -> Self {
+        let hue = if hue.is_nan() {
+            0.
+        } else if hue > 1. {
+            hue / 360.
+        } else {
+            hue
+        };
+        let saturation = if saturation.is_nan() {
+            0.
+        } else if saturation > 1. {
+            saturation / 100.
+        } else {
+            saturation
+        };
+        let light = if light.is_nan() {
+            0.
+        } else if light > 1. {
+            light / 100.
+        } else {
+            light
+        };
         Self {
             h: hue,
             s: saturation,
             l: light,
         }
     }
+
+    #[inline(always)]
+    /// Returns Hue in the range of 0.0 ..= 1.0
+    pub fn h(&self) -> f32 {
+        self.h
+    }
+
+    #[inline(always)]
+    /// Returns Saturation in the range of 0.0 ..= 1.0
+    pub fn s(&self) -> f32 {
+        self.s
+    }
+
+    #[inline(always)]
+    /// Returns Light in the range of 0.0 ..= 1.0
+    pub fn l(&self) -> f32 {
+        self.l
+    }
+
+    /// Returns Hue in the range of 0.0 ..= 360.0
+    pub fn h_scaled(&self) -> f32 {
+        self.h * 360.
+    }
+
+    /// Returns Saturation in the range of 0.0 ..= 100.0
+    pub fn s_scaled(&self) -> f32 {
+        self.s * 100.
+    }
+
+    /// Returns Light in the range of 0.0 ..= 100.0
+    pub fn l_scaled(&self) -> f32 {
+        self.l * 100.
+    }
+}
+
+//####################################################################################################
+
+impl From<Hsl> for Color32 {
+    fn from(color: Hsl) -> Self {
+        Hsv::from(color).into()
+    }
+}
+
+impl From<Color32> for Hsl {
+    fn from(color: Color32) -> Self {
+        Hsv::from(color).into()
+    }
+}
+
+impl From<Hsl> for Hsva {
+    fn from(color: Hsl) -> Self {
+        Hsv::from(color).into()
+    }
+}
+
+impl From<Hsva> for Hsl {
+    fn from(color: Hsva) -> Self {
+        Hsv::from(color).into()
+    }
 }
 
 impl From<Hsl> for Rgba {
-    fn from(hsl: Hsl) -> Rgba {
-        Color32::from(hsl).into()
+    fn from(color: Hsl) -> Self {
+        Hsv::from(color).into()
     }
 }
 
 impl From<Rgba> for Hsl {
-    fn from(rgba: Rgba) -> Hsl {
-        Color32::from(rgba).into()
+    fn from(color: Rgba) -> Self {
+        Hsv::from(color).into()
+    }
+}
+
+//####################################################################################################
+
+impl From<Color> for Hsl {
+    fn from(c: Color) -> Hsl {
+        match c {
+            Color::Cmyk(c) => Rgb::from(c).into(),
+            Color::Rgb(c) => c.into(),
+            Color::Hsv(c) => c.into(),
+            Color::Luv(c) => Rgb::from(c).into(),
+            Color::Xyz(c) => Rgb::from(c).into(),
+            Color::Lch(c) => Rgb::from(c).into(),
+            Color::Hsl(c) => c,
+        }
+    }
+}
+
+impl From<&Color> for Hsl {
+    fn from(c: &Color) -> Self {
+        (*c).into()
+    }
+}
+
+impl From<Cmyk> for Hsl {
+    fn from(color: Cmyk) -> Self {
+        Hsv::from(color).into()
     }
 }
 
 #[allow(clippy::many_single_char_names)]
-impl From<Hsva> for Hsl {
-    fn from(color: Hsva) -> Self {
-        let h = color.h;
-        let s = color.s;
-        let v = color.v;
+impl From<Hsv> for Hsl {
+    fn from(color: Hsv) -> Self {
+        let h = color.h();
+        let s = color.s();
+        let v = color.v();
 
         let mut l = (2. - s) * v;
         let mut ss = s * v;
@@ -45,47 +157,30 @@ impl From<Hsva> for Hsl {
         }
         l /= 2.;
 
-        Hsl {
-            h: if h.is_nan() { 0. } else { h },
-            s: if ss.is_nan() { 0. } else { ss },
-            l: if l.is_nan() { 0. } else { l },
-        }
+        Hsl::new(h, ss, l)
     }
 }
 
-#[allow(clippy::many_single_char_names)]
-impl From<Hsl> for Hsva {
-    fn from(color: Hsl) -> Self {
-        let h = color.h;
-        let mut ss = color.s;
-        let l = color.l * 2.;
-
-        if l <= 1. {
-            ss *= l;
-        } else {
-            ss *= 2. - l;
-        }
-
-        let v = (l + ss) / 2.;
-        let s = (2. * ss) / (l + ss);
-
-        Hsva {
-            h: if h.is_nan() { 0. } else { h },
-            s: if s.is_nan() { 0. } else { s },
-            v: if v.is_nan() { 0. } else { v },
-            a: 1.,
-        }
+impl From<Lch> for Hsl {
+    fn from(color: Lch) -> Self {
+        Hsv::from(color).into()
     }
 }
 
-impl From<Hsl> for Color32 {
-    fn from(color: Hsl) -> Self {
-        Hsva::from(color).into()
+impl From<Luv> for Hsl {
+    fn from(color: Luv) -> Self {
+        Hsv::from(color).into()
     }
 }
 
-impl From<Color32> for Hsl {
-    fn from(color: Color32) -> Self {
-        Hsva::from(color).into()
+impl From<Rgb> for Hsl {
+    fn from(rgb: Rgb) -> Hsl {
+        Hsv::from(rgb).into()
+    }
+}
+
+impl From<Xyz> for Hsl {
+    fn from(color: Xyz) -> Self {
+        Hsv::from(color).into()
     }
 }

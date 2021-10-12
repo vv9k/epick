@@ -13,8 +13,10 @@ pub use gradient::Gradient;
 
 pub use cmyk::Cmyk;
 pub use hsl::Hsl;
+pub use hsv::Hsv;
 pub use lch::Lch;
 pub use luv::Luv;
+pub use rgb::Rgb;
 pub use xyz::Xyz;
 
 use egui::color::{Color32, Hsva, HsvaGamma, Rgba};
@@ -114,8 +116,8 @@ impl AsRef<str> for DisplayFormat {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Color {
     Cmyk(Cmyk),
-    Rgb(Rgba),
-    Hsv(Hsva),
+    Rgb(Rgb),
+    Hsv(Hsv),
     Luv(Luv),
     Xyz(Xyz),
     Lch(Lch),
@@ -145,9 +147,9 @@ impl Color {
         let color = self.hsl();
         format!(
             "hsl({}, {}%, {}%)",
-            (color.h * 360.) as u16,
-            (color.s * 100.) as u16,
-            (color.l * 100.) as u16
+            color.h() as u16,
+            color.s() as u16,
+            color.l() as u16
         )
     }
 
@@ -161,35 +163,27 @@ impl Color {
     }
 
     pub fn from_hex(hex: &str) -> Option<Self> {
-        parse_hex(hex).map(|(r, g, b)| {
-            Color::Rgb(Rgba::from_rgb(
-                r as f32 / U8_MAX,
-                g as f32 / U8_MAX,
-                b as f32 / U8_MAX,
-            ))
-        })
+        parse_hex(hex).map(|(r, g, b)| Color::Rgb(Rgb::new(r as f32, g as f32, b as f32)))
     }
 
     pub fn as_hue_offset(&self, offset: f32) -> Color {
-        let mut hsv = Hsva::from(*self);
-
-        hsv.h = (hsv.h + offset) % 1.;
+        let mut hsv = self.hsv();
+        hsv.offset_hue(offset);
         Self::Hsv(hsv)
     }
 
     pub fn as_saturation_offset(&self, offset: f32) -> Color {
-        let mut hsv = Hsva::from(*self);
-
-        hsv.s = (hsv.s + offset) % 1.;
+        let mut hsv = self.hsv();
+        hsv.offset_saturation(offset);
         Self::Hsv(hsv)
     }
 
     pub fn as_rgb_triplet(&self) -> (u8, u8, u8) {
-        let color = self.rgba();
+        let color = self.rgb();
         (
-            (color.r() * U8_MAX) as u8,
-            (color.g() * U8_MAX) as u8,
-            (color.b() * U8_MAX) as u8,
+            color.r_scaled().floor() as u8,
+            color.g_scaled().floor() as u8,
+            color.b_scaled().floor() as u8,
         )
     }
 
@@ -197,11 +191,23 @@ impl Color {
         Color32::from(*self)
     }
 
+    pub fn hsva(&self) -> Hsva {
+        self.into()
+    }
+
     pub fn rgba(&self) -> Rgba {
         self.into()
     }
 
-    pub fn hsva(&self) -> Hsva {
+    pub fn cmyk(&self) -> Cmyk {
+        self.into()
+    }
+
+    pub fn hsl(&self) -> Hsl {
+        (*self).into()
+    }
+
+    pub fn hsv(&self) -> Hsv {
         self.into()
     }
 
@@ -213,16 +219,12 @@ impl Color {
         (*self).into()
     }
 
+    pub fn rgb(&self) -> Rgb {
+        self.into()
+    }
+
     pub fn xyz(&self) -> Xyz {
         (*self).into()
-    }
-
-    pub fn hsl(&self) -> Hsl {
-        (*self).into()
-    }
-
-    pub fn cmyk(&self) -> Cmyk {
-        self.into()
     }
 
     pub fn shades(&self, total: u8) -> Vec<Color> {
@@ -347,27 +349,21 @@ impl Color {
     }
 }
 
+//##################################################################################################
+
+impl From<&Color> for Color32 {
+    fn from(c: &Color) -> Self {
+        (*c).into()
+    }
+}
+
 impl From<&Color> for Rgba {
     fn from(c: &Color) -> Self {
         (*c).into()
     }
 }
+
 impl From<&Color> for Hsva {
-    fn from(c: &Color) -> Self {
-        (*c).into()
-    }
-}
-impl From<&Color> for Cmyk {
-    fn from(c: &Color) -> Self {
-        (*c).into()
-    }
-}
-impl From<&Color> for Luv {
-    fn from(c: &Color) -> Self {
-        (*c).into()
-    }
-}
-impl From<&Color> for Hsl {
     fn from(c: &Color) -> Self {
         (*c).into()
     }
@@ -387,148 +383,73 @@ impl From<Color> for Color32 {
     }
 }
 
+impl From<Color32> for Color {
+    fn from(c: Color32) -> Color {
+        Color::Rgb(c.into())
+    }
+}
+
+macro_rules! convert_color {
+    ($c:ident) => {
+        match $c {
+            Color::Cmyk(c) => Rgb::from(c).into(),
+            Color::Rgb(c) => c.into(),
+            Color::Hsv(c) => Rgb::from(c).into(),
+            Color::Luv(c) => Rgb::from(c).into(),
+            Color::Xyz(c) => Rgb::from(c).into(),
+            Color::Lch(c) => Rgb::from(c).into(),
+            Color::Hsl(c) => Rgb::from(c).into(),
+        }
+    };
+}
+
 impl From<Color> for Rgba {
     fn from(c: Color) -> Rgba {
-        match c {
-            Color::Cmyk(c) => c.into(),
-            Color::Rgb(c) => c,
-            Color::Hsv(c) => c.into(),
-            Color::Luv(c) => c.into(),
-            Color::Xyz(c) => c.into(),
-            Color::Lch(c) => c.into(),
-            Color::Hsl(c) => c.into(),
-        }
+        convert_color!(c)
+    }
+}
+
+impl From<Rgba> for Color {
+    fn from(c: Rgba) -> Color {
+        Color::Rgb(c.into())
+    }
+}
+
+impl From<Hsva> for Color {
+    fn from(c: Hsva) -> Color {
+        Color::Hsv(c.into())
     }
 }
 
 impl From<Color> for Hsva {
     fn from(c: Color) -> Hsva {
-        match c {
-            Color::Cmyk(c) => c.into(),
-            Color::Rgb(c) => c.into(),
-            Color::Hsv(c) => c,
-            Color::Luv(c) => c.into(),
-            Color::Xyz(c) => c.into(),
-            Color::Lch(c) => c.into(),
-            Color::Hsl(c) => c.into(),
-        }
+        convert_color!(c)
     }
 }
 
 impl From<Color> for HsvaGamma {
     fn from(c: Color) -> HsvaGamma {
-        match c {
-            Color::Cmyk(c) => Color32::from(c).into(),
-            Color::Rgb(c) => c.into(),
-            Color::Hsv(c) => c.into(),
-            Color::Luv(c) => Color32::from(c).into(),
-            Color::Xyz(c) => Color32::from(c).into(),
-            Color::Lch(c) => Color32::from(c).into(),
-            Color::Hsl(c) => Color32::from(c).into(),
-        }
+        convert_color!(c)
     }
 }
 
-impl From<Color> for Cmyk {
-    fn from(c: Color) -> Cmyk {
-        match c {
-            Color::Cmyk(c) => c,
-            Color::Rgb(c) => Color32::from(c).into(),
-            Color::Hsv(c) => Color32::from(c).into(),
-            Color::Luv(c) => Color32::from(c).into(),
-            Color::Xyz(c) => Color32::from(c).into(),
-            Color::Lch(c) => Color32::from(c).into(),
-            Color::Hsl(c) => Color32::from(c).into(),
-        }
-    }
-}
-
-impl From<Color> for Xyz {
-    fn from(c: Color) -> Xyz {
-        match c {
-            Color::Cmyk(c) => Color32::from(c).into(),
-            Color::Rgb(c) => c.into(),
-            Color::Hsv(c) => Color32::from(c).into(),
-            Color::Luv(c) => Color32::from(c).into(),
-            Color::Xyz(c) => c,
-            Color::Lch(c) => Color32::from(c).into(),
-            Color::Hsl(c) => Color32::from(c).into(),
-        }
-    }
-}
-
-impl From<Color> for Luv {
-    fn from(c: Color) -> Luv {
-        match c {
-            Color::Cmyk(c) => Color32::from(c).into(),
-            Color::Rgb(c) => c.into(),
-            Color::Hsv(c) => Color32::from(c).into(),
-            Color::Luv(c) => c,
-            Color::Xyz(c) => c.into(),
-            Color::Lch(c) => Color32::from(c).into(),
-            Color::Hsl(c) => Color32::from(c).into(),
-        }
-    }
-}
-
-impl From<Color> for Lch {
-    fn from(c: Color) -> Lch {
-        match c {
-            Color::Cmyk(c) => Color32::from(c).into(),
-            Color::Rgb(c) => c.into(),
-            Color::Hsv(c) => Color32::from(c).into(),
-            Color::Luv(c) => c.into(),
-            Color::Xyz(c) => Color32::from(c).into(),
-            Color::Lch(c) => c,
-            Color::Hsl(c) => Color32::from(c).into(),
-        }
-    }
-}
-
-impl From<Color> for Hsl {
-    fn from(c: Color) -> Hsl {
-        match c {
-            Color::Cmyk(c) => Color32::from(c).into(),
-            Color::Rgb(c) => Color32::from(c).into(),
-            Color::Hsv(c) => c.into(),
-            Color::Luv(c) => Color32::from(c).into(),
-            Color::Xyz(c) => Color32::from(c).into(),
-            Color::Lch(c) => Color32::from(c).into(),
-            Color::Hsl(c) => c,
-        }
-    }
-}
+//##################################################################################################
 
 impl From<Cmyk> for Color {
     fn from(c: Cmyk) -> Color {
         Color::Cmyk(c)
     }
 }
-impl From<Rgba> for Color {
-    fn from(c: Rgba) -> Color {
-        Color::Rgb(c)
+
+impl From<Hsl> for Color {
+    fn from(c: Hsl) -> Color {
+        Color::Hsl(c)
     }
 }
-impl From<Color32> for Color {
-    fn from(c: Color32) -> Color {
-        Color::Rgb(Rgba::from(c))
-    }
-}
-impl From<Hsva> for Color {
-    fn from(c: Hsva) -> Color {
+
+impl From<Hsv> for Color {
+    fn from(c: Hsv) -> Color {
         Color::Hsv(c)
-    }
-}
-
-impl From<Xyz> for Color {
-    fn from(c: Xyz) -> Self {
-        Color::Xyz(c)
-    }
-}
-
-impl From<Luv> for Color {
-    fn from(c: Luv) -> Color {
-        Color::Luv(c)
     }
 }
 
@@ -538,8 +459,20 @@ impl From<Lch> for Color {
     }
 }
 
-impl From<Hsl> for Color {
-    fn from(c: Hsl) -> Color {
-        Color::Hsl(c)
+impl From<Luv> for Color {
+    fn from(c: Luv) -> Color {
+        Color::Luv(c)
+    }
+}
+
+impl From<Rgb> for Color {
+    fn from(c: Rgb) -> Color {
+        Color::Rgb(c)
+    }
+}
+
+impl From<Xyz> for Color {
+    fn from(c: Xyz) -> Self {
+        Color::Xyz(c)
     }
 }

@@ -1,4 +1,4 @@
-use crate::color::{Color, U8_MAX};
+use crate::color::Color;
 
 #[derive(Debug, Clone)]
 pub struct ColorSliders {
@@ -32,7 +32,7 @@ impl Default for ColorSliders {
             c: 0.,
             m: 0.,
             y: 0.,
-            k: 1.,
+            k: 100.,
             lch_l: 0.,
             lch_c: 0.,
             lch_h: 0.,
@@ -45,38 +45,40 @@ impl Default for ColorSliders {
 
 impl ColorSliders {
     pub fn set_color(&mut self, color: Color) {
-        let rgba = color.rgba();
-        self.r = rgba.r() * U8_MAX;
-        self.g = rgba.g() * U8_MAX;
-        self.b = rgba.b() * U8_MAX;
-        let hsva = color.hsva();
-        self.hue = hsva.h;
-        self.sat = hsva.s;
-        self.val = hsva.v;
+        let rgb = color.rgb();
+        self.r = rgb.r_scaled();
+        self.g = rgb.g_scaled();
+        self.b = rgb.b_scaled();
         let cmyk = color.cmyk();
-        self.k = cmyk.k;
-        self.c = cmyk.c;
-        self.m = cmyk.m;
-        self.y = cmyk.y;
+        self.c = cmyk.c_scaled();
+        self.m = cmyk.m_scaled();
+        self.y = cmyk.y_scaled();
+        self.k = cmyk.k_scaled();
+        let hsl = color.hsl();
+        self.hsl_h = hsl.h_scaled();
+        self.hsl_s = hsl.s_scaled();
+        self.hsl_l = hsl.l_scaled();
+        let hsv = color.hsv();
+        self.hue = hsv.h_scaled();
+        self.sat = hsv.s_scaled();
+        self.val = hsv.v_scaled();
         let lch = color.lch();
         self.lch_l = lch.l;
         self.lch_h = lch.c;
         self.lch_c = lch.h;
-        let hsl = color.hsl();
-        self.hsl_h = hsl.h;
-        self.hsl_s = hsl.s;
-        self.hsl_l = hsl.l;
     }
 
     pub fn restore(&mut self, other: Self) {
-        self.hue = other.hue;
-        self.sat = other.sat;
-        self.c = other.c;
-        self.m = other.m;
-        self.y = other.y;
         self.r = other.r;
         self.g = other.g;
         self.b = other.b;
+        self.hue = other.hue;
+        self.sat = other.sat;
+        self.val = other.val;
+        self.c = other.c;
+        self.m = other.m;
+        self.y = other.y;
+        self.k = other.k;
         self.hsl_h = other.hsl_h;
         self.hsl_s = other.hsl_s;
         self.hsl_l = other.hsl_l;
