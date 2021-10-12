@@ -147,9 +147,9 @@ impl Color {
         let color = self.hsl();
         format!(
             "hsl({}, {}%, {}%)",
-            color.h() as u16,
-            color.s() as u16,
-            color.l() as u16
+            color.h_scaled() as u16,
+            color.s_scaled() as u16,
+            color.l_scaled() as u16
         )
     }
 
