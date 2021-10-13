@@ -166,8 +166,7 @@ impl From<Hsl> for Rgb {
 impl From<Hsv> for Rgb {
     #[rustfmt::skip]
     fn from(hsv: Hsv) -> Self {
-        let h = hsv.h();
-        let h = (h.fract() + 1.).fract() * 6.;
+        let h = hsv.h() * 6.;
         let s = hsv.s();
         let v = hsv.v();
 
@@ -176,14 +175,14 @@ impl From<Hsv> for Rgb {
         let q = v * (1. - f * s);
         let t = v * (1. - (1. - f) * s);
 
-         match h.floor() as i32 % 6 {
-            0 => Rgb::new(v,  t,  p  ),
-            1 => Rgb::new(q,  v,  p  ),
-            2 => Rgb::new(p,  v,  t  ),
-            3 => Rgb::new(p,  q,  v  ),
-            4 => Rgb::new(t,  p,  v  ),
-            5 => Rgb::new(v,  p,  q  ),
-            _ => Rgb::new(0., 0., 0. ),
+        match h.floor() as i32 % 6 {
+            0 => Rgb::new(v,  t,  p ),
+            1 => Rgb::new(q,  v,  p ),
+            2 => Rgb::new(p,  v,  t ),
+            3 => Rgb::new(p,  q,  v ),
+            4 => Rgb::new(t,  p,  v ),
+            5 => Rgb::new(v,  p,  q ),
+            _ => Rgb::new(0., 0., 0.),
         }
     }
 }
@@ -224,20 +223,56 @@ mod tests {
         }
 
         test_case!(
-            Cmyk: 0., 0., 0., 1.;
-            Rgb: 0., 0., 0.
-        );
-        test_case!(
             Cmyk: 0., 0., 0., 0.;
             Rgb: 1., 1., 1.
         );
         test_case!(
-            Cmyk: 0.93, 0.33, 0., 0.;
-            Rgb: 0.06999999, 0.66999996, 1.
+            Cmyk: 0.5, 0., 0., 0.;
+            Rgb: 0.5, 1., 1.
         );
         test_case!(
-            Cmyk: 0.08, 0., 0.06, 0.27;
-            Rgb: 0.67160004, 0.73, 0.6862
+            Cmyk: 1., 0., 0., 0.;
+            Rgb: 0., 1., 1.
+        );
+        test_case!(
+            Cmyk: 0., 0.5, 0., 0.;
+            Rgb: 1., 0.5, 1.
+        );
+        test_case!(
+            Cmyk: 0., 1., 0., 0.;
+            Rgb: 1., 0., 1.
+        );
+        test_case!(
+            Cmyk: 0., 0., 0.5, 0.;
+            Rgb: 1., 1., 0.5
+        );
+        test_case!(
+            Cmyk: 0., 0., 1., 0.;
+            Rgb: 1., 1., 0.
+        );
+        test_case!(
+            Cmyk: 0., 0., 0., 0.5;
+            Rgb: 0.5, 0.5, 0.5
+        );
+        test_case!(
+            Cmyk: 0., 0., 0., 1.;
+            Rgb: 0., 0., 0.
+        );
+        test_case!(
+            Cmyk: 1., 1., 0., 0.;
+            Rgb: 0., 0., 1.
+        );
+        test_case!(
+            Cmyk: 1., 0., 1., 0.;
+            Rgb: 0., 1., 0.
+        );
+        test_case!(
+            Cmyk: 0., 1., 1., 0.;
+            Rgb: 1., 0., 0.
+        );
+        test_case!(
+            Cmyk: 0., 1., 1., 0.;
+            Rgb: 1., 0., 0.
         );
     }
 
@@ -277,6 +312,10 @@ mod tests {
             Rgb: 255., 255., 0.
         );
         test_case!(
+            Hsv: 1./4., 1., 1.;
+            Rgb: 127.5, 255., 0.
+        );
+        test_case!(
             Hsv: 1./3., 1., 1.;
             Rgb: 0., 255., 0.
         );
@@ -287,6 +326,14 @@ mod tests {
         test_case!(
             Hsv: 2./3., 1., 1.;
             Rgb: 0., 0., 255.
+        );
+        test_case!(
+            Hsv: 3./4., 1., 1.;
+            Rgb: 127.5, 0., 255.
+        );
+        test_case!(
+            Hsv: 5./6., 1., 1.;
+            Rgb: 255., 0., 255.
         );
         test_case!(
             Hsv: 1., 1., 1.;
