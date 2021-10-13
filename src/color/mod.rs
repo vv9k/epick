@@ -46,6 +46,9 @@ const fn hex_chars_to_u8(ch: (u8, u8)) -> u8 {
 }
 
 pub fn parse_hex(color: &str) -> Option<(u8, u8, u8)> {
+    if color.len() != 6 {
+        return None;
+    }
     let mut bytes = color.as_bytes().chunks(2);
 
     Some((
@@ -491,11 +494,20 @@ mod tests {
                 assert_eq!($g, parsed.1);
                 assert_eq!($b, parsed.2);
             };
+            ($hex:literal, None) => {
+                let parsed = parse_hex($hex);
+                assert!(parsed.is_none());
+            };
         }
 
         test_case!("000000", 0, 0, 0);
         test_case!("ffffff", 255, 255, 255);
+        test_case!("FFFFFF", 255, 255, 255);
         test_case!("abbaaf", 171, 186, 175);
         test_case!("12abff", 18, 171, 255);
+
+        test_case!("", None);
+        test_case!("12abf", None);
+        test_case!("12abfff", None);
     }
 }
