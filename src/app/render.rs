@@ -6,6 +6,7 @@ use egui::{
     TextureId, Ui, Vec2,
 };
 use epaint::Mesh;
+use std::ops::{Neg, Sub};
 use std::{collections::HashMap, ops::RangeInclusive};
 
 /// Number of vertices per dimension in the color sliders.
@@ -88,7 +89,15 @@ pub fn color_slider_1d(
     #![allow(clippy::identity_op)]
 
     let width = ui.spacing().slider_width * 2.5;
-    let range_end = *range.end();
+
+    let range_start = *range.start();
+    let _range_end = *range.end();
+
+    let range_end = if range_start.is_sign_negative() {
+        _range_end + range_start.neg()
+    } else {
+        _range_end
+    };
 
     let desired_size = vec2(width, ui.spacing().interact_size.y * 2.);
     let (rect, response) = ui.allocate_at_least(desired_size, Sense::click_and_drag());
@@ -105,11 +114,12 @@ pub fn color_slider_1d(
         // fill color:
         let mut mesh = Mesh::default();
         for i in 0..=N {
-            let t = i as f32 / (N as f32);
-            let color = color_at(t);
-            let x = lerp(rect.left()..=rect.right(), t);
-            mesh.colored_vertex(pos2(x, rect.top()), color);
-            mesh.colored_vertex(pos2(x, rect.bottom()), color);
+            let pos = (i as f32 / (N as f32));
+            let color_pos = lerp(range_start..=_range_end, pos);
+            let color = color_at(color_pos);
+            let mesh_pos = lerp(rect.left()..=rect.right(), pos);
+            mesh.colored_vertex(pos2(mesh_pos, rect.top()), color);
+            mesh.colored_vertex(pos2(mesh_pos, rect.bottom()), color);
             if i < N {
                 mesh.add_triangle(2 * i + 0, 2 * i + 1, 2 * i + 2);
                 mesh.add_triangle(2 * i + 1, 2 * i + 2, 2 * i + 3);
@@ -121,12 +131,14 @@ pub fn color_slider_1d(
     ui.painter().rect_stroke(rect, 0.0, visuals.bg_stroke); // outline
 
     {
-        // Show where the slider is at:
-        let x = if *value >= 0. && *value <= 1. {
-            lerp(rect.left()..=rect.right(), *value)
+        let x = *value;
+        let x = if range_start.is_sign_negative() {
+            x + range_start.neg()
         } else {
-            rect.left() + (*value / range_end) * width
+            x
         };
+        // Show where the slider is at:
+        let x = rect.left() + (x / range_end) * width;
         let r = rect.height() / 4.0;
         let picked_color = color_at(*value);
         ui.painter().add(Shape::convex_polygon(
