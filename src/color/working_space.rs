@@ -7,61 +7,61 @@ pub type InverseRgbSpaceMatrix = [[f32; 3]; 3];
 
 #[derive(Debug)]
 #[allow(clippy::upper_case_acronyms)]
-pub enum ColorSpace {
-    AdobeRGB,
-    AppleRGB,
-    CIERGB,
-    ECIRGB,
-    NTSCRGB,
-    PALRGB,
-    ProPhotoRGB,
+pub enum RgbWorkingSpace {
+    Adobe,
+    Apple,
+    CIE,
+    ECI,
+    NTSC,
+    PAL,
+    ProPhoto,
     SRGB,
-    WideGamutRGB,
+    WideGamut,
 }
 
-impl ColorSpace {
+impl RgbWorkingSpace {
     pub fn reference_whitepoint(&self) -> Illuminant {
-        use ColorSpace::*;
+        use RgbWorkingSpace::*;
         match &self {
-            AdobeRGB => Illuminant::D65,
-            AppleRGB => Illuminant::D65,
-            CIERGB => Illuminant::E,
-            ECIRGB => Illuminant::D50,
-            NTSCRGB => Illuminant::C,
-            PALRGB => Illuminant::D65,
-            ProPhotoRGB => Illuminant::D50,
+            Adobe => Illuminant::D65,
+            Apple => Illuminant::D65,
+            CIE => Illuminant::E,
+            ECI => Illuminant::D50,
+            NTSC => Illuminant::C,
+            PAL => Illuminant::D65,
+            ProPhoto => Illuminant::D50,
             SRGB => Illuminant::D65,
-            WideGamutRGB => Illuminant::D50,
+            WideGamut => Illuminant::D50,
         }
     }
 
     pub fn rgb_matrix(&self) -> RgbSpaceMatrix {
-        use ColorSpace::*;
+        use RgbWorkingSpace::*;
         match &self {
-            AdobeRGB => ADOBE_RGB,
-            AppleRGB => APPLE_RGB,
-            CIERGB => CIE_RGB,
-            ECIRGB => ECI_RGB,
-            NTSCRGB => NTSC_RGB,
-            PALRGB => PAL_RGB,
-            ProPhotoRGB => PRO_PHOTO_RGB,
-            Self::SRGB => crate::color::colorspace::SRGB,
-            WideGamutRGB => WIDE_GAMUT_RGB,
+            Adobe => ADOBE_RGB,
+            Apple => APPLE_RGB,
+            CIE => CIE_RGB,
+            ECI => ECI_RGB,
+            NTSC => NTSC_RGB,
+            PAL => PAL_RGB,
+            ProPhoto => PRO_PHOTO_RGB,
+            Self::SRGB => crate::color::working_space::SRGB,
+            WideGamut => WIDE_GAMUT_RGB,
         }
     }
 
     pub fn rgb_matrix_inverse(&self) -> RgbSpaceMatrix {
-        use ColorSpace::*;
+        use RgbWorkingSpace::*;
         match &self {
-            AdobeRGB => ADOBE_RGB_INVERSE,
-            AppleRGB => APPLE_RGB_INVERSE,
-            CIERGB => CIE_RGB_INVERSE,
-            ECIRGB => ECI_RGB_INVERSE,
-            NTSCRGB => NTSC_RGB_INVERSE,
-            PALRGB => PAL_RGB_INVERSE,
-            ProPhotoRGB => PRO_PHOTO_RGB_INVERSE,
+            Adobe => ADOBE_RGB_INVERSE,
+            Apple => APPLE_RGB_INVERSE,
+            CIE => CIE_RGB_INVERSE,
+            ECI => ECI_RGB_INVERSE,
+            NTSC => NTSC_RGB_INVERSE,
+            PAL => PAL_RGB_INVERSE,
+            ProPhoto => PRO_PHOTO_RGB_INVERSE,
             SRGB => SRGB_INVERSE,
-            WideGamutRGB => WIDE_GAMUT_RGB_INVERSE,
+            WideGamut => WIDE_GAMUT_RGB_INVERSE,
         }
     }
 }

@@ -1,6 +1,6 @@
 #![allow(clippy::many_single_char_names)]
-use crate::color::colorspace::ColorSpace;
 use crate::color::hsv::Hsv;
+use crate::color::working_space::RgbWorkingSpace;
 use crate::color::{Cmyk, Color, Hsl, Lch, Luv, Xyz, U8_MAX};
 use egui::color::{Hsva, HsvaGamma};
 use egui::{Color32, Rgba};
@@ -201,7 +201,7 @@ impl From<Luv> for Rgb {
 
 impl From<Xyz> for Rgb {
     fn from(color: Xyz) -> Self {
-        color.as_rgb(ColorSpace::SRGB.rgb_matrix())
+        color.as_rgb(RgbWorkingSpace::SRGB.rgb_matrix())
     }
 }
 

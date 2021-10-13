@@ -4,7 +4,7 @@ use crate::color::hsv::Hsv;
 use crate::color::illuminant::Illuminant;
 use crate::color::rgb::Rgb;
 use crate::color::{
-    colorspace::{ColorSpace, InverseRgbSpaceMatrix, RgbSpaceMatrix},
+    working_space::{InverseRgbSpaceMatrix, RgbSpaceMatrix, RgbWorkingSpace},
     Cmyk, Color, Hsl, Luv, CIE_E, CIE_K, U8_MAX,
 };
 
@@ -115,7 +115,7 @@ impl From<Color> for Xyz {
 
 impl From<Xyz> for Color32 {
     fn from(color: Xyz) -> Self {
-        color.as_rgb(ColorSpace::SRGB.rgb_matrix()).into()
+        color.as_rgb(RgbWorkingSpace::SRGB.rgb_matrix()).into()
     }
 }
 
@@ -125,7 +125,7 @@ impl From<Color32> for Xyz {
         let g = color.g() as f32 / U8_MAX;
         let b = color.b() as f32 / U8_MAX;
         let color = (r, g, b);
-        Xyz::from_rgb(color, ColorSpace::SRGB.rgb_matrix_inverse())
+        Xyz::from_rgb(color, RgbWorkingSpace::SRGB.rgb_matrix_inverse())
     }
 }
 
@@ -202,7 +202,7 @@ impl From<Rgb> for Xyz {
     fn from(rgb: Rgb) -> Self {
         Xyz::from_rgb(
             (rgb.r(), rgb.g(), rgb.b()),
-            ColorSpace::SRGB.rgb_matrix_inverse(),
+            RgbWorkingSpace::SRGB.rgb_matrix_inverse(),
         )
     }
 }
