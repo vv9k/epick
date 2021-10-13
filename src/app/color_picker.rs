@@ -1,6 +1,6 @@
 use crate::app::render::color_slider_1d;
 use crate::app::sliders::ColorSliders;
-use crate::color::{Cmyk, Color, ColorHarmony, Hsl, Hsv, Lch, Luv, Rgb, Xyz, U8_MAX, U8_MIN};
+use crate::color::{Cmyk, Color, ColorHarmony, Hsl, Hsv, Lch, Luv, Rgb, U8_MAX, U8_MIN};
 
 use egui::Ui;
 use egui::{color::Hsva, DragValue};
@@ -48,9 +48,6 @@ impl ColorPicker {
         let color = color.into();
         self.sliders.set_color(color);
         self.current_color = color;
-        println!("{:?}", Xyz::from(self.current_color));
-        println!("{:?}", Luv::from(self.current_color));
-        println!("{:?}", Lch::from(self.current_color));
     }
 
     fn restore_sliders_if_saved(&mut self) {
@@ -129,7 +126,6 @@ impl ColorPicker {
         }
     }
 
-    #[allow(dead_code)]
     fn lch_changed(&mut self) -> bool {
         let lch = Lch::from(self.current_color);
         if (self.sliders.lch_l - lch.l()).abs() > f32::EPSILON
@@ -147,7 +143,6 @@ impl ColorPicker {
         }
     }
 
-    #[allow(dead_code)]
     fn luv_changed(&mut self) -> bool {
         let luv = Luv::from(self.current_color);
         if (self.sliders.luv_l - luv.l()).abs() > f32::EPSILON
@@ -192,7 +187,11 @@ impl ColorPicker {
         if self.cmyk_changed() {
             return;
         }
-        self.hsl_changed();
+        if self.hsl_changed() {
+            return;
+        }
+        self.luv_changed();
+        // self.lch_changed();
     }
 
     pub fn rgb_sliders(&mut self, ui: &mut Ui) {
@@ -258,6 +257,36 @@ impl ColorPicker {
             });
             slider!(self, ui, hsl_l, "light", 0. ..=100., |l| {
                 Hsl::new(opaque.h(), opaque.s(), l).into()
+            });
+        });
+    }
+
+    pub fn luv_sliders(&mut self, ui: &mut Ui) {
+        let opaque = self.current_color.luv();
+        ui.collapsing("Luv", |ui| {
+            slider!(self, ui, luv_l, "light", 0. ..=100., |l| {
+                Luv::new(l, opaque.u(), opaque.v()).into()
+            });
+            slider!(self, ui, luv_u, "u", -134. ..=220., |u| {
+                Luv::new(opaque.l(), u, opaque.v()).into()
+            });
+            slider!(self, ui, luv_v, "v", -140. ..=122., |v| {
+                Luv::new(opaque.l(), opaque.u(), v).into()
+            });
+        });
+    }
+
+    pub fn lch_sliders(&mut self, ui: &mut Ui) {
+        let opaque = self.current_color.lch();
+        ui.collapsing("LCH(uv)", |ui| {
+            slider!(self, ui, lch_l, "light", 0. ..=100., |l| {
+                Lch::new(l, opaque.c(), opaque.h()).into()
+            });
+            slider!(self, ui, lch_c, "c", 0. ..=270., |c| {
+                Lch::new(opaque.l(), c, opaque.h()).into()
+            });
+            slider!(self, ui, lch_h, "h", 0. ..=360., |h| {
+                Lch::new(opaque.l(), opaque.c(), h).into()
             });
         });
     }

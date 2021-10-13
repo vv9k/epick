@@ -15,12 +15,12 @@ pub struct ColorSliders {
     pub hsl_h: f32,
     pub hsl_s: f32,
     pub hsl_l: f32,
-    pub lch_l: f32,
-    pub lch_c: f32,
-    pub lch_h: f32,
     pub luv_l: f32,
     pub luv_u: f32,
     pub luv_v: f32,
+    pub lch_l: f32,
+    pub lch_c: f32,
+    pub lch_h: f32,
 }
 
 impl Default for ColorSliders {
@@ -39,12 +39,12 @@ impl Default for ColorSliders {
             hsl_h: 0.,
             hsl_s: 0.,
             hsl_l: 0.,
-            lch_l: 0.,
-            lch_c: 0.,
-            lch_h: 0.,
             luv_l: 0.,
             luv_u: 0.,
             luv_v: 0.,
+            lch_l: 0.,
+            lch_c: 0.,
+            lch_h: 180.,
         }
     }
 }
@@ -68,14 +68,14 @@ impl ColorSliders {
         self.hsl_h = hsl.h_scaled();
         self.hsl_s = hsl.s_scaled();
         self.hsl_l = hsl.l_scaled();
-        let lch = color.lch();
-        self.lch_l = lch.l();
-        self.lch_h = lch.c();
-        self.lch_c = lch.h();
         let luv = color.luv();
         self.luv_l = luv.l();
         self.luv_u = luv.u();
         self.luv_v = luv.v();
+        let lch = color.lch();
+        self.lch_l = lch.l();
+        self.lch_c = lch.c();
+        self.lch_h = lch.h();
     }
 
     pub fn restore(&mut self, other: Self) {
@@ -92,5 +92,11 @@ impl ColorSliders {
         self.hsl_h = other.hsl_h;
         self.hsl_s = other.hsl_s;
         self.hsl_l = other.hsl_l;
+        self.luv_l = other.luv_l;
+        self.luv_u = other.luv_u;
+        self.luv_v = other.luv_v;
+        self.lch_l = other.lch_l;
+        self.lch_c = other.lch_c;
+        self.lch_h = other.lch_h;
     }
 }

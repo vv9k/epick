@@ -12,6 +12,7 @@
 - HSV sliders are now scaled 0..=360, 0..=100, 0..=100 respectively [#14](https://github.com/vv9k/epick/pull/14)
 - HSL sliders are now scaled 0..=360, 0..=100, 0..=100 respectively [#14](https://github.com/vv9k/epick/pull/14)
 - The triangle displaying current position on a slider will be displayed in the correct position [#14](https://github.com/vv9k/epick/pull/14)
+- Add CIE Luv and CIE LCH(uv) sliders
 
 # 0.4.0
 

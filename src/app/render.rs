@@ -6,7 +6,7 @@ use egui::{
     TextureId, Ui, Vec2,
 };
 use epaint::Mesh;
-use std::ops::{Neg, Sub};
+use std::ops::Neg;
 use std::{collections::HashMap, ops::RangeInclusive};
 
 /// Number of vertices per dimension in the color sliders.
@@ -114,7 +114,7 @@ pub fn color_slider_1d(
         // fill color:
         let mut mesh = Mesh::default();
         for i in 0..=N {
-            let pos = (i as f32 / (N as f32));
+            let pos = i as f32 / (N as f32);
             let color_pos = lerp(range_start..=_range_end, pos);
             let color = color_at(color_pos);
             let mesh_pos = lerp(rect.left()..=rect.right(), pos);

@@ -8,6 +8,8 @@ pub struct ColorSpaceSettings {
     pub cmyk: bool,
     pub hsv: bool,
     pub hsl: bool,
+    pub luv: bool,
+    pub lch: bool,
 }
 
 impl Default for ColorSpaceSettings {
@@ -17,6 +19,8 @@ impl Default for ColorSpaceSettings {
             cmyk: true,
             hsv: true,
             hsl: true,
+            luv: false,
+            lch: false,
         }
     }
 }
@@ -76,6 +80,10 @@ impl SettingsWindow {
                 ui.horizontal(|ui| {
                     ui.checkbox(&mut self.colorspaces.hsv, "HSV");
                     ui.checkbox(&mut self.colorspaces.hsl, "HSL");
+                });
+                ui.horizontal(|ui| {
+                    ui.checkbox(&mut self.colorspaces.luv, "Luv");
+                    ui.checkbox(&mut self.colorspaces.lch, "LCH(uv)");
                 });
             });
 

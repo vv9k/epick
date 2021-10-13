@@ -32,14 +32,9 @@ impl Lch {
     }
 
     #[inline(always)]
-    /// Returns Hue in the range of 0.0 ..= 1.0
+    /// Returns Hue in the range of 0.0 ..= 360.0
     pub fn h(&self) -> f32 {
         self.h
-    }
-
-    /// Returns Hue scaled in the range of 0.0 ..= 360.0
-    pub fn h_scaled(&self) -> f32 {
-        self.h * 360.
     }
 }
 

@@ -122,10 +122,10 @@ impl From<Lch> for Luv {
     fn from(color: Lch) -> Self {
         let l = color.l();
         let c = color.c();
-        let h = color.h();
+        let h = color.h().to_radians();
 
-        let u = c * h.to_radians().cos();
-        let v = c * h.to_radians().sin();
+        let u = c * h.cos();
+        let v = c * h.sin();
 
         Luv::new(l, u, v)
     }

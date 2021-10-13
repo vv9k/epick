@@ -573,6 +573,12 @@ impl App {
             if self.settings_window.colorspaces.hsl {
                 self.picker.hsl_sliders(ui);
             }
+            if self.settings_window.colorspaces.luv {
+                self.picker.luv_sliders(ui);
+            }
+            if self.settings_window.colorspaces.lch {
+                self.picker.lch_sliders(ui);
+            }
         });
     }
 
