@@ -6,9 +6,9 @@ use egui::color::{Color32, Hsva, Rgba};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Luv {
-    pub l: f32,
-    pub u: f32,
-    pub v: f32,
+    l: f32,
+    u: f32,
+    v: f32,
 }
 
 impl Luv {
@@ -21,7 +21,7 @@ impl Luv {
     }
 
     #[inline(always)]
-    /// Returns Light in the range of 0.0 ..= 1.
+    /// Returns Light
     pub fn l(&self) -> f32 {
         self.l
     }
@@ -36,11 +36,6 @@ impl Luv {
     /// Returns V coordinate
     pub fn v(&self) -> f32 {
         self.v
-    }
-
-    /// Returns Light scaled in the range of 0.0 ..= 100.0
-    pub fn l_scaled(&self) -> f32 {
-        self.l * 100.
     }
 }
 

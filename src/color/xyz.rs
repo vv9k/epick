@@ -36,6 +36,18 @@ impl Xyz {
         self.z
     }
 
+    pub fn x_scaled(&self) -> f32 {
+        self.x * 100.
+    }
+
+    pub fn y_scaled(&self) -> f32 {
+        self.y * 100.
+    }
+
+    pub fn z_scaled(&self) -> f32 {
+        self.z * 100.
+    }
+
     pub fn as_rgb(&self, working_space: RgbWorkingSpace) -> Rgb {
         let space_matrix = working_space.inverse_rgb_matrix();
 

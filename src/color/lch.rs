@@ -5,9 +5,9 @@ use egui::color::{Color32, Hsva, Rgba};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Lch {
-    pub l: f32,
-    pub c: f32,
-    pub h: f32,
+    l: f32,
+    c: f32,
+    h: f32,
 }
 
 impl Lch {
@@ -16,11 +16,11 @@ impl Lch {
         let c = if c.is_nan() { 0. } else { c };
         let h = if h.is_nan() { 0. } else { h };
 
-        Self { l: l * 100., c, h }
+        Self { l, c, h }
     }
 
     #[inline(always)]
-    /// Returns Light in the range of 0.0 ..= 1.0
+    /// Returns Light
     pub fn l(&self) -> f32 {
         self.l
     }
@@ -35,11 +35,6 @@ impl Lch {
     /// Returns Hue in the range of 0.0 ..= 1.0
     pub fn h(&self) -> f32 {
         self.h
-    }
-
-    /// Returns Light scaled in the range of 0.0 ..= 100.0
-    pub fn l_scaled(&self) -> f32 {
-        self.l * 100.
     }
 
     /// Returns Hue scaled in the range of 0.0 ..= 360.0
@@ -126,7 +121,7 @@ impl From<Luv> for Lch {
         let u = color.u();
         let v = color.v();
         let c = (u.powi(2) + v.powi(2)).sqrt();
-        let vu_atan = f32::atan2(v, u);
+        let vu_atan = f32::atan2(v, u).to_degrees();
         let h = if vu_atan >= 0. {
             vu_atan
         } else {
