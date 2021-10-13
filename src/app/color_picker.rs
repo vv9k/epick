@@ -1,6 +1,6 @@
 use crate::app::render::color_slider_1d;
 use crate::app::sliders::ColorSliders;
-use crate::color::{Cmyk, Color, ColorHarmony, Hsl, Hsv, Lch, Rgb, U8_MAX, U8_MIN};
+use crate::color::{Cmyk, Color, ColorHarmony, Hsl, Hsv, Lch, Luv, Rgb, Xyz, U8_MAX, U8_MIN};
 
 use egui::Ui;
 use egui::{color::Hsva, DragValue};
@@ -48,6 +48,9 @@ impl ColorPicker {
         let color = color.into();
         self.sliders.set_color(color);
         self.current_color = color;
+        println!("{:?}", Xyz::from(self.current_color));
+        println!("{:?}", Luv::from(self.current_color));
+        println!("{:?}", Lch::from(self.current_color));
     }
 
     fn restore_sliders_if_saved(&mut self) {

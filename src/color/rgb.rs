@@ -1,7 +1,7 @@
 #![allow(clippy::many_single_char_names)]
 use crate::color::hsv::Hsv;
 use crate::color::working_space::RgbWorkingSpace;
-use crate::color::{Cmyk, Color, Hsl, Lch, Luv, Xyz, U8_MAX};
+use crate::color::{Cmyk, Color, Hsl, Lch, Luv, Xyz, CIE_E, CIE_K, U8_MAX};
 use egui::color::{Hsva, HsvaGamma};
 use egui::{Color32, Rgba};
 
@@ -78,6 +78,78 @@ impl Rgb {
     /// Returns Blue value in the range 0.0 ..= 255.0
     pub fn b_scaled(&self) -> f32 {
         self.b * U8_MAX
+    }
+
+    pub fn gamma_compand(mut self, gamma: f32) -> Rgb {
+        self.r = self.r.powf(1. / gamma);
+        self.g = self.g.powf(1. / gamma);
+        self.b = self.b.powf(1. / gamma);
+        self
+    }
+
+    pub fn inverse_gamma_compand(mut self, gamma: f32) -> Rgb {
+        self.r = self.r.powf(gamma);
+        self.g = self.g.powf(gamma);
+        self.b = self.b.powf(gamma);
+        self
+    }
+
+    pub fn srgb_compand(mut self) -> Rgb {
+        fn compand(num: f32) -> f32 {
+            if num <= 0.0031308 {
+                num * 12.92
+            } else {
+                1.055 * num.powf(1. / 2.4) - 0.055
+            }
+        }
+
+        self.r = compand(self.r);
+        self.g = compand(self.g);
+        self.b = compand(self.b);
+        self
+    }
+
+    pub fn inverse_srgb_compand(mut self) -> Rgb {
+        fn inverse_compand(num: f32) -> f32 {
+            if num <= 0.04045 {
+                num / 12.92
+            } else {
+                ((num + 0.055) / 1.055).powf(2.4)
+            }
+        }
+        self.r = inverse_compand(self.r);
+        self.g = inverse_compand(self.g);
+        self.b = inverse_compand(self.b);
+        self
+    }
+
+    pub fn l_compand(mut self) -> Rgb {
+        fn compand(num: f32) -> f32 {
+            if num <= CIE_E {
+                num * CIE_K
+            } else {
+                1.16 * num.cbrt() - 0.16
+            }
+        }
+
+        self.r = compand(self.r);
+        self.g = compand(self.g);
+        self.b = compand(self.b);
+        self
+    }
+
+    pub fn inverse_l_compand(mut self) -> Rgb {
+        fn inverse_compand(num: f32) -> f32 {
+            if num <= 0.08 {
+                100. * num / CIE_K
+            } else {
+                ((num + 0.16) / 1.16).powi(3)
+            }
+        }
+        self.r = inverse_compand(self.r);
+        self.g = inverse_compand(self.g);
+        self.b = inverse_compand(self.b);
+        self
     }
 }
 
@@ -201,7 +273,7 @@ impl From<Luv> for Rgb {
 
 impl From<Xyz> for Rgb {
     fn from(color: Xyz) -> Self {
-        color.as_rgb(RgbWorkingSpace::SRGB.rgb_matrix())
+        color.as_rgb(RgbWorkingSpace::SRGB)
     }
 }
 

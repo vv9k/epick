@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(clippy::excessive_precision)]
 use super::illuminant::Illuminant;
+use crate::color::Rgb;
 
 pub type RgbSpaceMatrix = [[f32; 3]; 3];
 pub type InverseRgbSpaceMatrix = [[f32; 3]; 3];
@@ -50,7 +51,7 @@ impl RgbWorkingSpace {
         }
     }
 
-    pub fn rgb_matrix_inverse(&self) -> RgbSpaceMatrix {
+    pub fn inverse_rgb_matrix(&self) -> RgbSpaceMatrix {
         use RgbWorkingSpace::*;
         match &self {
             Adobe => ADOBE_RGB_INVERSE,
@@ -62,6 +63,43 @@ impl RgbWorkingSpace {
             ProPhoto => PRO_PHOTO_RGB_INVERSE,
             SRGB => SRGB_INVERSE,
             WideGamut => WIDE_GAMUT_RGB_INVERSE,
+        }
+    }
+
+    pub fn gamma(&self) -> f32 {
+        use RgbWorkingSpace::*;
+        match &self {
+            Adobe => 2.2,
+            Apple => 1.8,
+            CIE => 2.2,
+            ECI => 3.,
+            NTSC => 2.2,
+            PAL => 2.2,
+            ProPhoto => 1.8,
+            SRGB => 2.2,
+            WideGamut => 2.2,
+        }
+    }
+
+    pub fn compand_channels(&self, color: Rgb) -> Rgb {
+        use RgbWorkingSpace::*;
+        match &self {
+            Adobe | Apple | CIE | NTSC | PAL | ProPhoto | WideGamut => {
+                color.gamma_compand(self.gamma())
+            }
+            ECI => color.l_compand(),
+            SRGB => color.srgb_compand(),
+        }
+    }
+
+    pub fn inverse_compand_channels(&self, color: Rgb) -> Rgb {
+        use RgbWorkingSpace::*;
+        match &self {
+            Adobe | Apple | CIE | NTSC | PAL | ProPhoto | WideGamut => {
+                color.inverse_gamma_compand(self.gamma())
+            }
+            ECI => color.inverse_l_compand(),
+            SRGB => color.inverse_srgb_compand(),
         }
     }
 }

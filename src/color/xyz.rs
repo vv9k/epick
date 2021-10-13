@@ -3,10 +3,7 @@ use egui::color::{Color32, Hsva, Rgba};
 use crate::color::hsv::Hsv;
 use crate::color::illuminant::Illuminant;
 use crate::color::rgb::Rgb;
-use crate::color::{
-    working_space::{InverseRgbSpaceMatrix, RgbSpaceMatrix, RgbWorkingSpace},
-    Cmyk, Color, Hsl, Luv, CIE_E, CIE_K, U8_MAX,
-};
+use crate::color::{working_space::RgbWorkingSpace, Cmyk, Color, Hsl, Luv, CIE_E, CIE_K, U8_MAX};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Xyz {
@@ -39,7 +36,9 @@ impl Xyz {
         self.z
     }
 
-    pub fn as_rgb(&self, space_matrix: RgbSpaceMatrix) -> Rgb {
+    pub fn as_rgb(&self, working_space: RgbWorkingSpace) -> Rgb {
+        let space_matrix = working_space.inverse_rgb_matrix();
+
         let r =
             self.x * space_matrix[0][0] + self.y * space_matrix[0][1] + self.z * space_matrix[0][2];
         let g =
@@ -47,43 +46,25 @@ impl Xyz {
         let b =
             self.x * space_matrix[2][0] + self.y * space_matrix[2][1] + self.z * space_matrix[2][2];
 
-        fn srgb_compand(num: f32) -> f32 {
-            if num <= 0.0031308 {
-                num * 12.92
-            } else {
-                1.055 * num.powf(1. / 2.4) - 0.055
-            }
-        }
-
-        let r = srgb_compand(r);
-        let g = srgb_compand(g);
-        let b = srgb_compand(b);
-
-        Rgb::new(r, g, b)
+        let rgb = Rgb::new(r, g, b);
+        working_space.compand_channels(rgb)
     }
 
     #[allow(clippy::many_single_char_names)]
-    pub fn from_rgb(color: (f32, f32, f32), space_matrix: InverseRgbSpaceMatrix) -> Self {
-        let r = color.0;
-        let g = color.1;
-        let b = color.2;
-        fn inverse_srgb_compand(num: f32) -> f32 {
-            if num <= 0.04045 {
-                num / 12.92
-            } else {
-                ((num + 0.055) / 1.055).powf(2.4)
-            }
-        }
+    pub fn from_rgb(color: (f32, f32, f32), working_space: RgbWorkingSpace) -> Self {
+        let space_matrix = working_space.rgb_matrix();
 
-        let r = inverse_srgb_compand(r);
-        let g = inverse_srgb_compand(g);
-        let b = inverse_srgb_compand(b);
+        let rgb = working_space.inverse_compand_channels(Rgb::new(color.0, color.1, color.2));
 
-        let x = (r * space_matrix[0][0] + g * space_matrix[0][1] + b * space_matrix[0][2]) * 100.;
-        let y = (r * space_matrix[1][0] + g * space_matrix[1][1] + b * space_matrix[1][2]) * 100.;
-        let z = (r * space_matrix[2][0] + g * space_matrix[2][1] + b * space_matrix[2][2]) * 100.;
+        let r = rgb.r();
+        let g = rgb.g();
+        let b = rgb.b();
 
-        Xyz { x, y, z }
+        let x = r * space_matrix[0][0] + g * space_matrix[0][1] + b * space_matrix[0][2];
+        let y = r * space_matrix[1][0] + g * space_matrix[1][1] + b * space_matrix[1][2];
+        let z = r * space_matrix[2][0] + g * space_matrix[2][1] + b * space_matrix[2][2];
+
+        Self { x, y, z }
     }
 
     #[inline(always)]
@@ -115,7 +96,7 @@ impl From<Color> for Xyz {
 
 impl From<Xyz> for Color32 {
     fn from(color: Xyz) -> Self {
-        color.as_rgb(RgbWorkingSpace::SRGB.rgb_matrix()).into()
+        color.as_rgb(RgbWorkingSpace::SRGB).into()
     }
 }
 
@@ -125,7 +106,7 @@ impl From<Color32> for Xyz {
         let g = color.g() as f32 / U8_MAX;
         let b = color.b() as f32 / U8_MAX;
         let color = (r, g, b);
-        Xyz::from_rgb(color, RgbWorkingSpace::SRGB.rgb_matrix_inverse())
+        Xyz::from_rgb(color, RgbWorkingSpace::SRGB)
     }
 }
 
@@ -200,9 +181,35 @@ impl From<Luv> for Xyz {
 
 impl From<Rgb> for Xyz {
     fn from(rgb: Rgb) -> Self {
-        Xyz::from_rgb(
-            (rgb.r(), rgb.g(), rgb.b()),
-            RgbWorkingSpace::SRGB.rgb_matrix_inverse(),
-        )
+        Xyz::from_rgb((rgb.r(), rgb.g(), rgb.b()), RgbWorkingSpace::SRGB)
+    }
+}
+
+//####################################################################################################
+
+#[cfg(test)]
+mod tests {
+    use super::{RgbWorkingSpace, Xyz};
+
+    #[test]
+    fn rgb_to_xyz() {
+        macro_rules! test_case {
+            ($ws:expr; Rgb: $r:expr, $g:expr, $b:expr; Xyz: $x:expr, $y:expr, $z:expr) => {
+                let expected = Xyz::new($x, $y, $z);
+                let got = Xyz::from_rgb(($r, $g, $b), $ws);
+                assert_eq!(got, expected);
+            };
+        }
+
+        test_case!(
+            RgbWorkingSpace::SRGB;
+            Rgb: 0., 0., 0.;
+            Xyz: 0., 0., 0.
+        );
+        test_case!(
+            RgbWorkingSpace::SRGB;
+            Rgb: 1., 1., 1.;
+            Xyz: 0.95047003, 1.0000001, 1.08883
+        );
     }
 }
