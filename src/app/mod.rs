@@ -16,7 +16,7 @@ use render::{tex_color, TextureManager};
 use saved_colors::SavedColors;
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
-use egui::{color::Color32, vec2, Ui};
+use egui::{color::Color32, vec2, Layout, Ui};
 use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
 use std::rc::Rc;
@@ -384,22 +384,23 @@ impl App {
 
     fn top_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
-            self.dark_light_switch(ui);
-            if ui.button(SETTINGS_ICON).on_hover_text("Settings").clicked() {
-                self.settings_window.show = true;
-            }
-            if ui
-                .button(EXPAND_ICON)
-                .on_hover_text("Show/hide side panel")
-                .clicked()
-            {
-                self.show_sidepanel = !self.show_sidepanel;
-            }
-            ui.add_space(50.);
-
             ui.selectable_value(&mut self.current_tab, Some(TopMenuTab::Hues), "hues");
             ui.selectable_value(&mut self.current_tab, Some(TopMenuTab::Tints), "tints");
             ui.selectable_value(&mut self.current_tab, Some(TopMenuTab::Shades), "shades");
+
+            ui.with_layout(Layout::right_to_left(), |ui| {
+                if ui
+                    .button(EXPAND_ICON)
+                    .on_hover_text("Show/hide side panel")
+                    .clicked()
+                {
+                    self.show_sidepanel = !self.show_sidepanel;
+                }
+                if ui.button(SETTINGS_ICON).on_hover_text("Settings").clicked() {
+                    self.settings_window.show = true;
+                }
+                self.dark_light_switch(ui);
+            });
         });
     }
 

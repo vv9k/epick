@@ -15,7 +15,7 @@
 - Add CIE Luv and CIE LCH(uv) sliders
 - Add setting to select RGB working space
 - Add CIE Lab and CIE LCH(ab) sliders
-- The sidebar is now on the right side
+- The sidebar and topbar icons are now on the right side
 
 # 0.4.0
 
