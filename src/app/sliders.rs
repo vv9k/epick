@@ -19,9 +19,15 @@ pub struct ColorSliders {
     pub luv_l: f32,
     pub luv_u: f32,
     pub luv_v: f32,
-    pub lch_l: f32,
-    pub lch_c: f32,
-    pub lch_h: f32,
+    pub lch_uv_l: f32,
+    pub lch_uv_c: f32,
+    pub lch_uv_h: f32,
+    pub lab_l: f32,
+    pub lab_a: f32,
+    pub lab_b: f32,
+    pub lch_ab_l: f32,
+    pub lch_ab_c: f32,
+    pub lch_ab_h: f32,
 }
 
 impl Default for ColorSliders {
@@ -44,9 +50,15 @@ impl Default for ColorSliders {
             luv_l: 0.,
             luv_u: 0.,
             luv_v: 0.,
-            lch_l: 0.,
-            lch_c: 0.,
-            lch_h: 180.,
+            lch_uv_l: 0.,
+            lch_uv_c: 0.,
+            lch_uv_h: 180.,
+            lab_l: 0.,
+            lab_a: 0.,
+            lab_b: 0.,
+            lch_ab_l: 0.,
+            lch_ab_c: 0.,
+            lch_ab_h: 0.,
         }
     }
 }
@@ -74,10 +86,18 @@ impl ColorSliders {
         self.luv_l = luv.l();
         self.luv_u = luv.u();
         self.luv_v = luv.v();
-        let lch = color.lch(self.rgb_working_space);
-        self.lch_l = lch.l();
-        self.lch_c = lch.c();
-        self.lch_h = lch.h();
+        let lch_uv = color.lch_uv(self.rgb_working_space);
+        self.lch_uv_l = lch_uv.l();
+        self.lch_uv_c = lch_uv.c();
+        self.lch_uv_h = lch_uv.h();
+        let lab = color.lab(self.rgb_working_space);
+        self.lab_l = lab.l();
+        self.lab_a = lab.a();
+        self.lab_b = lab.b();
+        let lch_ab = color.lch_ab(self.rgb_working_space);
+        self.lch_ab_l = lch_ab.l();
+        self.lch_ab_c = lch_ab.c();
+        self.lch_ab_h = lch_ab.h();
     }
 
     pub fn restore(&mut self, other: Self) {
@@ -97,8 +117,14 @@ impl ColorSliders {
         self.luv_l = other.luv_l;
         self.luv_u = other.luv_u;
         self.luv_v = other.luv_v;
-        self.lch_l = other.lch_l;
-        self.lch_c = other.lch_c;
-        self.lch_h = other.lch_h;
+        self.lch_uv_l = other.lch_uv_l;
+        self.lch_uv_c = other.lch_uv_c;
+        self.lch_uv_h = other.lch_uv_h;
+        self.lab_l = other.lab_l;
+        self.lab_a = other.lab_a;
+        self.lab_b = other.lab_b;
+        self.lch_ab_l = other.lch_ab_l;
+        self.lch_ab_c = other.lch_ab_c;
+        self.lch_ab_h = other.lch_ab_h;
     }
 }

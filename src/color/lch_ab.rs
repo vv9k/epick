@@ -1,14 +1,14 @@
 use crate::color::rgb::Rgb;
-use crate::color::{CIEColor, Luv, RgbWorkingSpace, Xyz};
+use crate::color::{CIEColor, Illuminant, Lab, RgbWorkingSpace, Xyz};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Lch {
+pub struct LchAB {
     l: f32,
     c: f32,
     h: f32,
 }
 
-impl Lch {
+impl LchAB {
     pub fn new(l: f32, c: f32, h: f32) -> Self {
         let l = if l.is_nan() { 0. } else { l };
         let c = if c.is_nan() { 0. } else { c };
@@ -34,39 +34,39 @@ impl Lch {
     pub fn h(&self) -> f32 {
         self.h
     }
+
+    pub fn from_xyz(color: Xyz, reference_white: Illuminant) -> Self {
+        Lab::from_xyz(color, reference_white).into()
+    }
+
+    pub fn to_xyz(self, reference_white: Illuminant) -> Xyz {
+        Lab::from(self).to_xyz(reference_white)
+    }
 }
 
-impl CIEColor for Lch {
+impl CIEColor for LchAB {
     fn to_rgb(self, ws: RgbWorkingSpace) -> Rgb {
-        Xyz::from(Luv::from(self)).to_rgb(ws)
+        self.to_xyz(ws.reference_whitepoint()).to_rgb(ws)
     }
 
     fn from_rgb(rgb: Rgb, ws: RgbWorkingSpace) -> Self {
-        Luv::from(Xyz::from_rgb(rgb, ws)).into()
+        Self::from_xyz(Xyz::from_rgb(rgb, ws), ws.reference_whitepoint())
     }
 }
 
 //####################################################################################################
 
-#[allow(clippy::many_single_char_names)]
-impl From<Luv> for Lch {
-    fn from(color: Luv) -> Self {
-        let u = color.u();
-        let v = color.v();
-        let c = (u.powi(2) + v.powi(2)).sqrt();
-        let vu_atan = f32::atan2(v, u).to_degrees();
-        let h = if vu_atan >= 0. {
-            vu_atan
+impl From<Lab> for LchAB {
+    fn from(color: Lab) -> Self {
+        let arctan_ba = f32::atan2(color.b(), color.a()).to_degrees();
+        let l = color.l();
+        let c = (color.a().powi(2) + color.b().powi(2)).sqrt();
+        let h = if arctan_ba >= 0. {
+            arctan_ba
         } else {
-            vu_atan + 360.
+            arctan_ba + 360.
         };
 
-        Lch::new(color.l(), c, h)
-    }
-}
-
-impl From<Xyz> for Lch {
-    fn from(color: Xyz) -> Self {
-        Luv::from(color).into()
+        Self::new(l, c, h)
     }
 }

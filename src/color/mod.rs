@@ -3,7 +3,9 @@ mod gradient;
 mod hsl;
 mod hsv;
 mod illuminant;
-mod lch;
+mod lab;
+mod lch_ab;
+mod lch_uv;
 mod luv;
 mod rgb;
 mod working_space;
@@ -15,7 +17,9 @@ pub use cmyk::Cmyk;
 pub use hsl::Hsl;
 pub use hsv::Hsv;
 pub use illuminant::Illuminant;
-pub use lch::Lch;
+pub use lab::Lab;
+pub use lch_ab::LchAB;
+pub use lch_uv::LchUV;
 pub use luv::Luv;
 pub use rgb::Rgb;
 pub use working_space::RgbWorkingSpace;
@@ -125,13 +129,15 @@ pub trait CIEColor {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Color {
-    Cmyk(Cmyk),
     Rgb(Rgb),
+    Cmyk(Cmyk),
     Hsv(Hsv),
-    Luv(Luv, RgbWorkingSpace),
-    Xyz(Xyz, RgbWorkingSpace),
-    Lch(Lch, RgbWorkingSpace),
     Hsl(Hsl),
+    Xyz(Xyz, RgbWorkingSpace),
+    Luv(Luv, RgbWorkingSpace),
+    LchUV(LchUV, RgbWorkingSpace),
+    Lab(Lab, RgbWorkingSpace),
+    LchAB(LchAB, RgbWorkingSpace),
 }
 
 impl Color {
@@ -226,11 +232,19 @@ impl Color {
         self.into()
     }
 
+    pub fn lab(&self, ws: RgbWorkingSpace) -> Lab {
+        Lab::from_xyz(Xyz::from_rgb(self.rgb(), ws), ws.reference_whitepoint())
+    }
+
+    pub fn lch_ab(&self, ws: RgbWorkingSpace) -> LchAB {
+        Lab::from_xyz(Xyz::from_rgb(self.rgb(), ws), ws.reference_whitepoint()).into()
+    }
+
     pub fn luv(&self, ws: RgbWorkingSpace) -> Luv {
         Xyz::from_rgb(self.rgb(), ws).into()
     }
 
-    pub fn lch(&self, ws: RgbWorkingSpace) -> Lch {
+    pub fn lch_uv(&self, ws: RgbWorkingSpace) -> LchUV {
         Luv::from(Xyz::from_rgb(self.rgb(), ws)).into()
     }
 
@@ -387,13 +401,15 @@ impl From<&Color> for Hsva {
 impl From<Color> for Color32 {
     fn from(c: Color) -> Color32 {
         match c {
-            Color::Cmyk(c) => c.into(),
             Color::Rgb(c) => c.into(),
+            Color::Cmyk(c) => c.into(),
             Color::Hsv(c) => c.into(),
-            Color::Luv(c, ws) => c.to_rgb(ws).into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::Lch(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => c.into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
+            Color::Lab(c, ws) => c.to_rgb(ws).into(),
+            Color::LchAB(c, ws) => c.to_rgb(ws).into(),
         }
     }
 }
@@ -407,13 +423,15 @@ impl From<Color32> for Color {
 macro_rules! convert_color {
     ($c:ident) => {
         match $c {
-            Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Rgb(c) => c.into(),
+            Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Hsv(c) => Rgb::from(c).into(),
-            Color::Luv(c, ws) => c.to_rgb(ws).into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::Lch(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => Rgb::from(c).into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
+            Color::Lab(c, ws) => c.to_rgb(ws).into(),
+            Color::LchAB(c, ws) => c.to_rgb(ws).into(),
         }
     };
 }

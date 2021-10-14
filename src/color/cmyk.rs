@@ -133,13 +133,15 @@ impl From<Rgba> for Cmyk {
 impl From<Color> for Cmyk {
     fn from(c: Color) -> Cmyk {
         match c {
-            Color::Cmyk(c) => c,
             Color::Rgb(c) => c.into(),
+            Color::Cmyk(c) => c,
             Color::Hsv(c) => Rgb::from(c).into(),
-            Color::Luv(c, ws) => c.to_rgb(ws).into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::Lch(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => Rgb::from(c).into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
+            Color::Lab(c, ws) => c.to_rgb(ws).into(),
+            Color::LchAB(c, ws) => c.to_rgb(ws).into(),
         }
     }
 }

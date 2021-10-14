@@ -14,6 +14,7 @@
 - The triangle displaying current position on a slider will be displayed in the correct position [#14](https://github.com/vv9k/epick/pull/14)
 - Add CIE Luv and CIE LCH(uv) sliders
 - Add setting to select RGB working space
+- Add CIE Lab and CIE LCH(ab) sliders
 
 # 0.4.0
 

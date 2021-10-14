@@ -9,7 +9,9 @@ pub struct ColorSpaceSettings {
     pub hsv: bool,
     pub hsl: bool,
     pub luv: bool,
-    pub lch: bool,
+    pub lch_uv: bool,
+    pub lab: bool,
+    pub lch_ab: bool,
 }
 
 impl Default for ColorSpaceSettings {
@@ -20,7 +22,9 @@ impl Default for ColorSpaceSettings {
             hsv: true,
             hsl: true,
             luv: false,
-            lch: false,
+            lch_uv: false,
+            lab: false,
+            lch_ab: false,
         }
     }
 }
@@ -135,7 +139,11 @@ impl SettingsWindow {
                 });
                 ui.horizontal(|ui| {
                     ui.checkbox(&mut self.colorspaces.luv, "Luv");
-                    ui.checkbox(&mut self.colorspaces.lch, "LCH(uv)");
+                    ui.checkbox(&mut self.colorspaces.lch_uv, "LCH(uv)");
+                });
+                ui.horizontal(|ui| {
+                    ui.checkbox(&mut self.colorspaces.lab, "Lab");
+                    ui.checkbox(&mut self.colorspaces.lch_ab, "LCH(ab)");
                 });
             });
 
