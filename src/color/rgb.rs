@@ -209,6 +209,7 @@ impl From<Color> for Rgb {
             Color::Luv(c, ws) => c.to_rgb(ws),
             Color::LchUV(c, ws) => c.to_rgb(ws),
             Color::Lab(c, ws) => c.to_rgb(ws),
+            Color::LchAB(c, ws) => c.to_rgb(ws),
         }
     }
 }

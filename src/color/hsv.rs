@@ -139,6 +139,7 @@ impl From<Color> for Hsv {
             Color::Luv(c, ws) => c.to_rgb(ws).into(),
             Color::LchUV(c, ws) => c.to_rgb(ws).into(),
             Color::Lab(c, ws) => c.to_rgb(ws).into(),
+            Color::LchAB(c, ws) => c.to_rgb(ws).into(),
         }
     }
 }

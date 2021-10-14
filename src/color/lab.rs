@@ -1,4 +1,5 @@
 use crate::color::illuminant::Illuminant;
+use crate::color::lch_ab::LchAB;
 use crate::color::rgb::Rgb;
 use crate::color::{CIEColor, RgbWorkingSpace, Xyz, CIE_E, CIE_K};
 
@@ -100,3 +101,15 @@ impl CIEColor for Lab {
 }
 
 //####################################################################################################
+
+impl From<LchAB> for Lab {
+    fn from(color: LchAB) -> Self {
+        let h = color.h().to_radians();
+
+        let l = color.l();
+        let a = color.c() * h.cos();
+        let b = color.c() * h.sin();
+
+        Self { l, a, b }
+    }
+}

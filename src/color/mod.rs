@@ -4,6 +4,7 @@ mod hsl;
 mod hsv;
 mod illuminant;
 mod lab;
+mod lch_ab;
 mod lch_uv;
 mod luv;
 mod rgb;
@@ -17,6 +18,7 @@ pub use hsl::Hsl;
 pub use hsv::Hsv;
 pub use illuminant::Illuminant;
 pub use lab::Lab;
+pub use lch_ab::LchAB;
 pub use lch_uv::LchUV;
 pub use luv::Luv;
 pub use rgb::Rgb;
@@ -135,6 +137,7 @@ pub enum Color {
     Luv(Luv, RgbWorkingSpace),
     LchUV(LchUV, RgbWorkingSpace),
     Lab(Lab, RgbWorkingSpace),
+    LchAB(LchAB, RgbWorkingSpace),
 }
 
 impl Color {
@@ -231,6 +234,10 @@ impl Color {
 
     pub fn lab(&self, ws: RgbWorkingSpace) -> Lab {
         Lab::from_xyz(Xyz::from_rgb(self.rgb(), ws), ws.reference_whitepoint())
+    }
+
+    pub fn lch_ab(&self, ws: RgbWorkingSpace) -> LchAB {
+        Lab::from_xyz(Xyz::from_rgb(self.rgb(), ws), ws.reference_whitepoint()).into()
     }
 
     pub fn luv(&self, ws: RgbWorkingSpace) -> Luv {
@@ -402,6 +409,7 @@ impl From<Color> for Color32 {
             Color::Luv(c, ws) => c.to_rgb(ws).into(),
             Color::LchUV(c, ws) => c.to_rgb(ws).into(),
             Color::Lab(c, ws) => c.to_rgb(ws).into(),
+            Color::LchAB(c, ws) => c.to_rgb(ws).into(),
         }
     }
 }
@@ -423,6 +431,7 @@ macro_rules! convert_color {
             Color::Luv(c, ws) => c.to_rgb(ws).into(),
             Color::LchUV(c, ws) => c.to_rgb(ws).into(),
             Color::Lab(c, ws) => c.to_rgb(ws).into(),
+            Color::LchAB(c, ws) => c.to_rgb(ws).into(),
         }
     };
 }
