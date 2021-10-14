@@ -1,4 +1,4 @@
-use crate::color::DisplayFormat;
+use crate::color::{DisplayFormat, RgbWorkingSpace};
 
 use egui::{ComboBox, Window};
 
@@ -30,6 +30,7 @@ pub struct SettingsWindow {
     pub show: bool,
     pub color_display_format: DisplayFormat,
     pub colorspaces: ColorSpaceSettings,
+    pub rgb_working_space: RgbWorkingSpace,
 }
 
 impl Default for SettingsWindow {
@@ -38,6 +39,7 @@ impl Default for SettingsWindow {
             show: false,
             color_display_format: DisplayFormat::Hex,
             colorspaces: ColorSpaceSettings::default(),
+            rgb_working_space: RgbWorkingSpace::default(),
         }
     }
 }
@@ -69,6 +71,56 @@ impl SettingsWindow {
                             &mut self.color_display_format,
                             DisplayFormat::CssHsl,
                             DisplayFormat::CssHsl.as_ref(),
+                        );
+                    });
+
+                ComboBox::from_label("RGB Working Space")
+                    .selected_text(self.rgb_working_space.as_ref())
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut self.rgb_working_space,
+                            RgbWorkingSpace::Adobe,
+                            RgbWorkingSpace::Adobe.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.rgb_working_space,
+                            RgbWorkingSpace::Apple,
+                            RgbWorkingSpace::Apple.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.rgb_working_space,
+                            RgbWorkingSpace::CIE,
+                            RgbWorkingSpace::CIE.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.rgb_working_space,
+                            RgbWorkingSpace::ECI,
+                            RgbWorkingSpace::ECI.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.rgb_working_space,
+                            RgbWorkingSpace::NTSC,
+                            RgbWorkingSpace::NTSC.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.rgb_working_space,
+                            RgbWorkingSpace::PAL,
+                            RgbWorkingSpace::PAL.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.rgb_working_space,
+                            RgbWorkingSpace::ProPhoto,
+                            RgbWorkingSpace::ProPhoto.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.rgb_working_space,
+                            RgbWorkingSpace::SRGB,
+                            RgbWorkingSpace::SRGB.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.rgb_working_space,
+                            RgbWorkingSpace::WideGamut,
+                            RgbWorkingSpace::WideGamut.as_ref(),
                         );
                     });
 
