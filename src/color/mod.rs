@@ -3,6 +3,7 @@ mod gradient;
 mod hsl;
 mod hsv;
 mod illuminant;
+mod lab;
 mod lch_uv;
 mod luv;
 mod rgb;
@@ -21,6 +22,7 @@ pub use rgb::Rgb;
 pub use working_space::RgbWorkingSpace;
 pub use xyz::Xyz;
 
+use crate::color::lab::Lab;
 use egui::color::{Color32, Hsva, HsvaGamma, Rgba};
 
 pub const CIE_E: f32 = 216. / 24389.;
@@ -125,13 +127,14 @@ pub trait CIEColor {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Color {
-    Cmyk(Cmyk),
     Rgb(Rgb),
+    Cmyk(Cmyk),
     Hsv(Hsv),
-    Luv(Luv, RgbWorkingSpace),
-    Xyz(Xyz, RgbWorkingSpace),
-    LchUV(LchUV, RgbWorkingSpace),
     Hsl(Hsl),
+    Xyz(Xyz, RgbWorkingSpace),
+    Luv(Luv, RgbWorkingSpace),
+    LchUV(LchUV, RgbWorkingSpace),
+    Lab(Lab, RgbWorkingSpace),
 }
 
 impl Color {
@@ -387,13 +390,14 @@ impl From<&Color> for Hsva {
 impl From<Color> for Color32 {
     fn from(c: Color) -> Color32 {
         match c {
-            Color::Cmyk(c) => c.into(),
             Color::Rgb(c) => c.into(),
+            Color::Cmyk(c) => c.into(),
             Color::Hsv(c) => c.into(),
-            Color::Luv(c, ws) => c.to_rgb(ws).into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => c.into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
+            Color::Lab(c, ws) => c.to_rgb(ws).into(),
         }
     }
 }
@@ -407,13 +411,14 @@ impl From<Color32> for Color {
 macro_rules! convert_color {
     ($c:ident) => {
         match $c {
-            Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Rgb(c) => c.into(),
+            Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Hsv(c) => Rgb::from(c).into(),
-            Color::Luv(c, ws) => c.to_rgb(ws).into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::Lch(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => Rgb::from(c).into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
+            Color::Lab(c, ws) => c.to_rgb(ws).into(),
         }
     };
 }

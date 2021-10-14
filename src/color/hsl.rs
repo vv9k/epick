@@ -118,13 +118,14 @@ impl From<Rgba> for Hsl {
 impl From<Color> for Hsl {
     fn from(c: Color) -> Hsl {
         match c {
-            Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Rgb(c) => c.into(),
+            Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Hsv(c) => c.into(),
-            Color::Luv(c, ws) => c.to_rgb(ws).into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => c,
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
+            Color::Lab(c, ws) => c.to_rgb(ws).into(),
         }
     }
 }

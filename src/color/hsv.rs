@@ -131,13 +131,14 @@ impl From<Rgba> for Hsv {
 impl From<Color> for Hsv {
     fn from(c: Color) -> Hsv {
         match c {
-            Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Rgb(c) => c.into(),
+            Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Hsv(c) => c,
-            Color::Luv(c, ws) => c.to_rgb(ws).into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => c.into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
+            Color::Lab(c, ws) => c.to_rgb(ws).into(),
         }
     }
 }
