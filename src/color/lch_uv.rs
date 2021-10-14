@@ -2,13 +2,13 @@ use crate::color::rgb::Rgb;
 use crate::color::{CIEColor, Luv, RgbWorkingSpace, Xyz};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Lch {
+pub struct LchUV {
     l: f32,
     c: f32,
     h: f32,
 }
 
-impl Lch {
+impl LchUV {
     pub fn new(l: f32, c: f32, h: f32) -> Self {
         let l = if l.is_nan() { 0. } else { l };
         let c = if c.is_nan() { 0. } else { c };
@@ -36,7 +36,7 @@ impl Lch {
     }
 }
 
-impl CIEColor for Lch {
+impl CIEColor for LchUV {
     fn to_rgb(self, ws: RgbWorkingSpace) -> Rgb {
         Xyz::from(Luv::from(self)).to_rgb(ws)
     }
@@ -49,7 +49,7 @@ impl CIEColor for Lch {
 //####################################################################################################
 
 #[allow(clippy::many_single_char_names)]
-impl From<Luv> for Lch {
+impl From<Luv> for LchUV {
     fn from(color: Luv) -> Self {
         let u = color.u();
         let v = color.v();
@@ -61,11 +61,11 @@ impl From<Luv> for Lch {
             vu_atan + 360.
         };
 
-        Lch::new(color.l(), c, h)
+        LchUV::new(color.l(), c, h)
     }
 }
 
-impl From<Xyz> for Lch {
+impl From<Xyz> for LchUV {
     fn from(color: Xyz) -> Self {
         Luv::from(color).into()
     }

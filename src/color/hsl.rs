@@ -123,7 +123,7 @@ impl From<Color> for Hsl {
             Color::Hsv(c) => c.into(),
             Color::Luv(c, ws) => c.to_rgb(ws).into(),
             Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::Lch(c, ws) => c.to_rgb(ws).into(),
+            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => c,
         }
     }

@@ -1,6 +1,6 @@
 use crate::color::illuminant::Illuminant;
 use crate::color::rgb::Rgb;
-use crate::color::{CIEColor, Lch, RgbWorkingSpace, Xyz, CIE_E, CIE_K};
+use crate::color::{CIEColor, LchUV, RgbWorkingSpace, Xyz, CIE_E, CIE_K};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Luv {
@@ -50,8 +50,8 @@ impl CIEColor for Luv {
 //####################################################################################################
 
 #[allow(clippy::many_single_char_names)]
-impl From<Lch> for Luv {
-    fn from(color: Lch) -> Self {
+impl From<LchUV> for Luv {
+    fn from(color: LchUV) -> Self {
         let l = color.l();
         let c = color.c();
         let h = color.h().to_radians();

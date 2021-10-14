@@ -3,7 +3,7 @@ mod gradient;
 mod hsl;
 mod hsv;
 mod illuminant;
-mod lch;
+mod lch_uv;
 mod luv;
 mod rgb;
 mod working_space;
@@ -15,7 +15,7 @@ pub use cmyk::Cmyk;
 pub use hsl::Hsl;
 pub use hsv::Hsv;
 pub use illuminant::Illuminant;
-pub use lch::Lch;
+pub use lch_uv::LchUV;
 pub use luv::Luv;
 pub use rgb::Rgb;
 pub use working_space::RgbWorkingSpace;
@@ -130,7 +130,7 @@ pub enum Color {
     Hsv(Hsv),
     Luv(Luv, RgbWorkingSpace),
     Xyz(Xyz, RgbWorkingSpace),
-    Lch(Lch, RgbWorkingSpace),
+    LchUV(LchUV, RgbWorkingSpace),
     Hsl(Hsl),
 }
 
@@ -230,7 +230,7 @@ impl Color {
         Xyz::from_rgb(self.rgb(), ws).into()
     }
 
-    pub fn lch(&self, ws: RgbWorkingSpace) -> Lch {
+    pub fn lch_uv(&self, ws: RgbWorkingSpace) -> LchUV {
         Luv::from(Xyz::from_rgb(self.rgb(), ws)).into()
     }
 
@@ -392,7 +392,7 @@ impl From<Color> for Color32 {
             Color::Hsv(c) => c.into(),
             Color::Luv(c, ws) => c.to_rgb(ws).into(),
             Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::Lch(c, ws) => c.to_rgb(ws).into(),
+            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => c.into(),
         }
     }
