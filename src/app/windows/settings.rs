@@ -137,16 +137,13 @@ impl SettingsWindow {
                 ui.horizontal(|ui| {
                     ui.checkbox(&mut self.colorspaces.rgb, "RGB");
                     ui.checkbox(&mut self.colorspaces.cmyk, "CMYK");
-                });
-                ui.horizontal(|ui| {
                     ui.checkbox(&mut self.colorspaces.hsv, "HSV");
                     ui.checkbox(&mut self.colorspaces.hsl, "HSL");
                 });
+                ui.label("CIE Colorspaces:");
                 ui.horizontal(|ui| {
                     ui.checkbox(&mut self.colorspaces.luv, "Luv");
                     ui.checkbox(&mut self.colorspaces.lch_uv, "LCH(uv)");
-                });
-                ui.horizontal(|ui| {
                     ui.checkbox(&mut self.colorspaces.lab, "Lab");
                     ui.checkbox(&mut self.colorspaces.lch_ab, "LCH(ab)");
                 });
