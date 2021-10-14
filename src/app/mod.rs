@@ -354,7 +354,7 @@ impl App {
             ..Default::default()
         };
 
-        egui::SidePanel::left("colors")
+        egui::SidePanel::right("colors")
             .frame(frame)
             .show(ctx, |ui| {
                 ScrollArea::auto_sized().show(ui, |ui| {
