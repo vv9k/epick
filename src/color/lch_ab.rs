@@ -56,7 +56,6 @@ impl CIEColor for LchAB {
 
 //####################################################################################################
 
-#[allow(clippy::many_single_char_names)]
 impl From<Lab> for LchAB {
     fn from(color: Lab) -> Self {
         let arctan_ba = f32::atan2(color.b(), color.a()).to_degrees();

@@ -63,7 +63,6 @@ impl From<LchUV> for Luv {
     }
 }
 
-#[allow(clippy::many_single_char_names)]
 impl From<Xyz> for Luv {
     fn from(color: Xyz) -> Self {
         let y = color.y();
