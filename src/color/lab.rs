@@ -60,7 +60,7 @@ impl Lab {
         let a = 500. * (fx - fy);
         let b = 200. * (fy - fz);
 
-        Self { l, a, b }
+        Self::new(l, a, b)
     }
 
     pub fn to_xyz(self, reference_white: Illuminant) -> Xyz {
@@ -111,5 +111,18 @@ impl From<LchAB> for Lab {
         let b = color.c() * h.sin();
 
         Self { l, a, b }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn it_works() {
+        let inp = Lab::new(50., 50., 50.);
+        let lch_ab = LchAB::from(inp);
+        let got = Lab::from(lch_ab);
+
+        assert_eq!(got, inp);
     }
 }

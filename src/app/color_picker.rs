@@ -1,7 +1,7 @@
 use crate::app::render::color_slider_1d;
 use crate::app::sliders::ColorSliders;
 use crate::color::{
-    CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Lab, LchUV, Luv, Rgb, U8_MAX, U8_MIN,
+    CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Lab, LchAB, LchUV, Luv, Rgb, U8_MAX, U8_MIN,
 };
 
 use egui::Ui;
@@ -202,6 +202,23 @@ impl ColorPicker {
         }
     }
 
+    fn lch_ab_changed(&mut self) -> bool {
+        let lch = LchAB::from_rgb(self.current_color.rgb(), self.sliders.rgb_working_space);
+        if (self.sliders.lch_ab_l - lch.l()).abs() > f32::EPSILON
+            || (self.sliders.lch_ab_c - lch.c()).abs() > f32::EPSILON
+            || (self.sliders.lch_ab_h - lch.h()).abs() > f32::EPSILON
+        {
+            self.set_cie_color(LchAB::new(
+                self.sliders.lch_ab_l,
+                self.sliders.lch_ab_c,
+                self.sliders.lch_ab_h,
+            ));
+            true
+        } else {
+            false
+        }
+    }
+
     pub fn check_color_change(&mut self) {
         if self.rgb_changed() {
             return;
@@ -221,7 +238,10 @@ impl ColorPicker {
         if self.lch_uv_changed() {
             return;
         }
-        self.lab_changed();
+        if self.lab_changed() {
+            return;
+        }
+        self.lch_ab_changed();
     }
 
     pub fn rgb_sliders(&mut self, ui: &mut Ui) {
@@ -307,7 +327,7 @@ impl ColorPicker {
         });
     }
 
-    pub fn lchuv_sliders(&mut self, ui: &mut Ui) {
+    pub fn lch_uv_sliders(&mut self, ui: &mut Ui) {
         let ws = self.sliders.rgb_working_space;
         let opaque = LchUV::from_rgb(self.current_color.rgb(), ws);
         ui.collapsing("LCH(uv)", |ui| {
@@ -335,6 +355,22 @@ impl ColorPicker {
             });
             slider!(self, ui, lab_b, "b", -128. ..=127., |b| {
                 Lab::new(opaque.l(), opaque.a(), b).to_rgb(ws).into()
+            });
+        });
+    }
+
+    pub fn lch_ab_sliders(&mut self, ui: &mut Ui) {
+        let ws = self.sliders.rgb_working_space;
+        let opaque = LchAB::from_rgb(self.current_color.rgb(), ws);
+        ui.collapsing("LCH(ab)", |ui| {
+            slider!(self, ui, lch_ab_l, "light", 0. ..=100., |l| {
+                LchAB::new(l, opaque.c(), opaque.h()).to_rgb(ws).into()
+            });
+            slider!(self, ui, lch_ab_c, "c", 0. ..=270., |c| {
+                LchAB::new(opaque.l(), c, opaque.h()).to_rgb(ws).into()
+            });
+            slider!(self, ui, lch_ab_h, "h", 0. ..=360., |h| {
+                LchAB::new(opaque.l(), opaque.c(), h).to_rgb(ws).into()
             });
         });
     }

@@ -59,7 +59,7 @@ impl CIEColor for LchAB {
 #[allow(clippy::many_single_char_names)]
 impl From<Lab> for LchAB {
     fn from(color: Lab) -> Self {
-        let arctan_ba = f32::atan2(color.b(), color.a());
+        let arctan_ba = f32::atan2(color.b(), color.a()).to_degrees();
         let l = color.l();
         let c = (color.a().powi(2) + color.b().powi(2)).sqrt();
         let h = if arctan_ba >= 0. {
@@ -68,6 +68,6 @@ impl From<Lab> for LchAB {
             arctan_ba + 360.
         };
 
-        Self { l, c, h }
+        Self::new(l, c, h)
     }
 }

@@ -25,6 +25,9 @@ pub struct ColorSliders {
     pub lab_l: f32,
     pub lab_a: f32,
     pub lab_b: f32,
+    pub lch_ab_l: f32,
+    pub lch_ab_c: f32,
+    pub lch_ab_h: f32,
 }
 
 impl Default for ColorSliders {
@@ -53,6 +56,9 @@ impl Default for ColorSliders {
             lab_l: 0.,
             lab_a: 0.,
             lab_b: 0.,
+            lch_ab_l: 0.,
+            lch_ab_c: 0.,
+            lch_ab_h: 0.,
         }
     }
 }
@@ -88,6 +94,10 @@ impl ColorSliders {
         self.lab_l = lab.l();
         self.lab_a = lab.a();
         self.lab_b = lab.b();
+        let lch_ab = color.lch_ab(self.rgb_working_space);
+        self.lch_ab_l = lch_ab.l();
+        self.lch_ab_c = lch_ab.c();
+        self.lch_ab_h = lch_ab.h();
     }
 
     pub fn restore(&mut self, other: Self) {
@@ -113,5 +123,8 @@ impl ColorSliders {
         self.lab_l = other.lab_l;
         self.lab_a = other.lab_a;
         self.lab_b = other.lab_b;
+        self.lch_ab_l = other.lch_ab_l;
+        self.lch_ab_c = other.lch_ab_c;
+        self.lch_ab_h = other.lch_ab_h;
     }
 }

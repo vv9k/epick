@@ -584,10 +584,13 @@ impl App {
                 self.picker.luv_sliders(ui);
             }
             if self.settings_window.colorspaces.lch_uv {
-                self.picker.lchuv_sliders(ui);
+                self.picker.lch_uv_sliders(ui);
             }
             if self.settings_window.colorspaces.lab {
                 self.picker.lab_sliders(ui);
+            }
+            if self.settings_window.colorspaces.lch_ab {
+                self.picker.lch_ab_sliders(ui);
             }
         });
     }
