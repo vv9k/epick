@@ -192,8 +192,7 @@ impl Default for App {
 
 impl App {
     fn check_settings_change(&mut self) {
-        if self.settings_window.rgb_working_space != self.picker.rgb_working_space {
-            self.picker.rgb_working_space = self.settings_window.rgb_working_space;
+        if self.settings_window.rgb_working_space != self.picker.sliders.rgb_working_space {
             self.picker.sliders.rgb_working_space = self.settings_window.rgb_working_space;
         }
     }

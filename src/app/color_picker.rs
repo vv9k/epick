@@ -1,8 +1,7 @@
 use crate::app::render::color_slider_1d;
 use crate::app::sliders::ColorSliders;
 use crate::color::{
-    CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Lch, Luv, Rgb, RgbWorkingSpace, Xyz, U8_MAX,
-    U8_MIN,
+    CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Lch, Luv, Rgb, Xyz, U8_MAX, U8_MIN,
 };
 
 use egui::Ui;
@@ -31,7 +30,6 @@ pub struct ColorPicker {
     pub saved_sliders: Option<ColorSliders>,
     pub scheme_color_size: f32,
     pub color_harmony: ColorHarmony,
-    pub rgb_working_space: RgbWorkingSpace,
 }
 
 impl Default for ColorPicker {
@@ -43,7 +41,6 @@ impl Default for ColorPicker {
             saved_sliders: None,
             scheme_color_size: 200.,
             color_harmony: ColorHarmony::Complementary,
-            rgb_working_space: RgbWorkingSpace::default(),
         }
     }
 }
@@ -56,7 +53,7 @@ impl ColorPicker {
     }
 
     pub fn set_cie_color(&mut self, color: impl CIEColor) {
-        let color = color.to_rgb(self.rgb_working_space).into();
+        let color = color.to_rgb(self.sliders.rgb_working_space).into();
         self.sliders.set_color(color);
         self.current_color = color;
     }
@@ -155,7 +152,7 @@ impl ColorPicker {
     }
 
     fn luv_changed(&mut self) -> bool {
-        let luv = Luv::from(self.current_color.xyz(self.rgb_working_space));
+        let luv = Luv::from(self.current_color.xyz(self.sliders.rgb_working_space));
         if (self.sliders.luv_l - luv.l()).abs() > f32::EPSILON
             || (self.sliders.luv_u - luv.u()).abs() > f32::EPSILON
             || (self.sliders.luv_v - luv.v()).abs() > f32::EPSILON
@@ -172,7 +169,7 @@ impl ColorPicker {
     }
 
     fn lch_changed(&mut self) -> bool {
-        let lch = Lch::from(self.current_color.xyz(self.rgb_working_space));
+        let lch = Lch::from(self.current_color.xyz(self.sliders.rgb_working_space));
         if (self.sliders.lch_l - lch.l()).abs() > f32::EPSILON
             || (self.sliders.lch_c - lch.c()).abs() > f32::EPSILON
             || (self.sliders.lch_h - lch.h()).abs() > f32::EPSILON
@@ -275,7 +272,7 @@ impl ColorPicker {
     }
 
     pub fn luv_sliders(&mut self, ui: &mut Ui) {
-        let ws = self.rgb_working_space;
+        let ws = self.sliders.rgb_working_space;
         let opaque = Luv::from(Xyz::from_rgb(self.current_color.rgb(), ws));
         ui.collapsing("Luv", |ui| {
             slider!(self, ui, luv_l, "light", 0. ..=100., |l| {
@@ -291,11 +288,8 @@ impl ColorPicker {
     }
 
     pub fn lch_sliders(&mut self, ui: &mut Ui) {
-        let ws = self.rgb_working_space;
-        let opaque = Lch::from(Luv::from(Xyz::from_rgb(
-            self.current_color.rgb(),
-            self.rgb_working_space,
-        )));
+        let ws = self.sliders.rgb_working_space;
+        let opaque = Lch::from(Luv::from(Xyz::from_rgb(self.current_color.rgb(), ws)));
         ui.collapsing("LCH(uv)", |ui| {
             slider!(self, ui, lch_l, "light", 0. ..=100., |l| {
                 Lch::new(l, opaque.c(), opaque.h()).to_rgb(ws).into()
