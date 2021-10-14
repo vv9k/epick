@@ -73,8 +73,13 @@ impl SettingsWindow {
                         );
                         ui.selectable_value(
                             &mut self.color_display_format,
-                            DisplayFormat::CssHsl,
-                            DisplayFormat::CssHsl.as_ref(),
+                            DisplayFormat::CssHsl {
+                                degree_symbol: true,
+                            },
+                            DisplayFormat::CssHsl {
+                                degree_symbol: true,
+                            }
+                            .as_ref(),
                         );
                     });
 

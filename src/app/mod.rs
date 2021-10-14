@@ -241,7 +241,11 @@ impl App {
     }
 
     fn display_color(&self, color: &Color) -> String {
-        color.display(self.settings_window.color_display_format)
+        color.display_padded(self.settings_window.color_display_format)
+    }
+
+    fn clipboard_color(&self, color: &Color) -> String {
+        color.display(self.settings_window.color_display_format.no_degree())
     }
 
     fn color_box_label_under(
@@ -462,7 +466,9 @@ impl App {
                                 self.saved_colors.remove(color);
                             }
                             if ui.button(COPY_ICON).on_hover_text("Copy color").clicked() {
-                                let _ = save_to_clipboard(color_str.clone());
+                                let _ = save_to_clipboard(
+                                    self.clipboard_color(&self.picker.current_color),
+                                );
                             }
                             if ui
                                 .button(PLAY_ICON)
@@ -537,7 +543,8 @@ impl App {
                 .on_hover_text("Copy color to clipboard")
                 .clicked()
             {
-                if let Err(e) = save_to_clipboard(color_str.clone()) {
+                if let Err(e) = save_to_clipboard(self.clipboard_color(&self.picker.current_color))
+                {
                     self.error_message = Some(format!("Failed to save color to clipboard - {}", e));
                 } else {
                     self.error_message = None;

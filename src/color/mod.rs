@@ -106,7 +106,21 @@ pub enum DisplayFormat {
     Hex,
     HexUpercase,
     CssRgb,
-    CssHsl,
+    CssHsl { degree_symbol: bool },
+}
+
+impl DisplayFormat {
+    pub fn no_degree(self) -> Self {
+        use DisplayFormat::*;
+        match self {
+            Hex => Hex,
+            HexUpercase => HexUpercase,
+            CssRgb => CssRgb,
+            CssHsl { .. } => CssHsl {
+                degree_symbol: false,
+            },
+        }
+    }
 }
 
 impl AsRef<str> for DisplayFormat {
@@ -115,7 +129,7 @@ impl AsRef<str> for DisplayFormat {
             DisplayFormat::Hex => "hex",
             DisplayFormat::HexUpercase => "hex uppercase",
             DisplayFormat::CssRgb => "css rgb",
-            DisplayFormat::CssHsl => "css hsl",
+            DisplayFormat::CssHsl { .. } => "css hsl",
         }
     }
 }
@@ -142,11 +156,11 @@ pub enum Color {
 
 impl Color {
     pub fn black() -> Self {
-        Self::Rgb(Color32::BLACK.into())
+        Self::Rgb(Rgb::new(0., 0., 0.))
     }
 
     pub fn white() -> Self {
-        Self::Rgb(Color32::WHITE.into())
+        Self::Rgb(Rgb::new(1., 1., 1.))
     }
 
     pub fn as_hex(&self) -> String {
@@ -156,14 +170,31 @@ impl Color {
 
     pub fn as_css_rgb(&self) -> String {
         let color = self.as_rgb_triplet_scaled();
-        format!("rgb({}, {}, {})", color.0, color.1, color.2)
+        format!("rgb({},{},{})", color.0, color.1, color.2)
     }
 
-    pub fn as_css_hsl(&self) -> String {
+    pub fn as_css_rgb_padded(&self) -> String {
+        let color = self.as_rgb_triplet_scaled();
+        format!("rgb({:>3},{:>3},{:>3})", color.0, color.1, color.2)
+    }
+
+    pub fn as_css_hsl(&self, degree_symbol: bool) -> String {
         let color = self.hsl();
         format!(
-            "hsl({}, {}%, {}%)",
+            "hsl({}{},{}%,{}%)",
             color.h_scaled() as u16,
+            if degree_symbol { "°" } else { "" },
+            color.s_scaled() as u16,
+            color.l_scaled() as u16
+        )
+    }
+
+    pub fn as_css_hsl_padded(&self, degree_symbol: bool) -> String {
+        let color = self.hsl();
+        format!(
+            "hsl({:>3}{},{:>3}%,{:>3}%)",
+            color.h_scaled() as u16,
+            if degree_symbol { "°" } else { "" },
             color.s_scaled() as u16,
             color.l_scaled() as u16
         )
@@ -174,7 +205,16 @@ impl Color {
             DisplayFormat::Hex => self.as_hex(),
             DisplayFormat::HexUpercase => self.as_hex().to_uppercase(),
             DisplayFormat::CssRgb => self.as_css_rgb(),
-            DisplayFormat::CssHsl => self.as_css_hsl(),
+            DisplayFormat::CssHsl { degree_symbol } => self.as_css_hsl(degree_symbol),
+        }
+    }
+
+    pub fn display_padded(&self, format: DisplayFormat) -> String {
+        match format {
+            DisplayFormat::Hex => self.as_hex(),
+            DisplayFormat::HexUpercase => self.as_hex().to_uppercase(),
+            DisplayFormat::CssRgb => self.as_css_rgb_padded(),
+            DisplayFormat::CssHsl { degree_symbol } => self.as_css_hsl_padded(degree_symbol),
         }
     }
 
