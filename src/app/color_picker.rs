@@ -1,7 +1,7 @@
 use crate::app::render::color_slider_1d;
 use crate::app::sliders::ColorSliders;
 use crate::color::{
-    CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, LchUV, Luv, Rgb, Xyz, U8_MAX, U8_MIN,
+    CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Lab, LchUV, Luv, Rgb, U8_MAX, U8_MIN,
 };
 
 use egui::Ui;
@@ -168,7 +168,7 @@ impl ColorPicker {
         }
     }
 
-    fn lch_changed(&mut self) -> bool {
+    fn lch_uv_changed(&mut self) -> bool {
         let lch = LchUV::from(self.current_color.xyz(self.sliders.rgb_working_space));
         if (self.sliders.lch_uv_l - lch.l()).abs() > f32::EPSILON
             || (self.sliders.lch_uv_c - lch.c()).abs() > f32::EPSILON
@@ -178,6 +178,23 @@ impl ColorPicker {
                 self.sliders.lch_uv_l,
                 self.sliders.lch_uv_c,
                 self.sliders.lch_uv_h,
+            ));
+            true
+        } else {
+            false
+        }
+    }
+
+    fn lab_changed(&mut self) -> bool {
+        let lab = Lab::from_rgb(self.current_color.rgb(), self.sliders.rgb_working_space);
+        if (self.sliders.lab_l - lab.l()).abs() > f32::EPSILON
+            || (self.sliders.lab_a - lab.a()).abs() > f32::EPSILON
+            || (self.sliders.lab_b - lab.b()).abs() > f32::EPSILON
+        {
+            self.set_cie_color(Lab::new(
+                self.sliders.lab_l,
+                self.sliders.lab_a,
+                self.sliders.lab_b,
             ));
             true
         } else {
@@ -201,7 +218,10 @@ impl ColorPicker {
         if self.luv_changed() {
             return;
         }
-        self.lch_changed();
+        if self.lch_uv_changed() {
+            return;
+        }
+        self.lab_changed();
     }
 
     pub fn rgb_sliders(&mut self, ui: &mut Ui) {
@@ -273,7 +293,7 @@ impl ColorPicker {
 
     pub fn luv_sliders(&mut self, ui: &mut Ui) {
         let ws = self.sliders.rgb_working_space;
-        let opaque = Luv::from(Xyz::from_rgb(self.current_color.rgb(), ws));
+        let opaque = Luv::from_rgb(self.current_color.rgb(), ws);
         ui.collapsing("Luv", |ui| {
             slider!(self, ui, luv_l, "light", 0. ..=100., |l| {
                 Luv::new(l, opaque.u(), opaque.v()).to_rgb(ws).into()
@@ -289,7 +309,7 @@ impl ColorPicker {
 
     pub fn lchuv_sliders(&mut self, ui: &mut Ui) {
         let ws = self.sliders.rgb_working_space;
-        let opaque = LchUV::from(Luv::from(Xyz::from_rgb(self.current_color.rgb(), ws)));
+        let opaque = LchUV::from_rgb(self.current_color.rgb(), ws);
         ui.collapsing("LCH(uv)", |ui| {
             slider!(self, ui, lch_uv_l, "light", 0. ..=100., |l| {
                 LchUV::new(l, opaque.c(), opaque.h()).to_rgb(ws).into()
@@ -299,6 +319,22 @@ impl ColorPicker {
             });
             slider!(self, ui, lch_uv_h, "h", 0. ..=360., |h| {
                 LchUV::new(opaque.l(), opaque.c(), h).to_rgb(ws).into()
+            });
+        });
+    }
+
+    pub fn lab_sliders(&mut self, ui: &mut Ui) {
+        let ws = self.sliders.rgb_working_space;
+        let opaque = Lab::from_rgb(self.current_color.rgb(), ws);
+        ui.collapsing("Lab", |ui| {
+            slider!(self, ui, lab_l, "light", 0. ..=100., |l| {
+                Lab::new(l, opaque.a(), opaque.b()).to_rgb(ws).into()
+            });
+            slider!(self, ui, lab_a, "a", -128. ..=127., |a| {
+                Lab::new(opaque.l(), a, opaque.b()).to_rgb(ws).into()
+            });
+            slider!(self, ui, lab_b, "b", -128. ..=127., |b| {
+                Lab::new(opaque.l(), opaque.a(), b).to_rgb(ws).into()
             });
         });
     }

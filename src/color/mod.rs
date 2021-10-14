@@ -16,13 +16,13 @@ pub use cmyk::Cmyk;
 pub use hsl::Hsl;
 pub use hsv::Hsv;
 pub use illuminant::Illuminant;
+pub use lab::Lab;
 pub use lch_uv::LchUV;
 pub use luv::Luv;
 pub use rgb::Rgb;
 pub use working_space::RgbWorkingSpace;
 pub use xyz::Xyz;
 
-use crate::color::lab::Lab;
 use egui::color::{Color32, Hsva, HsvaGamma, Rgba};
 
 pub const CIE_E: f32 = 216. / 24389.;
@@ -227,6 +227,10 @@ impl Color {
 
     pub fn hsv(&self) -> Hsv {
         self.into()
+    }
+
+    pub fn lab(&self, ws: RgbWorkingSpace) -> Lab {
+        Lab::from_xyz(Xyz::from_rgb(self.rgb(), ws), ws.reference_whitepoint())
     }
 
     pub fn luv(&self, ws: RgbWorkingSpace) -> Luv {

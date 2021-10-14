@@ -583,8 +583,11 @@ impl App {
             if self.settings_window.colorspaces.luv {
                 self.picker.luv_sliders(ui);
             }
-            if self.settings_window.colorspaces.lch {
+            if self.settings_window.colorspaces.lch_uv {
                 self.picker.lchuv_sliders(ui);
+            }
+            if self.settings_window.colorspaces.lab {
+                self.picker.lab_sliders(ui);
             }
         });
     }
