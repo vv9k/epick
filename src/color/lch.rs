@@ -1,7 +1,5 @@
-use crate::color::hsv::Hsv;
 use crate::color::rgb::Rgb;
-use crate::color::{Cmyk, Color, Hsl, Luv, Xyz};
-use egui::color::{Color32, Hsva, Rgba};
+use crate::color::{CIEColor, Luv, RgbWorkingSpace, Xyz};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Lch {
@@ -38,77 +36,17 @@ impl Lch {
     }
 }
 
-//####################################################################################################
-
-impl From<Lch> for Color32 {
-    fn from(color: Lch) -> Self {
-        Luv::from(color).into()
+impl CIEColor for Lch {
+    fn to_rgb(self, ws: RgbWorkingSpace) -> Rgb {
+        Xyz::from(Luv::from(self)).to_rgb(ws)
     }
-}
 
-impl From<Color32> for Lch {
-    fn from(color: Color32) -> Self {
-        Luv::from(color).into()
-    }
-}
-
-impl From<Lch> for Hsva {
-    fn from(color: Lch) -> Hsva {
-        Color32::from(color).into()
-    }
-}
-
-impl From<Hsva> for Lch {
-    fn from(color: Hsva) -> Self {
-        Luv::from(color).into()
-    }
-}
-
-impl From<Lch> for Rgba {
-    fn from(color: Lch) -> Self {
-        Luv::from(color).into()
-    }
-}
-
-impl From<Rgba> for Lch {
-    fn from(color: Rgba) -> Self {
-        Luv::from(color).into()
+    fn from_rgb(rgb: Rgb, ws: RgbWorkingSpace) -> Self {
+        Luv::from(Xyz::from_rgb(rgb, ws)).into()
     }
 }
 
 //####################################################################################################
-
-impl From<Color> for Lch {
-    fn from(c: Color) -> Lch {
-        match c {
-            Color::Cmyk(c) => Rgb::from(c).into(),
-            Color::Rgb(c) => c.into(),
-            Color::Hsv(c) => Rgb::from(c).into(),
-            Color::Luv(c) => c.into(),
-            Color::Xyz(c) => Luv::from(c).into(),
-            Color::Lch(c) => c,
-            Color::Hsl(c) => Rgb::from(c).into(),
-        }
-    }
-}
-
-impl From<Cmyk> for Lch {
-    fn from(color: Cmyk) -> Self {
-        Rgb::from(color).into()
-    }
-}
-
-impl From<Hsl> for Lch {
-    fn from(color: Hsl) -> Self {
-        Rgb::from(color).into()
-    }
-}
-
-impl From<Hsv> for Lch {
-    fn from(color: Hsv) -> Self {
-        Rgb::from(color).into()
-    }
-}
 
 #[allow(clippy::many_single_char_names)]
 impl From<Luv> for Lch {
@@ -127,14 +65,8 @@ impl From<Luv> for Lch {
     }
 }
 
-impl From<Rgb> for Lch {
-    fn from(color: Rgb) -> Self {
-        Luv::from(Xyz::from(color)).into()
-    }
-}
-
 impl From<Xyz> for Lch {
     fn from(color: Xyz) -> Self {
-        Rgb::from(color).into()
+        Luv::from(color).into()
     }
 }

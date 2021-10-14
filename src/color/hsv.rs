@@ -1,6 +1,6 @@
 #![allow(clippy::many_single_char_names)]
 use crate::color::rgb::Rgb;
-use crate::color::{Cmyk, Color, Hsl, Lch, Luv, Xyz};
+use crate::color::{CIEColor, Cmyk, Color, Hsl};
 use egui::color::{Color32, Hsva, Rgba};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -134,9 +134,9 @@ impl From<Color> for Hsv {
             Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Rgb(c) => c.into(),
             Color::Hsv(c) => c,
-            Color::Luv(c) => Rgb::from(c).into(),
-            Color::Xyz(c) => Rgb::from(c).into(),
-            Color::Lch(c) => Rgb::from(c).into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Lch(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => c.into(),
         }
     }
@@ -173,18 +173,6 @@ impl From<Hsl> for Hsv {
     }
 }
 
-impl From<Lch> for Hsv {
-    fn from(color: Lch) -> Self {
-        Rgb::from(color).into()
-    }
-}
-
-impl From<Luv> for Hsv {
-    fn from(color: Luv) -> Self {
-        Rgb::from(color).into()
-    }
-}
-
 impl From<Rgb> for Hsv {
     fn from(rgb: Rgb) -> Self {
         let r = rgb.r();
@@ -209,11 +197,5 @@ impl From<Rgb> for Hsv {
         let s = if v == 0. { 0. } else { 1. - min / max };
 
         Hsv::new(h, s, v)
-    }
-}
-
-impl From<Xyz> for Hsv {
-    fn from(color: Xyz) -> Self {
-        Rgb::from(color).into()
     }
 }

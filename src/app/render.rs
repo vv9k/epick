@@ -132,6 +132,7 @@ pub fn color_slider_1d(
 
     {
         let x = *value;
+        let picked_color = color_at(x);
         let x = if range_start.is_sign_negative() {
             x + range_start.neg()
         } else {
@@ -140,7 +141,6 @@ pub fn color_slider_1d(
         // Show where the slider is at:
         let x = rect.left() + (x / range_end) * width;
         let r = rect.height() / 4.0;
-        let picked_color = color_at(*value);
         ui.painter().add(Shape::convex_polygon(
             vec![
                 pos2(x - r, rect.bottom()),

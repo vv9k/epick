@@ -1,7 +1,6 @@
 #![allow(clippy::many_single_char_names)]
 use crate::color::hsv::Hsv;
-use crate::color::working_space::RgbWorkingSpace;
-use crate::color::{Cmyk, Color, Hsl, Lch, Luv, Xyz, CIE_E, CIE_K, U8_MAX};
+use crate::color::{CIEColor, Cmyk, Color, Hsl, CIE_E, CIE_K, U8_MAX};
 use egui::color::{Hsva, HsvaGamma};
 use egui::{Color32, Rgba};
 
@@ -205,9 +204,9 @@ impl From<Color> for Rgb {
             Color::Cmyk(c) => c.into(),
             Color::Rgb(c) => c,
             Color::Hsv(c) => c.into(),
-            Color::Luv(c) => c.into(),
-            Color::Xyz(c) => c.into(),
-            Color::Lch(c) => c.into(),
+            Color::Luv(c, ws) => c.to_rgb(ws),
+            Color::Xyz(c, ws) => c.to_rgb(ws),
+            Color::Lch(c, ws) => c.to_rgb(ws),
             Color::Hsl(c) => c.into(),
         }
     }
@@ -256,24 +255,6 @@ impl From<Hsv> for Rgb {
             5 => Rgb::new(v,  p,  q ),
             _ => Rgb::new(0., 0., 0.),
         }
-    }
-}
-
-impl From<Lch> for Rgb {
-    fn from(lch: Lch) -> Rgb {
-        Xyz::from(Luv::from(lch)).into()
-    }
-}
-
-impl From<Luv> for Rgb {
-    fn from(luv: Luv) -> Rgb {
-        Xyz::from(luv).into()
-    }
-}
-
-impl From<Xyz> for Rgb {
-    fn from(color: Xyz) -> Self {
-        color.as_rgb(RgbWorkingSpace::SRGB)
     }
 }
 

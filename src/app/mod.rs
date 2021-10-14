@@ -94,6 +94,8 @@ impl epi::App for App {
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
         let tex_allocator = &mut Some(frame.tex_allocator());
 
+        self.check_settings_change();
+
         self.top_panel(ctx);
         if self.show_sidepanel {
             self.side_panel(ctx, tex_allocator);
@@ -189,6 +191,11 @@ impl Default for App {
 }
 
 impl App {
+    fn check_settings_change(&mut self) {
+        if self.settings_window.rgb_working_space != self.picker.sliders.rgb_working_space {
+            self.picker.sliders.rgb_working_space = self.settings_window.rgb_working_space;
+        }
+    }
     fn add_color(&mut self, color: Color) {
         if !self.saved_colors.add(color) {
             let color_str = self.display_color(&color);

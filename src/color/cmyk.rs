@@ -2,7 +2,7 @@ use egui::color::{Color32, Hsva, Rgba};
 
 use crate::color::hsv::Hsv;
 use crate::color::rgb::Rgb;
-use crate::color::{Color, Hsl, Lch, Luv, Xyz};
+use crate::color::{CIEColor, Color, Hsl};
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Cmyk {
@@ -136,9 +136,9 @@ impl From<Color> for Cmyk {
             Color::Cmyk(c) => c,
             Color::Rgb(c) => c.into(),
             Color::Hsv(c) => Rgb::from(c).into(),
-            Color::Luv(c) => Rgb::from(c).into(),
-            Color::Xyz(c) => Rgb::from(c).into(),
-            Color::Lch(c) => Rgb::from(c).into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Lch(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => Rgb::from(c).into(),
         }
     }
@@ -162,18 +162,6 @@ impl From<Hsv> for Cmyk {
     }
 }
 
-impl From<Lch> for Cmyk {
-    fn from(color: Lch) -> Self {
-        Rgb::from(color).into()
-    }
-}
-
-impl From<Luv> for Cmyk {
-    fn from(color: Luv) -> Self {
-        Rgb::from(color).into()
-    }
-}
-
 #[allow(clippy::many_single_char_names)]
 impl From<Rgb> for Cmyk {
     fn from(color: Rgb) -> Self {
@@ -192,11 +180,5 @@ impl From<Rgb> for Cmyk {
         let y = (1. - b - k) / (1. - k);
 
         Cmyk::new(c, m, y, k)
-    }
-}
-
-impl From<Xyz> for Cmyk {
-    fn from(color: Xyz) -> Self {
-        Rgb::from(color).into()
     }
 }
