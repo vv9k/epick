@@ -1,3 +1,5 @@
+//! A module responsible for abstraction over a window manager
+
 #[cfg(windows)]
 pub mod windows;
 #[cfg(target_os = "linux")]

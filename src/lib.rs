@@ -1,6 +1,6 @@
 mod app;
 mod color;
-mod picker;
+mod wm_picker;
 
 pub use app::App as Epick;
 

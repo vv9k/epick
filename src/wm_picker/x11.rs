@@ -2,7 +2,7 @@
 use std::borrow::Cow;
 
 use crate::color::Color;
-use crate::picker::DisplayPicker;
+use crate::wm_picker::DisplayPicker;
 use anyhow::{Context, Result};
 use egui::Color32;
 use image::{Bgra, ImageBuffer};
