@@ -120,14 +120,14 @@ impl From<Luv> for Xyz {
 
 #[cfg(test)]
 mod tests {
-    use super::{RgbWorkingSpace, Xyz};
+    use super::{CIEColor, Rgb, RgbWorkingSpace, Xyz};
 
     #[test]
     fn rgb_to_xyz() {
         macro_rules! test_case {
             ($ws:expr; Rgb: $r:expr, $g:expr, $b:expr; Xyz: $x:expr, $y:expr, $z:expr) => {
                 let expected = Xyz::new($x, $y, $z);
-                let got = Xyz::from_rgb(($r, $g, $b), $ws);
+                let got = Xyz::from_rgb(Rgb::new($r, $g, $b), $ws);
                 assert_eq!(got, expected);
             };
         }
