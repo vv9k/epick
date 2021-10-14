@@ -193,7 +193,7 @@ impl Default for App {
 impl App {
     fn check_settings_change(&mut self) {
         if self.settings_window.rgb_working_space != self.picker.sliders.rgb_working_space {
-            self.picker.sliders.rgb_working_space = self.settings_window.rgb_working_space;
+            self.picker.new_workspace = Some(self.settings_window.rgb_working_space);
         }
     }
     fn add_color(&mut self, color: Color) {

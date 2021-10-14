@@ -1,7 +1,8 @@
 use crate::app::render::color_slider_1d;
 use crate::app::sliders::ColorSliders;
 use crate::color::{
-    CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Lab, LchAB, LchUV, Luv, Rgb, U8_MAX, U8_MIN,
+    CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Lab, LchAB, LchUV, Luv, Rgb, RgbWorkingSpace,
+    U8_MAX, U8_MIN,
 };
 
 use egui::Ui;
@@ -30,6 +31,7 @@ pub struct ColorPicker {
     pub saved_sliders: Option<ColorSliders>,
     pub scheme_color_size: f32,
     pub color_harmony: ColorHarmony,
+    pub new_workspace: Option<RgbWorkingSpace>,
 }
 
 impl Default for ColorPicker {
@@ -41,6 +43,7 @@ impl Default for ColorPicker {
             saved_sliders: None,
             scheme_color_size: 200.,
             color_harmony: ColorHarmony::Complementary,
+            new_workspace: None,
         }
     }
 }
@@ -220,6 +223,13 @@ impl ColorPicker {
     }
 
     pub fn check_color_change(&mut self) {
+        if let Some(ws) = self.new_workspace {
+            self.sliders.rgb_working_space = ws;
+            self.set_cur_color(Rgb::new(self.sliders.r, self.sliders.g, self.sliders.b));
+            self.new_workspace = None;
+            return;
+        }
+
         if self.rgb_changed() {
             return;
         }
