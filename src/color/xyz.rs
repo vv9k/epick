@@ -1,9 +1,6 @@
-use egui::color::{Color32, Hsva, Rgba};
-
-use crate::color::hsv::Hsv;
 use crate::color::illuminant::Illuminant;
 use crate::color::rgb::Rgb;
-use crate::color::{working_space::RgbWorkingSpace, Cmyk, Color, Hsl, Luv, CIE_E, CIE_K, U8_MAX};
+use crate::color::{working_space::RgbWorkingSpace, CIEColor, Luv, CIE_E, CIE_K};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Xyz {
@@ -48,7 +45,19 @@ impl Xyz {
         self.z * 100.
     }
 
-    pub fn as_rgb(&self, working_space: RgbWorkingSpace) -> Rgb {
+    #[inline(always)]
+    pub fn u(&self) -> f32 {
+        4. * self.x / (self.x + 15. * self.y + 3. * self.z)
+    }
+
+    #[inline(always)]
+    pub fn v(&self) -> f32 {
+        9. * self.y / (self.x + 15. * self.y + 3. * self.z)
+    }
+}
+
+impl CIEColor for Xyz {
+    fn to_rgb(self, working_space: RgbWorkingSpace) -> Rgb {
         let space_matrix = working_space.inverse_rgb_matrix();
 
         let r =
@@ -63,10 +72,10 @@ impl Xyz {
     }
 
     #[allow(clippy::many_single_char_names)]
-    pub fn from_rgb(color: (f32, f32, f32), working_space: RgbWorkingSpace) -> Self {
+    fn from_rgb(rgb: Rgb, working_space: RgbWorkingSpace) -> Self {
         let space_matrix = working_space.rgb_matrix();
 
-        let rgb = working_space.inverse_compand_channels(Rgb::new(color.0, color.1, color.2));
+        let rgb = working_space.inverse_compand_channels(rgb);
 
         let r = rgb.r();
         let g = rgb.g();
@@ -78,93 +87,9 @@ impl Xyz {
 
         Self { x, y, z }
     }
-
-    #[inline(always)]
-    pub fn u(&self) -> f32 {
-        4. * self.x / (self.x + 15. * self.y + 3. * self.z)
-    }
-
-    #[inline(always)]
-    pub fn v(&self) -> f32 {
-        9. * self.y / (self.x + 15. * self.y + 3. * self.z)
-    }
 }
 
 //####################################################################################################
-
-impl From<Color> for Xyz {
-    fn from(c: Color) -> Xyz {
-        match c {
-            Color::Cmyk(c) => Rgb::from(c).into(),
-            Color::Rgb(c) => c.into(),
-            Color::Hsv(c) => Rgb::from(c).into(),
-            Color::Luv(c) => Rgb::from(c).into(),
-            Color::Xyz(c) => c,
-            Color::Lch(c) => Rgb::from(c).into(),
-            Color::Hsl(c) => Rgb::from(c).into(),
-        }
-    }
-}
-
-impl From<Xyz> for Color32 {
-    fn from(color: Xyz) -> Self {
-        color.as_rgb(RgbWorkingSpace::SRGB).into()
-    }
-}
-
-impl From<Color32> for Xyz {
-    fn from(color: Color32) -> Self {
-        let r = color.r() as f32 / U8_MAX;
-        let g = color.g() as f32 / U8_MAX;
-        let b = color.b() as f32 / U8_MAX;
-        let color = (r, g, b);
-        Xyz::from_rgb(color, RgbWorkingSpace::SRGB)
-    }
-}
-
-impl From<Xyz> for Hsva {
-    fn from(color: Xyz) -> Hsva {
-        Color32::from(color).into()
-    }
-}
-
-impl From<Hsva> for Xyz {
-    fn from(color: Hsva) -> Xyz {
-        Color32::from(color).into()
-    }
-}
-
-impl From<Xyz> for Rgba {
-    fn from(color: Xyz) -> Rgba {
-        Color32::from(color).into()
-    }
-}
-
-impl From<Rgba> for Xyz {
-    fn from(color: Rgba) -> Xyz {
-        Color32::from(color).into()
-    }
-}
-
-//####################################################################################################
-
-impl From<Cmyk> for Xyz {
-    fn from(color: Cmyk) -> Self {
-        Rgb::from(color).into()
-    }
-}
-
-impl From<Hsl> for Xyz {
-    fn from(color: Hsl) -> Self {
-        Rgb::from(color).into()
-    }
-}
-
-impl From<Hsv> for Xyz {
-    fn from(color: Hsv) -> Self {
-        Rgb::from(color).into()
-    }
-}
 
 #[allow(clippy::many_single_char_names)]
 impl From<Luv> for Xyz {
@@ -188,12 +113,6 @@ impl From<Luv> for Xyz {
         let z = x * a + b;
 
         Xyz::new(x, y, z)
-    }
-}
-
-impl From<Rgb> for Xyz {
-    fn from(rgb: Rgb) -> Self {
-        Xyz::from_rgb((rgb.r(), rgb.g(), rgb.b()), RgbWorkingSpace::SRGB)
     }
 }
 

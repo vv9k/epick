@@ -1,6 +1,6 @@
 use crate::color::hsv::Hsv;
 use crate::color::rgb::Rgb;
-use crate::color::{Cmyk, Color, Lch, Luv, Xyz};
+use crate::color::{CIEColor, Cmyk, Color};
 use egui::color::{Color32, Hsva, Rgba};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -121,9 +121,9 @@ impl From<Color> for Hsl {
             Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Rgb(c) => c.into(),
             Color::Hsv(c) => c.into(),
-            Color::Luv(c) => Rgb::from(c).into(),
-            Color::Xyz(c) => Rgb::from(c).into(),
-            Color::Lch(c) => Rgb::from(c).into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Lch(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => c,
         }
     }
@@ -161,26 +161,8 @@ impl From<Hsv> for Hsl {
     }
 }
 
-impl From<Lch> for Hsl {
-    fn from(color: Lch) -> Self {
-        Hsv::from(color).into()
-    }
-}
-
-impl From<Luv> for Hsl {
-    fn from(color: Luv) -> Self {
-        Hsv::from(color).into()
-    }
-}
-
 impl From<Rgb> for Hsl {
     fn from(rgb: Rgb) -> Hsl {
         Hsv::from(rgb).into()
-    }
-}
-
-impl From<Xyz> for Hsl {
-    fn from(color: Xyz) -> Self {
-        Hsv::from(color).into()
     }
 }

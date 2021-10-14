@@ -6,7 +6,7 @@ use crate::color::Rgb;
 pub type RgbSpaceMatrix = [[f32; 3]; 3];
 pub type InverseRgbSpaceMatrix = [[f32; 3]; 3];
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum RgbWorkingSpace {
     Adobe,
@@ -18,6 +18,12 @@ pub enum RgbWorkingSpace {
     ProPhoto,
     SRGB,
     WideGamut,
+}
+
+impl Default for RgbWorkingSpace {
+    fn default() -> Self {
+        Self::SRGB
+    }
 }
 
 impl RgbWorkingSpace {
@@ -100,6 +106,22 @@ impl RgbWorkingSpace {
             }
             ECI => color.inverse_l_compand(),
             SRGB => color.inverse_srgb_compand(),
+        }
+    }
+}
+
+impl AsRef<str> for RgbWorkingSpace {
+    fn as_ref(&self) -> &str {
+        match &self {
+            RgbWorkingSpace::Adobe => "Adobe RGB",
+            RgbWorkingSpace::Apple => "Apple RGB",
+            RgbWorkingSpace::CIE => "CIE RGB",
+            RgbWorkingSpace::ECI => "ECI RGB",
+            RgbWorkingSpace::NTSC => "NTSC RGB",
+            RgbWorkingSpace::PAL => "PAL RGB",
+            RgbWorkingSpace::ProPhoto => "Pro Photo RGB",
+            RgbWorkingSpace::SRGB => "SRGB",
+            RgbWorkingSpace::WideGamut => "Adobe Wide Gamut RGB",
         }
     }
 }

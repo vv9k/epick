@@ -14,9 +14,11 @@ pub use gradient::Gradient;
 pub use cmyk::Cmyk;
 pub use hsl::Hsl;
 pub use hsv::Hsv;
+pub use illuminant::Illuminant;
 pub use lch::Lch;
 pub use luv::Luv;
 pub use rgb::Rgb;
+pub use working_space::RgbWorkingSpace;
 pub use xyz::Xyz;
 
 use egui::color::{Color32, Hsva, HsvaGamma, Rgba};
@@ -116,14 +118,19 @@ impl AsRef<str> for DisplayFormat {
 
 //################################################################################
 
+pub trait CIEColor {
+    fn to_rgb(self, ws: RgbWorkingSpace) -> Rgb;
+    fn from_rgb(rgb: Rgb, ws: RgbWorkingSpace) -> Self;
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Color {
     Cmyk(Cmyk),
     Rgb(Rgb),
     Hsv(Hsv),
-    Luv(Luv),
-    Xyz(Xyz),
-    Lch(Lch),
+    Luv(Luv, RgbWorkingSpace),
+    Xyz(Xyz, RgbWorkingSpace),
+    Lch(Lch, RgbWorkingSpace),
     Hsl(Hsl),
 }
 
@@ -137,12 +144,12 @@ impl Color {
     }
 
     pub fn as_hex(&self) -> String {
-        let color = self.as_rgb_triplet();
+        let color = self.as_rgb_triplet_scaled();
         format!("#{:02x}{:02x}{:02x}", color.0, color.1, color.2)
     }
 
     pub fn as_css_rgb(&self) -> String {
-        let color = self.as_rgb_triplet();
+        let color = self.as_rgb_triplet_scaled();
         format!("rgb({}, {}, {})", color.0, color.1, color.2)
     }
 
@@ -181,13 +188,18 @@ impl Color {
         Self::Hsv(hsv)
     }
 
-    pub fn as_rgb_triplet(&self) -> (u8, u8, u8) {
+    pub fn as_rgb_triplet_scaled(&self) -> (u8, u8, u8) {
         let color = self.rgb();
         (
             color.r_scaled().floor() as u8,
             color.g_scaled().floor() as u8,
             color.b_scaled().floor() as u8,
         )
+    }
+
+    pub fn as_rgb_triplet(&self) -> (f32, f32, f32) {
+        let color = self.rgb();
+        (color.r(), color.g(), color.b())
     }
 
     pub fn color32(&self) -> Color32 {
@@ -214,20 +226,20 @@ impl Color {
         self.into()
     }
 
-    pub fn luv(&self) -> Luv {
-        self.into()
+    pub fn luv(&self, ws: RgbWorkingSpace) -> Luv {
+        Xyz::from_rgb(self.rgb(), ws).into()
     }
 
-    pub fn lch(&self) -> Lch {
-        (*self).into()
+    pub fn lch(&self, ws: RgbWorkingSpace) -> Lch {
+        Luv::from(Xyz::from_rgb(self.rgb(), ws)).into()
     }
 
     pub fn rgb(&self) -> Rgb {
         self.into()
     }
 
-    pub fn xyz(&self) -> Xyz {
-        (*self).into()
+    pub fn xyz(&self, working_space: RgbWorkingSpace) -> Xyz {
+        Xyz::from_rgb(self.rgb(), working_space)
     }
 
     pub fn shades(&self, total: u8) -> Vec<Color> {
@@ -378,9 +390,9 @@ impl From<Color> for Color32 {
             Color::Cmyk(c) => c.into(),
             Color::Rgb(c) => c.into(),
             Color::Hsv(c) => c.into(),
-            Color::Luv(c) => c.into(),
-            Color::Xyz(c) => c.into(),
-            Color::Lch(c) => c.into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Lch(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => c.into(),
         }
     }
@@ -398,9 +410,9 @@ macro_rules! convert_color {
             Color::Cmyk(c) => Rgb::from(c).into(),
             Color::Rgb(c) => c.into(),
             Color::Hsv(c) => Rgb::from(c).into(),
-            Color::Luv(c) => Rgb::from(c).into(),
-            Color::Xyz(c) => Rgb::from(c).into(),
-            Color::Lch(c) => Rgb::from(c).into(),
+            Color::Luv(c, ws) => c.to_rgb(ws).into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::Lch(c, ws) => c.to_rgb(ws).into(),
             Color::Hsl(c) => Rgb::from(c).into(),
         }
     };
@@ -456,27 +468,9 @@ impl From<Hsv> for Color {
     }
 }
 
-impl From<Lch> for Color {
-    fn from(c: Lch) -> Color {
-        Color::Lch(c)
-    }
-}
-
-impl From<Luv> for Color {
-    fn from(c: Luv) -> Color {
-        Color::Luv(c)
-    }
-}
-
 impl From<Rgb> for Color {
     fn from(c: Rgb) -> Color {
         Color::Rgb(c)
-    }
-}
-
-impl From<Xyz> for Color {
-    fn from(c: Xyz) -> Self {
-        Color::Xyz(c)
     }
 }
 

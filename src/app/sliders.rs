@@ -1,7 +1,8 @@
-use crate::color::Color;
+use crate::color::{Color, RgbWorkingSpace};
 
 #[derive(Debug, Clone)]
 pub struct ColorSliders {
+    pub rgb_working_space: RgbWorkingSpace,
     pub r: f32,
     pub g: f32,
     pub b: f32,
@@ -26,6 +27,7 @@ pub struct ColorSliders {
 impl Default for ColorSliders {
     fn default() -> Self {
         Self {
+            rgb_working_space: RgbWorkingSpace::default(),
             r: 0.,
             g: 0.,
             b: 0.,
@@ -68,11 +70,11 @@ impl ColorSliders {
         self.hsl_h = hsl.h_scaled();
         self.hsl_s = hsl.s_scaled();
         self.hsl_l = hsl.l_scaled();
-        let luv = color.luv();
+        let luv = color.luv(self.rgb_working_space);
         self.luv_l = luv.l();
         self.luv_u = luv.u();
         self.luv_v = luv.v();
-        let lch = color.lch();
+        let lch = color.lch(self.rgb_working_space);
         self.lch_l = lch.l();
         self.lch_c = lch.c();
         self.lch_h = lch.h();
