@@ -59,7 +59,7 @@ impl Xyz {
 
 impl CIEColor for Xyz {
     fn to_rgb(self, working_space: RgbWorkingSpace) -> Rgb {
-        let space_matrix = working_space.inverse_rgb_matrix();
+        let space_matrix = working_space.inverse_rgb_matrix().0;
 
         let r =
             self.x * space_matrix[0][0] + self.y * space_matrix[0][1] + self.z * space_matrix[0][2];
@@ -74,7 +74,7 @@ impl CIEColor for Xyz {
 
     #[allow(clippy::many_single_char_names)]
     fn from_rgb(rgb: Rgb, working_space: RgbWorkingSpace) -> Self {
-        let space_matrix = working_space.rgb_matrix();
+        let space_matrix = working_space.rgb_matrix().0;
 
         let rgb = working_space.inverse_compand_channels(rgb);
 
