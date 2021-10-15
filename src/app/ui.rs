@@ -18,10 +18,10 @@ pub mod colors {
         pub static ref D_BG_3: Color32 = Color32::from_rgb(0x41, 0x53, 0x67);
         pub static ref D_FG_0: Color32 = Color32::from_rgb(0xe5, 0xde, 0xd6);
         pub static ref L_BG_0: Color32 = Color32::from_rgb(0xbf, 0xbf, 0xbf);
-        pub static ref L_BG_1: Color32 = Color32::from_rgb(0xd9, 0xd9, 0xd9);
-        pub static ref L_BG_2: Color32 = Color32::from_rgb(0xef, 0xef, 0xef);
-        pub static ref L_BG_3: Color32 = Color32::from_rgb(0xd4, 0xd3, 0xd4);
-        pub static ref L_BG_4: Color32 = Color32::from_rgb(0xf2, 0xf1, 0xf2);
+        pub static ref L_BG_1: Color32 = Color32::from_rgb(0xd4, 0xd3, 0xd4);
+        pub static ref L_BG_2: Color32 = Color32::from_rgb(0xd9, 0xd9, 0xd9);
+        pub static ref L_BG_3: Color32 = Color32::from_rgb(0xea, 0xea, 0xea);
+        pub static ref L_BG_4: Color32 = Color32::from_rgb(0xf9, 0xf9, 0xf9);
         pub static ref L_BG_5: Color32 = Color32::from_rgb(0xff, 0xff, 0xff);
         pub static ref L_FG_0: Color32 = *D_BG_0;
     }
@@ -112,17 +112,17 @@ pub fn color_tooltip(color: &Color, display_format: DisplayFormat) -> String {
 }
 
 pub fn light_visuals() -> Visuals {
-    let mut widgets = Widgets::dark();
-    widgets.noninteractive.fg_stroke = Stroke::new(0., *L_FG_0);
-    widgets.noninteractive.bg_fill = *L_BG_5;
-    widgets.inactive.bg_fill = *L_BG_4;
-    widgets.inactive.bg_stroke = Stroke::new(0.7, *D_BG_3);
-    widgets.inactive.fg_stroke = Stroke::new(0.7, *D_BG_3);
-    widgets.hovered.bg_fill = *L_BG_5;
+    let mut widgets = Widgets::light();
+    widgets.noninteractive.bg_fill = *L_BG_4;
+    widgets.inactive.bg_fill = *L_BG_3;
+    widgets.inactive.bg_stroke = Stroke::new(0.5, *D_BG_3);
+    widgets.inactive.fg_stroke = Stroke::new(0.5, *D_BG_3);
+    widgets.hovered.bg_fill = *L_BG_4;
     widgets.hovered.bg_stroke = Stroke::new(1., *D_BG_1);
     widgets.hovered.fg_stroke = Stroke::new(1., *D_BG_1);
     widgets.active.bg_fill = *L_BG_5;
-    widgets.active.fg_stroke = Stroke::new(0., *D_BG_0);
+    widgets.active.fg_stroke = Stroke::new(1.5, *D_BG_0);
+    widgets.active.bg_stroke = Stroke::new(1.5, *D_BG_0);
 
     Visuals {
         dark_mode: false,
