@@ -108,6 +108,54 @@ impl RgbWorkingSpace {
             SRGB => color.inverse_srgb_compand(),
         }
     }
+
+    #[rustfmt::skip]
+    pub fn reference_red_xyy(&self) -> xyY {
+        use RgbWorkingSpace::*;
+        match &self {
+            Adobe     => xyY::new(0.6400, 0.3300, 0.297361),
+            Apple     => xyY::new(0.6250, 0.3400, 0.244634),
+            CIE       => xyY::new(0.7350, 0.2650, 0.176204),
+            ECI       => xyY::new(0.6700, 0.3300, 0.320250),
+            NTSC      => xyY::new(0.6700, 0.3300, 0.298839),
+            PAL       => xyY::new(0.6400, 0.3300, 0.222021),
+            ProPhoto  => xyY::new(0.7347, 0.2653, 0.288040),
+            SRGB      => xyY::new(0.6400, 0.3300, 0.212656),
+            WideGamut => xyY::new(0.7350, 0.2650, 0.258187),
+       }
+    }
+
+    #[rustfmt::skip]
+    pub fn reference_green_xyy(&self) -> xyY {
+        use RgbWorkingSpace::*;
+        match &self {
+            Adobe     => xyY::new(0.2100, 0.7100, 0.627355),
+            Apple     => xyY::new(0.2800, 0.5950, 0.672034),
+            CIE       => xyY::new(0.2150, 0.7750, 0.737352),
+            ECI       => xyY::new(0.1986, 0.7551, 0.663786),
+            NTSC      => xyY::new(0.2800, 0.6500, 0.683554),
+            PAL       => xyY::new(0.2740, 0.7170, 0.812985),
+            ProPhoto  => xyY::new(0.2950, 0.6050, 0.658132),
+            SRGB      => xyY::new(0.2150, 0.7650, 0.687970),
+            WideGamut => xyY::new(0.2100, 0.7100, 0.602071),
+        }
+    }
+
+    #[rustfmt::skip]
+    pub fn reference_blue_xyy(&self) -> xyY {
+        use RgbWorkingSpace::*;
+        match &self {
+            Adobe     => xyY::new(0.1500, 0.0600, 0.075285),
+            Apple     => xyY::new(0.1550, 0.0700, 0.083332),
+            CIE       => xyY::new(0.1300, 0.0350, 0.034191),
+            ECI       => xyY::new(0.1265, 0.0352, 0.032941),
+            NTSC      => xyY::new(0.1500, 0.0600, 0.075452),
+            PAL       => xyY::new(0.1670, 0.0090, 0.010811),
+            ProPhoto  => xyY::new(0.1500, 0.0750, 0.066985),
+            SRGB      => xyY::new(0.1300, 0.0350, 0.033680),
+            WideGamut => xyY::new(0.1400, 0.0800, 0.077679),
+        }
+    }
 }
 
 impl AsRef<str> for RgbWorkingSpace {
