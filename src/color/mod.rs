@@ -9,6 +9,7 @@ mod lch_uv;
 mod luv;
 mod rgb;
 mod working_space;
+mod xyy;
 mod xyz;
 
 pub use gradient::Gradient;
@@ -23,6 +24,7 @@ pub use lch_uv::LchUV;
 pub use luv::Luv;
 pub use rgb::Rgb;
 pub use working_space::RgbWorkingSpace;
+pub use xyy::xyY;
 pub use xyz::Xyz;
 
 use egui::color::{Color32, Hsva, HsvaGamma, Rgba};
@@ -141,6 +143,7 @@ pub trait CIEColor {
     fn from_rgb(rgb: Rgb, ws: RgbWorkingSpace) -> Self;
 }
 
+#[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Color {
     Rgb(Rgb),
@@ -148,6 +151,7 @@ pub enum Color {
     Hsv(Hsv),
     Hsl(Hsl),
     Xyz(Xyz, RgbWorkingSpace),
+    xyY(xyY, RgbWorkingSpace),
     Luv(Luv, RgbWorkingSpace),
     LchUV(LchUV, RgbWorkingSpace),
     Lab(Lab, RgbWorkingSpace),
@@ -294,6 +298,10 @@ impl Color {
 
     pub fn xyz(&self, working_space: RgbWorkingSpace) -> Xyz {
         Xyz::from_rgb(self.rgb(), working_space)
+    }
+
+    pub fn xyy(&self, working_space: RgbWorkingSpace) -> xyY {
+        xyY::from_rgb(self.rgb(), working_space)
     }
 
     pub fn shades(&self, total: u8) -> Vec<Color> {
@@ -446,6 +454,7 @@ impl From<Color> for Color32 {
             Color::Hsv(c) => c.into(),
             Color::Hsl(c) => c.into(),
             Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::xyY(c, ws) => c.to_rgb(ws).into(),
             Color::Luv(c, ws) => c.to_rgb(ws).into(),
             Color::LchUV(c, ws) => c.to_rgb(ws).into(),
             Color::Lab(c, ws) => c.to_rgb(ws).into(),
@@ -468,6 +477,7 @@ macro_rules! convert_color {
             Color::Hsv(c) => Rgb::from(c).into(),
             Color::Hsl(c) => Rgb::from(c).into(),
             Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::xyY(c, ws) => c.to_rgb(ws).into(),
             Color::Luv(c, ws) => c.to_rgb(ws).into(),
             Color::LchUV(c, ws) => c.to_rgb(ws).into(),
             Color::Lab(c, ws) => c.to_rgb(ws).into(),

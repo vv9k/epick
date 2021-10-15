@@ -1,5 +1,6 @@
 use crate::color::illuminant::Illuminant;
 use crate::color::rgb::Rgb;
+use crate::color::xyy::xyY;
 use crate::color::{working_space::RgbWorkingSpace, CIEColor, Luv, CIE_E, CIE_K};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -113,6 +114,27 @@ impl From<Luv> for Xyz {
         let z = x * a + b;
 
         Xyz::new(x, y, z)
+    }
+}
+
+impl From<xyY> for Xyz {
+    fn from(color: xyY) -> Self {
+        let x = color.x();
+        let y = color.y();
+        let yy = color.yy();
+
+        if y == 0. {
+            return Self {
+                x: 0.,
+                y: 0.,
+                z: 0.,
+            };
+        }
+
+        let xx = x * yy / y;
+        let zz = (1. - x - y) * yy / y;
+
+        Self::new(xx, yy, zz)
     }
 }
 
