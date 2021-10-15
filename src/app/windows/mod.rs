@@ -7,6 +7,7 @@ pub use settings::SettingsWindow;
 
 #[derive(Debug)]
 pub struct ShadesWindow {
+    pub is_open: bool,
     pub num_of_shades: u8,
     pub shade_color_size: f32,
 }
@@ -14,6 +15,7 @@ pub struct ShadesWindow {
 impl Default for ShadesWindow {
     fn default() -> Self {
         Self {
+            is_open: false,
             num_of_shades: 6,
             shade_color_size: 100.,
         }
@@ -37,6 +39,7 @@ impl ShadesWindow {
 
 #[derive(Debug)]
 pub struct TintsWindow {
+    pub is_open: bool,
     pub num_of_tints: u8,
     pub tint_color_size: f32,
 }
@@ -44,6 +47,7 @@ pub struct TintsWindow {
 impl Default for TintsWindow {
     fn default() -> Self {
         Self {
+            is_open: false,
             num_of_tints: 6,
             tint_color_size: 100.,
         }
@@ -67,6 +71,7 @@ impl TintsWindow {
 
 #[derive(Debug)]
 pub struct HuesWindow {
+    pub is_open: bool,
     pub num_of_hues: u8,
     pub hue_color_size: f32,
     pub hues_step: f32,
@@ -75,6 +80,7 @@ pub struct HuesWindow {
 impl Default for HuesWindow {
     fn default() -> Self {
         Self {
+            is_open: false,
             num_of_hues: 4,
             hue_color_size: 100.,
             hues_step: 0.05,

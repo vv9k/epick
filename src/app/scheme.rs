@@ -1,4 +1,4 @@
-use crate::app::{App, ColorHarmony, TopMenuTab};
+use crate::app::{App, ColorHarmony};
 use egui::{vec2, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
 
@@ -8,7 +8,7 @@ impl App {
         ctx: &egui::CtxRef,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
-        if let Some(TopMenuTab::Hues) = self.current_tab {
+        if self.hues_window.is_open {
             let mut is_open = true;
             Window::new("Hues")
                 .collapsible(false)
@@ -30,7 +30,7 @@ impl App {
                 });
 
             if !is_open {
-                self.current_tab = None;
+                self.hues_window.is_open = false;
             }
         }
     }
@@ -40,7 +40,7 @@ impl App {
         ctx: &egui::CtxRef,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
-        if let Some(TopMenuTab::Tints) = self.current_tab {
+        if self.tints_window.is_open {
             let mut is_open = true;
             Window::new("Tints")
                 .collapsible(false)
@@ -61,7 +61,7 @@ impl App {
                 });
 
             if !is_open {
-                self.current_tab = None;
+                self.tints_window.is_open = false;
             }
         }
     }
@@ -71,7 +71,7 @@ impl App {
         ctx: &egui::CtxRef,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
-        if let Some(TopMenuTab::Shades) = self.current_tab {
+        if self.shades_window.is_open {
             let mut is_open = true;
             Window::new("Shades")
                 .collapsible(false)
@@ -93,7 +93,7 @@ impl App {
                 });
 
             if !is_open {
-                self.current_tab = None;
+                self.shades_window.is_open = false;
             }
         }
     }

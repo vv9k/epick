@@ -17,6 +17,7 @@
 - Add CIE Lab and CIE LCH(ab) sliders
 - The sidebar and topbar icons are now on the right side
 - Fix invisible pointer on slider when using light theme
+- Shades, tints and hues can now all be open at the same time
 
 # 0.4.0
 

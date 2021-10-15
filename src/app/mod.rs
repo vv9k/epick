@@ -16,7 +16,7 @@ use render::{tex_color, TextureManager};
 use saved_colors::SavedColors;
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
-use egui::{color::Color32, vec2, Layout, Ui};
+use egui::{color::Color32, vec2, Button, Layout, Rgba, Ui};
 use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
 use std::rc::Rc;
@@ -55,16 +55,6 @@ const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as 
 
 //####################################################################################################
 
-#[derive(Copy, Clone, Debug, PartialEq)]
-pub enum TopMenuTab {
-    Hues,
-    Shades,
-    Tints,
-    NoTab,
-}
-
-//####################################################################################################
-
 #[derive(Debug)]
 pub struct App {
     pub picker: ColorPicker,
@@ -75,7 +65,6 @@ pub struct App {
     pub saved_colors: SavedColors,
     pub error_message: Option<String>,
 
-    pub current_tab: Option<TopMenuTab>,
     pub show_sidepanel: bool,
 
     pub settings_window: SettingsWindow,
@@ -173,7 +162,6 @@ impl Default for App {
             saved_colors: SavedColors::default(),
             error_message: None,
 
-            current_tab: None,
             show_sidepanel: false,
 
             settings_window: SettingsWindow::default(),
@@ -384,9 +372,37 @@ impl App {
 
     fn top_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
-            ui.selectable_value(&mut self.current_tab, Some(TopMenuTab::Hues), "hues");
-            ui.selectable_value(&mut self.current_tab, Some(TopMenuTab::Tints), "tints");
-            ui.selectable_value(&mut self.current_tab, Some(TopMenuTab::Shades), "shades");
+            if self.hues_window.is_open {
+                if ui.button("hues").clicked() {
+                    self.hues_window.is_open = false;
+                }
+            } else {
+                let btn = Button::new("hues").fill(Rgba::from_black_alpha(0.));
+                if ui.add(btn).clicked() {
+                    self.hues_window.is_open = true;
+                }
+            }
+            if self.tints_window.is_open {
+                if ui.button("tints").clicked() {
+                    self.tints_window.is_open = false;
+                }
+            } else {
+                let btn = Button::new("tints").fill(Rgba::from_black_alpha(0.));
+                if ui.add(btn).clicked() {
+                    self.tints_window.is_open = true;
+                }
+            }
+
+            if self.shades_window.is_open {
+                if ui.button("shades").clicked() {
+                    self.shades_window.is_open = false;
+                }
+            } else {
+                let btn = Button::new("shades").fill(Rgba::from_black_alpha(0.));
+                if ui.add(btn).clicked() {
+                    self.shades_window.is_open = true;
+                }
+            }
 
             ui.with_layout(Layout::right_to_left(), |ui| {
                 if ui
