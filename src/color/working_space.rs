@@ -64,11 +64,9 @@ impl RgbWorkingSpace {
         let yyb = yyg;
         let zzb = (1. - xb - yb) / yb;
 
-        let s = Matrix3::from([[xxr, xxg, xxb], [yyr, yyg, yyb], [zzr, zzg, zzb]]).mul_by_3x1([
-            ref_white.x(),
-            ref_white.y(),
-            ref_white.z(),
-        ]);
+        let s = Matrix3::from([[xxr, xxg, xxb], [yyr, yyg, yyb], [zzr, zzg, zzb]])
+            .inverse()
+            .mul_by_3x1([ref_white.x(), ref_white.y(), ref_white.z()]);
 
         Matrix3::from([
             [s[0] * xxr, s[1] * xxg, s[2] * xxb],
@@ -140,13 +138,13 @@ impl RgbWorkingSpace {
         match &self {
             Adobe     => xyY::new(0.2100, 0.7100, 0.627355),
             Apple     => xyY::new(0.2800, 0.5950, 0.672034),
-            CIE       => xyY::new(0.2150, 0.7750, 0.737352),
-            ECI       => xyY::new(0.1986, 0.7551, 0.663786),
-            NTSC      => xyY::new(0.2800, 0.6500, 0.683554),
-            PAL       => xyY::new(0.2740, 0.7170, 0.812985),
-            ProPhoto  => xyY::new(0.2950, 0.6050, 0.658132),
-            SRGB      => xyY::new(0.2150, 0.7650, 0.687970),
-            WideGamut => xyY::new(0.2100, 0.7100, 0.602071),
+            CIE       => xyY::new(0.2740, 0.7170, 0.812985),
+            ECI       => xyY::new(0.2100, 0.7100, 0.602071),
+            NTSC      => xyY::new(0.2100, 0.7100, 0.586811),
+            PAL       => xyY::new(0.2900, 0.6000, 0.706645),
+            ProPhoto  => xyY::new(0.1596, 0.8404, 0.711874),
+            SRGB      => xyY::new(0.3000, 0.6000, 0.715158),
+            WideGamut => xyY::new(0.1150, 0.8260, 0.724938),
         }
     }
 
@@ -156,13 +154,13 @@ impl RgbWorkingSpace {
         match &self {
             Adobe     => xyY::new(0.1500, 0.0600, 0.075285),
             Apple     => xyY::new(0.1550, 0.0700, 0.083332),
-            CIE       => xyY::new(0.1300, 0.0350, 0.034191),
-            ECI       => xyY::new(0.1265, 0.0352, 0.032941),
-            NTSC      => xyY::new(0.1500, 0.0600, 0.075452),
-            PAL       => xyY::new(0.1670, 0.0090, 0.010811),
-            ProPhoto  => xyY::new(0.1500, 0.0750, 0.066985),
-            SRGB      => xyY::new(0.1300, 0.0350, 0.033680),
-            WideGamut => xyY::new(0.1400, 0.0800, 0.077679),
+            CIE       => xyY::new(0.1670, 0.0090, 0.010811),
+            ECI       => xyY::new(0.1400, 0.0800, 0.077679),
+            NTSC      => xyY::new(0.1400, 0.0800, 0.114350),
+            PAL       => xyY::new(0.1500, 0.0600, 0.071334),
+            ProPhoto  => xyY::new(0.0366, 0.0001, 0.000086),
+            SRGB      => xyY::new(0.1500, 0.0600, 0.072186),
+            WideGamut => xyY::new(0.1570, 0.0180, 0.016875),
         }
     }
 }
