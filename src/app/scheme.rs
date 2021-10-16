@@ -164,9 +164,12 @@ impl App {
                         );
                     });
                 ui.add(
-                    Slider::new(&mut self.picker.scheme_color_size, 100.0..=250.)
-                        .clamp_to_range(true)
-                        .text("color size"),
+                    Slider::new(
+                        &mut self.picker.scheme_color_size,
+                        20.0..=ui.available_width() / 4.,
+                    )
+                    .clamp_to_range(true)
+                    .text("color size"),
                 );
                 match self.picker.color_harmony {
                     ColorHarmony::Complementary => {

@@ -43,7 +43,7 @@ impl Default for ColorPicker {
             hex_color: "".to_string(),
             sliders: ColorSliders::default(),
             saved_sliders: None,
-            scheme_color_size: 200.,
+            scheme_color_size: 100.,
             color_harmony: ColorHarmony::Complementary,
             new_workspace: None,
             new_illuminant: None,

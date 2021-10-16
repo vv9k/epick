@@ -15,9 +15,10 @@ use crate::wm_picker::{self, DisplayPickerExt};
 use color_picker::ColorPicker;
 use render::{tex_color, TextureManager};
 use saved_colors::SavedColors;
+use screen_size::ScreenSize;
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
-use egui::{color::Color32, vec2, Button, Layout, Rgba, Ui};
+use egui::{color::Color32, vec2, Button, Layout, Rgba, Style, Ui};
 use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
 use std::rc::Rc;
@@ -65,8 +66,9 @@ pub struct App {
     pub dark_theme: Visuals,
     pub saved_colors: SavedColors,
     pub error_message: Option<String>,
+    pub screen_size: ScreenSize,
 
-    pub show_sidepanel: bool,
+    pub show_side_panel: bool,
 
     pub settings_window: SettingsWindow,
     pub export_window: ExportWindow,
@@ -84,10 +86,15 @@ impl epi::App for App {
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
         let tex_allocator = &mut Some(frame.tex_allocator());
 
+        let screen_size = ScreenSize::from(ctx.available_rect());
+        if self.screen_size != screen_size {
+            self.set_styles(ctx, screen_size);
+        }
+
         self.check_settings_change();
 
         self.top_panel(ctx);
-        if self.show_sidepanel {
+        if self.show_side_panel {
             self.side_panel(ctx, tex_allocator);
         }
         self.central_panel(ctx, tex_allocator);
@@ -116,12 +123,7 @@ impl epi::App for App {
         }
     }
 
-    fn setup(
-        &mut self,
-        _ctx: &egui::CtxRef,
-        _frame: &mut epi::Frame<'_>,
-        _storage: Option<&dyn epi::Storage>,
-    ) {
+    fn setup(&mut self, ctx: &egui::CtxRef, _: &mut epi::Frame<'_>, _: Option<&dyn epi::Storage>) {
         let mut fonts = egui::FontDefinitions::default();
         fonts.font_data.insert(
             "Firacode".to_string(),
@@ -139,8 +141,9 @@ impl epi::App for App {
             egui::TextStyle::Monospace,
             (egui::FontFamily::Monospace, 16.),
         );
-        _ctx.set_fonts(fonts);
-        _ctx.set_visuals(dark_visuals());
+        ctx.set_fonts(fonts);
+        ctx.set_visuals(dark_visuals());
+        println!("{:?}", ctx.available_rect());
     }
 
     fn name(&self) -> &str {
@@ -162,8 +165,9 @@ impl Default for App {
             dark_theme: dark_visuals(),
             saved_colors: SavedColors::default(),
             error_message: None,
+            screen_size: ScreenSize::Desktop(0., 0.),
 
-            show_sidepanel: false,
+            show_side_panel: false,
 
             settings_window: SettingsWindow::default(),
             export_window: ExportWindow::default(),
@@ -180,6 +184,23 @@ impl Default for App {
 }
 
 impl App {
+    fn set_styles(&mut self, ctx: &egui::CtxRef, screen_size: ScreenSize) {
+        self.screen_size = screen_size;
+        println!("{:?}", screen_size);
+
+        let slider_size = match screen_size {
+            ScreenSize::Phone(w, _) => w * 0.5,
+            ScreenSize::Desktop(w, _) if w > 1500. => w * 0.2,
+            ScreenSize::Tablet(w, _) | ScreenSize::Laptop(w, _) | ScreenSize::Desktop(w, _) => {
+                w * 0.35
+            }
+        };
+
+        let mut style = Style::default();
+        style.spacing.slider_width = slider_size;
+        ctx.set_style(style);
+    }
+
     fn check_settings_change(&mut self) {
         if self.settings_window.chromatic_adaptation_method
             != self.picker.sliders.chromatic_adaptation_method
@@ -201,7 +222,7 @@ impl App {
             self.error_message = Some(format!("Color {} already saved!", color_str));
         } else {
             self.error_message = None;
-            self.show_sidepanel = true;
+            self.show_side_panel = true;
         }
     }
 
@@ -421,7 +442,7 @@ impl App {
                     .on_hover_text("Show/hide side panel")
                     .clicked()
                 {
-                    self.show_sidepanel = !self.show_sidepanel;
+                    self.show_side_panel = !self.show_side_panel;
                 }
                 if ui.button(SETTINGS_ICON).on_hover_text("Settings").clicked() {
                     self.settings_window.show = true;
