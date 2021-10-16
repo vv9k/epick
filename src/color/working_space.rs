@@ -66,7 +66,8 @@ impl RgbWorkingSpace {
 
         let s = Matrix3::from([[xxr, xxg, xxb], [yyr, yyg, yyb], [zzr, zzg, zzb]])
             .inverse()
-            .mul_by_3x1([ref_white.x(), ref_white.y(), ref_white.z()]);
+            .mul_by_1x3([ref_white.x(), ref_white.y(), ref_white.z()])
+            .0;
 
         Matrix3::from([
             [s[0] * xxr, s[1] * xxg, s[2] * xxb],

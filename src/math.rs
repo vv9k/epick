@@ -1,4 +1,13 @@
-use std::ops::Neg;
+use std::ops::{Mul, Neg};
+
+#[derive(Debug)]
+pub struct Matrix1x3(pub [f32; 3]);
+
+impl From<[f32; 3]> for Matrix1x3 {
+    fn from(arr: [f32; 3]) -> Self {
+        Self(arr)
+    }
+}
 
 #[derive(Debug)]
 pub struct Matrix3(pub [[f32; 3]; 3]);
@@ -54,18 +63,28 @@ impl Matrix3 {
         n
     }
 
-    pub fn mul_by_3x1(&self, other: [f32; 3]) -> [f32; 3] {
+    pub fn mul_by_1x3(&self, other: impl Into<Matrix1x3>) -> Matrix1x3 {
+        let other = other.into();
+        self * other
+    }
+}
+
+impl Mul<Matrix1x3> for &Matrix3 {
+    type Output = Matrix1x3;
+
+    fn mul(self, rhs: Matrix1x3) -> Self::Output {
         let arr = &self.0;
+        let other = rhs.0;
         let a = other[0] * arr[0][0] + other[1] * arr[0][1] + other[2] * arr[0][2];
         let b = other[0] * arr[1][0] + other[1] * arr[1][1] + other[2] * arr[1][2];
         let c = other[0] * arr[2][0] + other[1] * arr[2][1] + other[2] * arr[2][2];
-        [a, b, c]
+        [a, b, c].into()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::math::Matrix3;
+    use crate::math::{Matrix1x3, Matrix3};
 
     #[test]
     fn matrix3_determinant() {
@@ -87,10 +106,10 @@ mod tests {
     }
 
     #[test]
-    fn matrix3_mul_by_3x1() {
-        let want = [20.0f32, 47., 56.];
+    fn matrix3_mul_by_1x3() {
+        let want = Matrix1x3([20.0f32, 47., 56.]);
         let got =
-            Matrix3::from([[1., 2., 3.], [4., 5., 6.], [7., 2., 9.]]).mul_by_3x1([2., 3., 4.]);
-        assert_eq!(got, want);
+            Matrix3::from([[1., 2., 3.], [4., 5., 6.], [7., 2., 9.]]).mul_by_1x3([2., 3., 4.]);
+        assert_eq!(got.0, want.0);
     }
 }
