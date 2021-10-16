@@ -278,58 +278,19 @@ mod tests {
             };
         }
 
-        test_case!(
-            Cmyk: 0., 0., 0., 0.;
-            Rgb: 1., 1., 1.
-        );
-        test_case!(
-            Cmyk: 0.5, 0., 0., 0.;
-            Rgb: 0.5, 1., 1.
-        );
-        test_case!(
-            Cmyk: 1., 0., 0., 0.;
-            Rgb: 0., 1., 1.
-        );
-        test_case!(
-            Cmyk: 0., 0.5, 0., 0.;
-            Rgb: 1., 0.5, 1.
-        );
-        test_case!(
-            Cmyk: 0., 1., 0., 0.;
-            Rgb: 1., 0., 1.
-        );
-        test_case!(
-            Cmyk: 0., 0., 0.5, 0.;
-            Rgb: 1., 1., 0.5
-        );
-        test_case!(
-            Cmyk: 0., 0., 1., 0.;
-            Rgb: 1., 1., 0.
-        );
-        test_case!(
-            Cmyk: 0., 0., 0., 0.5;
-            Rgb: 0.5, 0.5, 0.5
-        );
-        test_case!(
-            Cmyk: 0., 0., 0., 1.;
-            Rgb: 0., 0., 0.
-        );
-        test_case!(
-            Cmyk: 1., 1., 0., 0.;
-            Rgb: 0., 0., 1.
-        );
-        test_case!(
-            Cmyk: 1., 0., 1., 0.;
-            Rgb: 0., 1., 0.
-        );
-        test_case!(
-            Cmyk: 0., 1., 1., 0.;
-            Rgb: 1., 0., 0.
-        );
-        test_case!(
-            Cmyk: 0., 1., 1., 0.;
-            Rgb: 1., 0., 0.
-        );
+        test_case!(Cmyk: 0., 0., 0., 0.; Rgb: 1., 1., 1.);
+        test_case!(Cmyk: 0.5, 0., 0., 0.; Rgb: 0.5, 1., 1.);
+        test_case!(Cmyk: 1., 0., 0., 0.; Rgb: 0., 1., 1.);
+        test_case!(Cmyk: 0., 0.5, 0., 0.; Rgb: 1., 0.5, 1.);
+        test_case!(Cmyk: 0., 1., 0., 0.; Rgb: 1., 0., 1.);
+        test_case!(Cmyk: 0., 0., 0.5, 0.; Rgb: 1., 1., 0.5);
+        test_case!(Cmyk: 0., 0., 1., 0.; Rgb: 1., 1., 0.);
+        test_case!(Cmyk: 0., 0., 0., 0.5; Rgb: 0.5, 0.5, 0.5);
+        test_case!(Cmyk: 0., 0., 0., 1.; Rgb: 0., 0., 0.);
+        test_case!(Cmyk: 1., 1., 0., 0.; Rgb: 0., 0., 1.);
+        test_case!(Cmyk: 1., 0., 1., 0.; Rgb: 0., 1., 0.);
+        test_case!(Cmyk: 0., 1., 1., 0.; Rgb: 1., 0., 0.);
+        test_case!(Cmyk: 0., 1., 1., 0.; Rgb: 1., 0., 0.);
     }
 
     #[test]
@@ -343,57 +304,18 @@ mod tests {
             };
         }
 
-        test_case!(
-            Hsv: 0., 0., 0.;
-            Rgb: 0., 0., 0.
-        );
-        test_case!(
-            Hsv: 0.5, 0., 0.;
-            Rgb: 0., 0., 0.
-        );
-        test_case!(
-            Hsv: 1., 0., 0.;
-            Rgb: 0., 0., 0.
-        );
-        test_case!(
-            Hsv: 1., 1., 0.;
-            Rgb: 0., 0., 0.
-        );
-        test_case!(
-            Hsv: 0., 1., 1.;
-            Rgb: 255., 0., 0.
-        );
-        test_case!(
-            Hsv: 1./6., 1., 1.;
-            Rgb: 255., 255., 0.
-        );
-        test_case!(
-            Hsv: 1./4., 1., 1.;
-            Rgb: 127.5, 255., 0.
-        );
-        test_case!(
-            Hsv: 1./3., 1., 1.;
-            Rgb: 0., 255., 0.
-        );
-        test_case!(
-            Hsv: 1./2., 1., 1.;
-            Rgb: 0., 255., 255.
-        );
-        test_case!(
-            Hsv: 2./3., 1., 1.;
-            Rgb: 0., 0., 255.
-        );
-        test_case!(
-            Hsv: 3./4., 1., 1.;
-            Rgb: 127.5, 0., 255.
-        );
-        test_case!(
-            Hsv: 5./6., 1., 1.;
-            Rgb: 255., 0., 255.
-        );
-        test_case!(
-            Hsv: 1., 1., 1.;
-            Rgb: 255., 0., 0.
-        );
+        test_case!(Hsv: 0., 0., 0.; Rgb: 0., 0., 0.);
+        test_case!(Hsv: 0.5, 0., 0.; Rgb: 0., 0., 0.);
+        test_case!(Hsv: 1., 0., 0.; Rgb: 0., 0., 0.);
+        test_case!(Hsv: 1., 1., 0.; Rgb: 0., 0., 0.);
+        test_case!(Hsv: 0., 1., 1.; Rgb: 255., 0., 0.);
+        test_case!(Hsv: 1./6., 1., 1.; Rgb: 255., 255., 0.);
+        test_case!(Hsv: 1./4., 1., 1.; Rgb: 127.5, 255., 0.);
+        test_case!(Hsv: 1./3., 1., 1.; Rgb: 0., 255., 0.);
+        test_case!(Hsv: 1./2., 1., 1.; Rgb: 0., 255., 255.);
+        test_case!(Hsv: 2./3., 1., 1.; Rgb: 0., 0., 255.);
+        test_case!(Hsv: 3./4., 1., 1.; Rgb: 127.5, 0., 255.);
+        test_case!(Hsv: 5./6., 1., 1.; Rgb: 255., 0., 255.);
+        test_case!(Hsv: 1., 1., 1.; Rgb: 255., 0., 0.);
     }
 }
