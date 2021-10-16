@@ -3,6 +3,7 @@ mod color_picker;
 mod render;
 mod saved_colors;
 mod scheme;
+mod screen_size;
 mod sliders;
 mod ui;
 mod windows;
