@@ -23,7 +23,7 @@ impl Default for RgbWorkingSpace {
 }
 
 impl RgbWorkingSpace {
-    pub fn reference_whitepoint(&self) -> Illuminant {
+    pub fn reference_illuminant(&self) -> Illuminant {
         use RgbWorkingSpace::*;
         match &self {
             Adobe => Illuminant::D65,
@@ -42,7 +42,7 @@ impl RgbWorkingSpace {
         let ref_red = self.reference_red_xyy();
         let ref_green = self.reference_green_xyy();
         let ref_blue = self.reference_blue_xyy();
-        let ref_white = self.reference_whitepoint().xyz();
+        let ref_white = self.reference_illuminant().xyz();
 
         let xr = ref_red.x();
         let yr = ref_red.y();

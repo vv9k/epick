@@ -283,8 +283,8 @@ impl Color {
         method: ChromaticAdaptationMethod,
     ) -> Lab {
         let xyz = Xyz::from_rgb(self.rgb(), ws);
-        let xyz = if ref_white != ws.reference_whitepoint() {
-            xyz.chromatic_adaptation_transform(method, ws.reference_whitepoint(), ref_white)
+        let xyz = if ref_white != ws.reference_illuminant() {
+            xyz.chromatic_adaptation_transform(method, ws.reference_illuminant(), ref_white)
         } else {
             xyz
         };

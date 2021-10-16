@@ -37,7 +37,7 @@ impl Default for ColorSliders {
         let ws = RgbWorkingSpace::default();
         Self {
             rgb_working_space: ws,
-            illuminant: ws.reference_whitepoint(),
+            illuminant: ws.reference_illuminant(),
             chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
             r: 0.,
             g: 0.,

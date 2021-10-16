@@ -48,7 +48,7 @@ impl Default for SettingsWindow {
             color_spaces: ColorSpaceSettings::default(),
             rgb_working_space: ws,
             chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
-            illuminant: ws.reference_whitepoint(),
+            illuminant: ws.reference_illuminant(),
         }
     }
 }
