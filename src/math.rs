@@ -1,6 +1,6 @@
-use std::ops::{Mul, Neg};
+use std::ops::{Index, Mul, Neg};
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Matrix1x3(pub [f32; 3]);
 
 impl From<[f32; 3]> for Matrix1x3 {
@@ -9,7 +9,15 @@ impl From<[f32; 3]> for Matrix1x3 {
     }
 }
 
-#[derive(Debug)]
+impl Index<usize> for Matrix1x3 {
+    type Output = f32;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Matrix3(pub [[f32; 3]; 3]);
 
 impl From<[[f32; 3]; 3]> for Matrix3 {
@@ -20,10 +28,9 @@ impl From<[[f32; 3]; 3]> for Matrix3 {
 
 impl Matrix3 {
     pub fn determinant(&self) -> f32 {
-        let arr = &self.0;
-        arr[0][0] * (arr[1][1] * arr[2][2] - arr[1][2] * arr[2][1])
-            - arr[0][1] * (arr[1][0] * arr[2][2] - arr[1][2] * arr[2][0])
-            + arr[0][2] * (arr[1][0] * arr[2][1] - arr[1][1] * arr[2][0])
+        self[0][0] * (self[1][1] * self[2][2] - self[1][2] * self[2][1])
+            - self[0][1] * (self[1][0] * self[2][2] - self[1][2] * self[2][0])
+            + self[0][2] * (self[1][0] * self[2][1] - self[1][1] * self[2][0])
     }
 
     pub fn mul_by(&mut self, n: f32) {
@@ -39,22 +46,21 @@ impl Matrix3 {
     }
 
     pub fn inverse(&self) -> Matrix3 {
-        let arr = &self.0;
         let mut n = Matrix3::from([
             [
-                arr[1][1] * arr[2][2] - arr[1][2] * arr[2][1],
-                (arr[0][1] * arr[2][2] - arr[0][2] * arr[2][1]).neg(),
-                arr[0][1] * arr[1][2] - arr[0][2] * arr[1][1],
+                self[1][1] * self[2][2] - self[1][2] * self[2][1],
+                (self[0][1] * self[2][2] - self[0][2] * self[2][1]).neg(),
+                self[0][1] * self[1][2] - self[0][2] * self[1][1],
             ],
             [
-                (arr[1][0] * arr[2][2] - arr[1][2] * arr[2][0]).neg(),
-                arr[0][0] * arr[2][2] - arr[0][2] * arr[2][0],
-                (arr[0][0] * arr[1][2] - arr[0][2] * arr[1][0]).neg(),
+                (self[1][0] * self[2][2] - self[1][2] * self[2][0]).neg(),
+                self[0][0] * self[2][2] - self[0][2] * self[2][0],
+                (self[0][0] * self[1][2] - self[0][2] * self[1][0]).neg(),
             ],
             [
-                arr[1][0] * arr[2][1] - arr[2][0] * arr[1][1],
-                (arr[0][0] * arr[2][1] - arr[0][1] * arr[2][0]).neg(),
-                arr[0][0] * arr[1][1] - arr[0][1] * arr[1][0],
+                self[1][0] * self[2][1] - self[2][0] * self[1][1],
+                (self[0][0] * self[2][1] - self[0][1] * self[2][0]).neg(),
+                self[0][0] * self[1][1] - self[0][1] * self[1][0],
             ],
         ]);
 
@@ -73,12 +79,43 @@ impl Mul<Matrix1x3> for &Matrix3 {
     type Output = Matrix1x3;
 
     fn mul(self, rhs: Matrix1x3) -> Self::Output {
-        let arr = &self.0;
-        let other = rhs.0;
-        let a = other[0] * arr[0][0] + other[1] * arr[0][1] + other[2] * arr[0][2];
-        let b = other[0] * arr[1][0] + other[1] * arr[1][1] + other[2] * arr[1][2];
-        let c = other[0] * arr[2][0] + other[1] * arr[2][1] + other[2] * arr[2][2];
+        let a = rhs[0] * self[0][0] + rhs[1] * self[0][1] + rhs[2] * self[0][2];
+        let b = rhs[0] * self[1][0] + rhs[1] * self[1][1] + rhs[2] * self[1][2];
+        let c = rhs[0] * self[2][0] + rhs[1] * self[2][1] + rhs[2] * self[2][2];
         [a, b, c].into()
+    }
+}
+
+impl Index<usize> for Matrix3 {
+    type Output = [f32; 3];
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.0[index]
+    }
+}
+
+impl Mul for Matrix3 {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self::Output {
+        [
+            [
+                self[0][0] * rhs[0][0] + self[0][1] * rhs[1][0] + self[0][2] * rhs[2][0],
+                self[0][0] * rhs[0][1] + self[0][1] * rhs[1][1] + self[0][2] * rhs[2][1],
+                self[0][0] * rhs[0][2] + self[0][1] * rhs[1][2] + self[0][2] * rhs[2][2],
+            ],
+            [
+                self[1][0] * rhs[0][0] + self[1][1] * rhs[1][0] + self[1][2] * rhs[2][0],
+                self[1][0] * rhs[0][1] + self[1][1] * rhs[1][1] + self[1][2] * rhs[2][1],
+                self[1][0] * rhs[0][2] + self[1][1] * rhs[1][2] + self[1][2] * rhs[2][2],
+            ],
+            [
+                self[2][0] * rhs[0][0] + self[2][1] * rhs[1][0] + self[2][2] * rhs[2][0],
+                self[2][0] * rhs[0][1] + self[2][1] * rhs[1][1] + self[2][2] * rhs[2][1],
+                self[2][0] * rhs[0][2] + self[2][1] * rhs[1][2] + self[2][2] * rhs[2][2],
+            ],
+        ]
+        .into()
     }
 }
 
@@ -102,14 +139,25 @@ mod tests {
             [-1. / 6., 1. / 3., -1. / 6.],
             [3. / 4., -1. / 3., 1. / 12.],
         ]);
-        assert_eq!(got.0, want.0);
+        assert_eq!(got, want);
     }
 
     #[test]
     fn matrix3_mul_by_1x3() {
-        let want = Matrix1x3([20.0f32, 47., 56.]);
         let got =
             Matrix3::from([[1., 2., 3.], [4., 5., 6.], [7., 2., 9.]]).mul_by_1x3([2., 3., 4.]);
-        assert_eq!(got.0, want.0);
+        let want = Matrix1x3([20.0f32, 47., 56.]);
+        assert_eq!(got, want);
+    }
+
+    #[test]
+    fn matrix3_mul_by_3x3() {
+        let a = Matrix3::from([[1., 2., 3.], [4., 5., 6.], [7., 2., 9.]]);
+        let b = Matrix3::from([[7., 2., 9.], [4., 5., 6.], [1., 2., 3.]]);
+
+        let got = a * b;
+        let want = Matrix3::from([[18., 18., 30.], [54., 45., 84.], [66., 42., 102.]]);
+
+        assert_eq!(got, want);
     }
 }
