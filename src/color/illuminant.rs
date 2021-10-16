@@ -1,8 +1,6 @@
-#![allow(dead_code)]
-
 use crate::color::Xyz;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Illuminant {
     A,
     B,
@@ -39,5 +37,24 @@ impl Illuminant {
     }
     pub fn reference_v(&self) -> f32 {
         self.xyz().v()
+    }
+}
+
+impl AsRef<str> for Illuminant {
+    fn as_ref(&self) -> &str {
+        use Illuminant::*;
+        match &self {
+            A => "A",
+            B => "B",
+            C => "C",
+            D50 => "D50",
+            D55 => "D55",
+            D65 => "D65",
+            D75 => "D75",
+            E => "E",
+            F2 => "F2",
+            F7 => "F7",
+            F11 => "F11",
+        }
     }
 }
