@@ -78,7 +78,7 @@ impl Xyz {
             [0., 0., src_lms[2] / dst_lms[2]],
         ]);
 
-        let m = ma.inverse() * lms * ma;
+        let m = ma.inverse().expect("inverse adaptation matrix") * lms * ma;
 
         Xyz::from(m * Matrix1x3::from(*self))
     }
@@ -86,7 +86,7 @@ impl Xyz {
 
 impl CIEColor for Xyz {
     fn to_rgb(self, working_space: RgbWorkingSpace) -> Rgb {
-        let space_matrix = working_space.inverse_rgb_matrix().0;
+        let space_matrix = working_space.inverse_rgb_matrix();
 
         let r =
             self.x * space_matrix[0][0] + self.y * space_matrix[0][1] + self.z * space_matrix[0][2];

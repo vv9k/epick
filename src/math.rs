@@ -45,7 +45,13 @@ impl Matrix3 {
         self.0[2][2] *= n;
     }
 
-    pub fn inverse(&self) -> Matrix3 {
+    pub fn inverse(&self) -> Option<Matrix3> {
+        let det = self.determinant();
+
+        if det == 0. {
+            return None;
+        }
+
         let mut n = Matrix3::from([
             [
                 self[1][1] * self[2][2] - self[1][2] * self[2][1],
@@ -64,9 +70,9 @@ impl Matrix3 {
             ],
         ]);
 
-        n.mul_by(1. / self.determinant());
+        n.mul_by(1. / det);
 
-        n
+        Some(n)
     }
 }
 
@@ -128,13 +134,19 @@ mod tests {
 
     #[test]
     fn matrix_inverse() {
-        let got = Matrix3::from([[1., 2., 3.], [4., 5., 6.], [7., 2., 9.]]).inverse();
+        let got = Matrix3::from([[1., 2., 3.], [4., 5., 6.], [7., 2., 9.]])
+            .inverse()
+            .unwrap();
         let want = Matrix3::from([
             [-11. / 12., 1. / 3., 1. / 12.],
             [-1. / 6., 1. / 3., -1. / 6.],
             [3. / 4., -1. / 3., 1. / 12.],
         ]);
         assert_eq!(got, want);
+
+        assert!(Matrix3::from([[1., 2., 3.], [4., 5., 6.], [7., 8., 9.]])
+            .inverse()
+            .is_none());
     }
 
     #[test]

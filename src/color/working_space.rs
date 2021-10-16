@@ -63,7 +63,9 @@ impl RgbWorkingSpace {
         let yyb = yyg;
         let zzb = (1. - xb - yb) / yb;
 
-        let s = Matrix3::from([[xxr, xxg, xxb], [yyr, yyg, yyb], [zzr, zzg, zzb]]).inverse()
+        let s = Matrix3::from([[xxr, xxg, xxb], [yyr, yyg, yyb], [zzr, zzg, zzb]])
+            .inverse()
+            .expect("inverse matrix")
             * Matrix1x3::from([ref_white.x(), ref_white.y(), ref_white.z()]);
 
         Matrix3::from([
@@ -74,7 +76,7 @@ impl RgbWorkingSpace {
     }
 
     pub fn inverse_rgb_matrix(&self) -> Matrix3 {
-        self.rgb_matrix().inverse()
+        self.rgb_matrix().inverse().expect("inverse matrix")
     }
 
     pub fn gamma(&self) -> f32 {
