@@ -18,7 +18,7 @@ use saved_colors::SavedColors;
 use screen_size::ScreenSize;
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
-use egui::{color::Color32, vec2, Button, Layout, Rgba, Style, Ui};
+use egui::{color::Color32, vec2, Button, Layout, Rgba, Ui};
 use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
 use std::rc::Rc;
@@ -194,7 +194,7 @@ impl App {
             }
         };
 
-        let mut style = Style::default();
+        let mut style = (*ctx.style()).clone();
         style.spacing.slider_width = slider_size;
         ctx.set_style(style);
     }
