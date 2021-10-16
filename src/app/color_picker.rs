@@ -1,12 +1,13 @@
 use crate::app::render::color_slider_1d;
 use crate::app::sliders::ColorSliders;
 use crate::color::{
-    CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Lab, LchAB, LchUV, Luv, Rgb, RgbWorkingSpace,
-    U8_MAX, U8_MIN,
+    CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, Rgb,
+    RgbWorkingSpace, U8_MAX, U8_MIN,
 };
 
 use egui::Ui;
 use egui::{color::Hsva, DragValue};
+use std::mem;
 
 macro_rules! slider {
     ($it:ident, $ui:ident, $field:ident, $label:literal, $range:expr, $($tt:tt)+) => {
@@ -32,6 +33,7 @@ pub struct ColorPicker {
     pub scheme_color_size: f32,
     pub color_harmony: ColorHarmony,
     pub new_workspace: Option<RgbWorkingSpace>,
+    pub new_illuminant: Option<Illuminant>,
 }
 
 impl Default for ColorPicker {
@@ -44,6 +46,7 @@ impl Default for ColorPicker {
             scheme_color_size: 200.,
             color_harmony: ColorHarmony::Complementary,
             new_workspace: None,
+            new_illuminant: None,
         }
     }
 }
@@ -62,7 +65,7 @@ impl ColorPicker {
     }
 
     fn restore_sliders_if_saved(&mut self) {
-        if let Some(saved) = std::mem::take(&mut self.saved_sliders) {
+        if let Some(saved) = mem::take(&mut self.saved_sliders) {
             self.sliders.restore(saved);
         }
     }
@@ -223,10 +226,22 @@ impl ColorPicker {
     }
 
     pub fn check_color_change(&mut self) {
-        if let Some(ws) = self.new_workspace {
+        if let Some(ws) = mem::take(&mut self.new_workspace) {
             self.sliders.rgb_working_space = ws;
             self.set_cur_color(Rgb::new(self.sliders.r, self.sliders.g, self.sliders.b));
             self.new_workspace = None;
+            return;
+        }
+
+        if let Some(illuminant) = mem::take(&mut self.new_illuminant) {
+            let cur_xyz = self.current_color.xyz(self.sliders.rgb_working_space);
+            let new_xyz = cur_xyz.chromatic_adaptation_transform(
+                self.sliders.chromatic_adaptation_method,
+                self.sliders.illuminant,
+                illuminant,
+            );
+            self.sliders.illuminant = illuminant;
+            self.set_cie_color(new_xyz);
             return;
         }
 

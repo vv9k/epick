@@ -1,4 +1,4 @@
-use crate::color::{DisplayFormat, RgbWorkingSpace};
+use crate::color::{ChromaticAdaptationMethod, DisplayFormat, Illuminant, RgbWorkingSpace};
 
 use egui::{ComboBox, Window};
 
@@ -33,17 +33,22 @@ impl Default for ColorSpaceSettings {
 pub struct SettingsWindow {
     pub show: bool,
     pub color_display_format: DisplayFormat,
-    pub colorspaces: ColorSpaceSettings,
+    pub color_spaces: ColorSpaceSettings,
     pub rgb_working_space: RgbWorkingSpace,
+    pub chromatic_adaptation_method: ChromaticAdaptationMethod,
+    pub illuminant: Illuminant,
 }
 
 impl Default for SettingsWindow {
     fn default() -> Self {
+        let ws = RgbWorkingSpace::default();
         Self {
             show: false,
             color_display_format: DisplayFormat::Hex,
-            colorspaces: ColorSpaceSettings::default(),
-            rgb_working_space: RgbWorkingSpace::default(),
+            color_spaces: ColorSpaceSettings::default(),
+            rgb_working_space: ws,
+            chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
+            illuminant: ws.reference_whitepoint(),
         }
     }
 }
@@ -132,20 +137,98 @@ impl SettingsWindow {
                             RgbWorkingSpace::WideGamut.as_ref(),
                         );
                     });
+                ComboBox::from_label("Illuminant")
+                    .selected_text(self.illuminant.as_ref())
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut self.illuminant,
+                            Illuminant::A,
+                            Illuminant::A.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.illuminant,
+                            Illuminant::B,
+                            Illuminant::B.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.illuminant,
+                            Illuminant::C,
+                            Illuminant::C.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.illuminant,
+                            Illuminant::D50,
+                            Illuminant::D50.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.illuminant,
+                            Illuminant::D55,
+                            Illuminant::D55.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.illuminant,
+                            Illuminant::D65,
+                            Illuminant::D65.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.illuminant,
+                            Illuminant::D75,
+                            Illuminant::D75.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.illuminant,
+                            Illuminant::E,
+                            Illuminant::E.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.illuminant,
+                            Illuminant::F2,
+                            Illuminant::F2.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.illuminant,
+                            Illuminant::F7,
+                            Illuminant::F7.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.illuminant,
+                            Illuminant::F11,
+                            Illuminant::F11.as_ref(),
+                        );
+                    });
+                ComboBox::from_label("Chromatic adaptation method")
+                    .selected_text(self.chromatic_adaptation_method.as_ref())
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(
+                            &mut self.chromatic_adaptation_method,
+                            ChromaticAdaptationMethod::Bradford,
+                            ChromaticAdaptationMethod::Bradford.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.chromatic_adaptation_method,
+                            ChromaticAdaptationMethod::VonKries,
+                            ChromaticAdaptationMethod::VonKries.as_ref(),
+                        );
+                        ui.selectable_value(
+                            &mut self.chromatic_adaptation_method,
+                            ChromaticAdaptationMethod::XYZScaling,
+                            ChromaticAdaptationMethod::XYZScaling.as_ref(),
+                        );
+                    });
 
-                ui.label("Colorspaces:");
+                ui.label("Colors spaces:");
                 ui.horizontal(|ui| {
-                    ui.checkbox(&mut self.colorspaces.rgb, "RGB");
-                    ui.checkbox(&mut self.colorspaces.cmyk, "CMYK");
-                    ui.checkbox(&mut self.colorspaces.hsv, "HSV");
-                    ui.checkbox(&mut self.colorspaces.hsl, "HSL");
+                    ui.checkbox(&mut self.color_spaces.rgb, "RGB");
+                    ui.checkbox(&mut self.color_spaces.cmyk, "CMYK");
+                    ui.checkbox(&mut self.color_spaces.hsv, "HSV");
+                    ui.checkbox(&mut self.color_spaces.hsl, "HSL");
                 });
-                ui.label("CIE Colorspaces:");
+                ui.label("CIE Color spaces:");
                 ui.horizontal(|ui| {
-                    ui.checkbox(&mut self.colorspaces.luv, "Luv");
-                    ui.checkbox(&mut self.colorspaces.lch_uv, "LCH(uv)");
-                    ui.checkbox(&mut self.colorspaces.lab, "Lab");
-                    ui.checkbox(&mut self.colorspaces.lch_ab, "LCH(ab)");
+                    ui.checkbox(&mut self.color_spaces.luv, "Luv");
+                    ui.checkbox(&mut self.color_spaces.lch_uv, "LCH(uv)");
+                    ui.checkbox(&mut self.color_spaces.lab, "Lab");
+                    ui.checkbox(&mut self.color_spaces.lch_ab, "LCH(ab)");
                 });
             });
 

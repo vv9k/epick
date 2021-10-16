@@ -1,8 +1,10 @@
-use crate::color::{Color, RgbWorkingSpace};
+use crate::color::{ChromaticAdaptationMethod, Color, Illuminant, RgbWorkingSpace};
 
 #[derive(Debug, Clone)]
 pub struct ColorSliders {
     pub rgb_working_space: RgbWorkingSpace,
+    pub illuminant: Illuminant,
+    pub chromatic_adaptation_method: ChromaticAdaptationMethod,
     pub r: f32,
     pub g: f32,
     pub b: f32,
@@ -32,8 +34,11 @@ pub struct ColorSliders {
 
 impl Default for ColorSliders {
     fn default() -> Self {
+        let ws = RgbWorkingSpace::default();
         Self {
-            rgb_working_space: RgbWorkingSpace::default(),
+            rgb_working_space: ws,
+            illuminant: ws.reference_whitepoint(),
+            chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
             r: 0.,
             g: 0.,
             b: 0.,

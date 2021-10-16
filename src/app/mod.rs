@@ -180,10 +180,20 @@ impl Default for App {
 
 impl App {
     fn check_settings_change(&mut self) {
+        if self.settings_window.chromatic_adaptation_method
+            != self.picker.sliders.chromatic_adaptation_method
+        {
+            self.picker.sliders.chromatic_adaptation_method =
+                self.settings_window.chromatic_adaptation_method;
+        }
         if self.settings_window.rgb_working_space != self.picker.sliders.rgb_working_space {
             self.picker.new_workspace = Some(self.settings_window.rgb_working_space);
         }
+        if self.settings_window.illuminant != self.picker.sliders.illuminant {
+            self.picker.new_illuminant = Some(self.settings_window.illuminant);
+        }
     }
+
     fn add_color(&mut self, color: Color) {
         if !self.saved_colors.add(color) {
             let color_str = self.display_color(&color);
@@ -592,28 +602,28 @@ impl App {
 
     fn sliders(&mut self, ui: &mut Ui) {
         ui.vertical(|ui| {
-            if self.settings_window.colorspaces.rgb {
+            if self.settings_window.color_spaces.rgb {
                 self.picker.rgb_sliders(ui);
             }
-            if self.settings_window.colorspaces.cmyk {
+            if self.settings_window.color_spaces.cmyk {
                 self.picker.cmyk_sliders(ui);
             }
-            if self.settings_window.colorspaces.hsv {
+            if self.settings_window.color_spaces.hsv {
                 self.picker.hsv_sliders(ui);
             }
-            if self.settings_window.colorspaces.hsl {
+            if self.settings_window.color_spaces.hsl {
                 self.picker.hsl_sliders(ui);
             }
-            if self.settings_window.colorspaces.luv {
+            if self.settings_window.color_spaces.luv {
                 self.picker.luv_sliders(ui);
             }
-            if self.settings_window.colorspaces.lch_uv {
+            if self.settings_window.color_spaces.lch_uv {
                 self.picker.lch_uv_sliders(ui);
             }
-            if self.settings_window.colorspaces.lab {
+            if self.settings_window.color_spaces.lab {
                 self.picker.lab_sliders(ui);
             }
-            if self.settings_window.colorspaces.lch_ab {
+            if self.settings_window.color_spaces.lch_ab {
                 self.picker.lch_ab_sliders(ui);
             }
         });

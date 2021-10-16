@@ -18,6 +18,7 @@
 - The sidebar and topbar icons are now on the right side
 - Fix invisible pointer on slider when using light theme
 - Shades, tints and hues can now all be open at the same time
+- Add settings to change the reference white illuminant
 
 # 0.4.0
 
