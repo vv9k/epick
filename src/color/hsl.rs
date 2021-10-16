@@ -169,3 +169,43 @@ impl From<Rgb> for Hsl {
         Hsv::from(rgb).into()
     }
 }
+
+//####################################################################################################
+
+#[cfg(test)]
+mod tests {
+    use super::{Hsl, Hsv};
+    #[test]
+    fn hsv_to_hsl() {
+        macro_rules! test_case {
+            (Hsv: $hh:expr, $ss:expr, $v:expr ;Hsl: $h:expr, $s:expr, $l:expr) => {
+                let expected = Hsl::new($h, $s, $l);
+                let hsv = Hsv::new($hh, $ss, $v);
+                let got = Hsl::from(hsv);
+                assert_eq!(got, expected);
+            };
+        }
+
+        test_case!(Hsv: 0., 0., 0.; Hsl: 0., 0., 0.);
+        test_case!(Hsv: 0.5, 0., 0.; Hsl: 0.5, 0., 0.);
+        test_case!(Hsv: 1., 0., 0.; Hsl: 1., 0., 0.);
+        test_case!(Hsv: 0., 0.5, 0.; Hsl: 0., 0., 0.);
+        test_case!(Hsv: 0., 1., 0.; Hsl: 0., 0., 0.);
+        test_case!(Hsv: 0., 0., 0.5; Hsl: 0., 0., 0.5);
+        test_case!(Hsv: 0., 0., 1.; Hsl: 0., 0., 1.);
+        test_case!(Hsv: 0., 0.5, 0.5; Hsl: 0., 1./3., 0.375);
+        test_case!(Hsv: 0., 1., 1.; Hsl: 0., 1., 0.5);
+        test_case!(Hsv: 1./4., 1./4., 1./4.; Hsl: 1./4., 0.14285715, 0.21875);
+        test_case!(Hsv: 1./3., 1./3., 1./3.; Hsl: 1./3., 1./5., 0.2777778);
+        test_case!(Hsv: 1./2., 1./2., 1./2.; Hsl: 1./2., 1./3., 3./8.);
+        test_case!(Hsv: 2./3., 2./3., 2./3.; Hsl: 2./3., 0.50000006, 0.44444442);
+        test_case!(Hsv: 3./4., 3./4., 3./4.; Hsl: 3./4., 3./5., 0.46875);
+        test_case!(Hsv: 1., 1., 1.; Hsl: 1., 1., 0.5);
+        test_case!(Hsv: 1./4., 2./5., 0.3125; Hsl: 1./4., 1./4., 1./4.);
+        test_case!(Hsv: 1./3., 1./2., 0.44444448; Hsl: 1./3., 0.3333333, 0.33333337);
+        test_case!(Hsv: 1./2., 2./3., 3./4.; Hsl: 1./2., 0.50000006, 0.49999997);
+        test_case!(Hsv: 2./3., 0.49999997, 0.8888889; Hsl: 2./3., 2./3., 2./3.);
+        test_case!(Hsv: 3./4., 2./5., 0.9375; Hsl: 3./4., 3./4., 3./4.);
+        test_case!(Hsv: 1., 0., 1.; Hsl: 1., 0., 1.);
+    }
+}

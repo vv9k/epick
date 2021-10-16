@@ -206,7 +206,7 @@ impl From<Rgb> for Hsv {
 
 #[cfg(test)]
 mod tests {
-    use super::{Hsv, Rgb};
+    use super::{Hsl, Hsv, Rgb};
     #[test]
     fn rgb_to_hsv() {
         macro_rules! test_case {
@@ -228,5 +228,38 @@ mod tests {
         test_case!(Rgb: 127.5, 0., 255.; Hsv: 3./4., 1., 1.);
         test_case!(Rgb: 255., 0., 255.; Hsv: 5./6., 1., 1.);
         test_case!(Rgb: 255., 0., 0.; Hsv: 0., 1., 1.);
+    }
+    #[test]
+    fn hsl_to_hsv() {
+        macro_rules! test_case {
+            (Hsl: $hh:expr, $ss:expr, $l:expr ;Hsv: $h:expr, $s:expr, $v:expr) => {
+                let expected = Hsv::new($h, $s, $v);
+                let hsl = Hsl::new($hh, $ss, $l);
+                let got = Hsv::from(hsl);
+                assert_eq!(got, expected);
+            };
+        }
+
+        test_case!(Hsl: 0., 0., 0.; Hsv: 0., 0., 0.);
+        test_case!(Hsl: 0.5, 0., 0.; Hsv: 0.5, 0., 0.);
+        test_case!(Hsl: 1., 0., 0.; Hsv: 1., 0., 0.);
+        test_case!(Hsl: 0., 0.5, 0.; Hsv: 0., 0., 0.);
+        test_case!(Hsl: 0., 1., 0.; Hsv: 0., 0., 0.);
+        test_case!(Hsl: 0., 0., 0.5; Hsv: 0., 0., 0.5);
+        test_case!(Hsl: 0., 0., 1.; Hsv: 0., 0., 1.);
+        test_case!(Hsl: 0., 0.5, 0.5; Hsv: 0., 2./3., 3./4.);
+        test_case!(Hsl: 0., 1., 1.; Hsv: 0., 0., 1.);
+        test_case!(Hsl: 1./4., 1./4., 1./4.; Hsv: 1./4., 2./5., 0.3125);
+        test_case!(Hsl: 1./3., 1./3., 1./3.; Hsv: 1./3., 1./2., 0.44444448);
+        test_case!(Hsl: 1./2., 1./2., 1./2.; Hsv: 1./2., 2./3., 3./4.);
+        test_case!(Hsl: 2./3., 2./3., 2./3.; Hsv: 2./3., 0.49999997, 0.8888889);
+        test_case!(Hsl: 3./4., 3./4., 3./4.; Hsv: 3./4., 2./5., 0.9375);
+        test_case!(Hsl: 1., 1., 1.; Hsv: 1., 0., 1.);
+        test_case!(Hsl: 1./4., 0.14285715, 0.21875; Hsv: 1./4., 1./4., 1./4.);
+        test_case!(Hsl: 1./3., 1./5., 0.2777778; Hsv: 1./3., 1./3., 1./3.);
+        test_case!(Hsl: 1./2., 1./3., 3./8.; Hsv: 1./2., 1./2., 1./2.);
+        test_case!(Hsl: 2./3., 1./2., 0.44444442; Hsv: 2./3., 2./3., 0.6666666);
+        test_case!(Hsl: 3./4., 3./5., 0.46875; Hsv: 3./4., 3./4., 3./4.);
+        test_case!(Hsl: 1., 1., 0.5; Hsv: 1., 1., 1.);
     }
 }
