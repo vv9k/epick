@@ -143,7 +143,6 @@ impl epi::App for App {
         );
         ctx.set_fonts(fonts);
         ctx.set_visuals(dark_visuals());
-        println!("{:?}", ctx.available_rect());
     }
 
     fn name(&self) -> &str {
@@ -186,7 +185,6 @@ impl Default for App {
 impl App {
     fn set_styles(&mut self, ctx: &egui::CtxRef, screen_size: ScreenSize) {
         self.screen_size = screen_size;
-        println!("{:?}", screen_size);
 
         let slider_size = match screen_size {
             ScreenSize::Phone(w, _) => w * 0.5,
