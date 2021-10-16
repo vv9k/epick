@@ -1,7 +1,9 @@
 use crate::color::illuminant::Illuminant;
 use crate::color::rgb::Rgb;
+use crate::color::working_space::ChromaticAdaptationMethod;
 use crate::color::xyy::xyY;
 use crate::color::{working_space::RgbWorkingSpace, CIEColor, Luv, CIE_E, CIE_K};
+use crate::math::{Matrix1x3, Matrix3};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Xyz {
@@ -54,6 +56,31 @@ impl Xyz {
     #[inline(always)]
     pub fn v(&self) -> f32 {
         9. * self.y / (self.x + 15. * self.y + 3. * self.z)
+    }
+
+    pub fn chromatic_adaptation_transform(
+        &self,
+        method: ChromaticAdaptationMethod,
+        src_white: Illuminant,
+        dst_white: Illuminant,
+    ) -> Xyz {
+        let src_ref_xyz = Matrix1x3::from(src_white.xyz());
+        let dst_ref_xyz = Matrix1x3::from(dst_white.xyz());
+
+        let ma = method.adaptation_matrix();
+
+        let src_lms = ma * src_ref_xyz;
+        let dst_lms = ma * dst_ref_xyz;
+
+        let lms = Matrix3::from([
+            [src_lms[0] / dst_lms[0], 0., 0.],
+            [0., src_lms[1] / dst_lms[1], 0.],
+            [0., 0., src_lms[2] / dst_lms[2]],
+        ]);
+
+        let m = ma.inverse() * lms * ma;
+
+        Xyz::from(m * Matrix1x3::from(*self))
     }
 }
 
@@ -135,6 +162,22 @@ impl From<xyY> for Xyz {
         let zz = (1. - x - y) * yy / y;
 
         Self::new(xx, yy, zz)
+    }
+}
+
+impl From<Matrix1x3> for Xyz {
+    fn from(mx: Matrix1x3) -> Self {
+        Self {
+            x: mx[0],
+            y: mx[1],
+            z: mx[2],
+        }
+    }
+}
+
+impl From<Xyz> for Matrix1x3 {
+    fn from(color: Xyz) -> Self {
+        [color.x, color.y, color.z].into()
     }
 }
 

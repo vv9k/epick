@@ -181,6 +181,7 @@ impl AsRef<str> for RgbWorkingSpace {
 
 //####################################################################################################
 
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub enum ChromaticAdaptationMethod {
     Bradford,
     VonKries,
@@ -223,5 +224,11 @@ impl AsRef<str> for ChromaticAdaptationMethod {
             ChromaticAdaptationMethod::VonKries => "Von Kries",
             ChromaticAdaptationMethod::XYZScaling => "XYZ Scaling",
         }
+    }
+}
+
+impl Default for ChromaticAdaptationMethod {
+    fn default() -> Self {
+        ChromaticAdaptationMethod::Bradford
     }
 }
