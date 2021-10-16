@@ -1,7 +1,6 @@
 #![allow(dead_code)]
-#![allow(clippy::excessive_precision)]
 use crate::color::{illuminant::Illuminant, xyY, Rgb};
-use crate::math::Matrix3;
+use crate::math::{Matrix1x3, Matrix3};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 #[allow(clippy::upper_case_acronyms)]
@@ -64,9 +63,8 @@ impl RgbWorkingSpace {
         let yyb = yyg;
         let zzb = (1. - xb - yb) / yb;
 
-        let s = Matrix3::from([[xxr, xxg, xxb], [yyr, yyg, yyb], [zzr, zzg, zzb]])
-            .inverse()
-            .mul_by_1x3([ref_white.x(), ref_white.y(), ref_white.z()]);
+        let s = Matrix3::from([[xxr, xxg, xxb], [yyr, yyg, yyb], [zzr, zzg, zzb]]).inverse()
+            * Matrix1x3::from([ref_white.x(), ref_white.y(), ref_white.z()]);
 
         Matrix3::from([
             [s[0] * xxr, s[1] * xxg, s[2] * xxb],

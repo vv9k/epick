@@ -68,14 +68,9 @@ impl Matrix3 {
 
         n
     }
-
-    pub fn mul_by_1x3(&self, other: impl Into<Matrix1x3>) -> Matrix1x3 {
-        let other = other.into();
-        self * other
-    }
 }
 
-impl Mul<Matrix1x3> for &Matrix3 {
+impl Mul<Matrix1x3> for Matrix3 {
     type Output = Matrix1x3;
 
     fn mul(self, rhs: Matrix1x3) -> Self::Output {
@@ -144,8 +139,8 @@ mod tests {
 
     #[test]
     fn matrix3_mul_by_1x3() {
-        let got =
-            Matrix3::from([[1., 2., 3.], [4., 5., 6.], [7., 2., 9.]]).mul_by_1x3([2., 3., 4.]);
+        let got = Matrix3::from([[1., 2., 3.], [4., 5., 6.], [7., 2., 9.]])
+            * Matrix1x3::from([2., 3., 4.]);
         let want = Matrix1x3([20.0f32, 47., 56.]);
         assert_eq!(got, want);
     }
