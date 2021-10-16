@@ -19,6 +19,7 @@
 - Fix invisible pointer on slider when using light theme
 - Shades, tints and hues can now all be open at the same time
 - Add settings to change the reference white illuminant
+- The harmonies section is now on the top
 
 # 0.4.0
 

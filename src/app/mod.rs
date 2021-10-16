@@ -590,9 +590,9 @@ impl App {
         ScrollArea::auto_sized()
             .id_source("picker scroll")
             .show(ui, |ui| {
+                self.harmonies(ui, tex_allocator);
                 self.sliders(ui);
                 self.hex_input(ui);
-                self.harmonies(ui, tex_allocator);
             });
 
         self.shades(ctx, tex_allocator);
