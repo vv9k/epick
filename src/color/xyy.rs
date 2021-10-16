@@ -1,5 +1,4 @@
-use crate::color::rgb::Rgb;
-use crate::color::{CIEColor, RgbWorkingSpace, Xyz};
+use crate::color::Xyz;
 
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -34,16 +33,6 @@ impl xyY {
     /// Returns Y coordinate
     pub fn yy(&self) -> f32 {
         self.yy
-    }
-}
-
-impl CIEColor for xyY {
-    fn to_rgb(self, ws: RgbWorkingSpace) -> Rgb {
-        Xyz::from(self).to_rgb(ws)
-    }
-
-    fn from_rgb(rgb: Rgb, ws: RgbWorkingSpace) -> Self {
-        Xyz::from_rgb(rgb, ws).into()
     }
 }
 

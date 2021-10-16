@@ -95,11 +95,19 @@ impl ColorSliders {
         self.lch_uv_l = lch_uv.l();
         self.lch_uv_c = lch_uv.c();
         self.lch_uv_h = lch_uv.h();
-        let lab = color.lab(self.rgb_working_space);
+        let lab = color.lab(
+            self.rgb_working_space,
+            self.illuminant,
+            self.chromatic_adaptation_method,
+        );
         self.lab_l = lab.l();
         self.lab_a = lab.a();
         self.lab_b = lab.b();
-        let lch_ab = color.lch_ab(self.rgb_working_space);
+        let lch_ab = color.lch_ab(
+            self.rgb_working_space,
+            self.illuminant,
+            self.chromatic_adaptation_method,
+        );
         self.lch_ab_l = lch_ab.l();
         self.lch_ab_c = lch_ab.c();
         self.lch_ab_h = lch_ab.h();

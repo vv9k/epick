@@ -2,7 +2,7 @@ use egui::color::{Color32, Hsva, Rgba};
 
 use crate::color::hsv::Hsv;
 use crate::color::rgb::Rgb;
-use crate::color::{CIEColor, Color, Hsl};
+use crate::color::{CIEColor, Color, Hsl, Xyz};
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Cmyk {
@@ -138,11 +138,11 @@ impl From<Color> for Cmyk {
             Color::Hsv(c) => Rgb::from(c).into(),
             Color::Hsl(c) => Rgb::from(c).into(),
             Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::xyY(c, ws) => c.to_rgb(ws).into(),
-            Color::Luv(c, ws) => c.to_rgb(ws).into(),
-            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
-            Color::Lab(c, ws) => c.to_rgb(ws).into(),
-            Color::LchAB(c, ws) => c.to_rgb(ws).into(),
+            Color::xyY(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::Luv(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
+            Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
         }
     }
 }

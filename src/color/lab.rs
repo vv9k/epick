@@ -1,7 +1,6 @@
 use crate::color::illuminant::Illuminant;
 use crate::color::lch_ab::LchAB;
-use crate::color::rgb::Rgb;
-use crate::color::{CIEColor, RgbWorkingSpace, Xyz, CIE_E, CIE_K};
+use crate::color::{Xyz, CIE_E, CIE_K};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Lab {
@@ -87,16 +86,6 @@ impl Lab {
         };
 
         Xyz::new(x * ref_xyz.x(), y * ref_xyz.y(), z * ref_xyz.z())
-    }
-}
-
-impl CIEColor for Lab {
-    fn to_rgb(self, ws: RgbWorkingSpace) -> Rgb {
-        self.to_xyz(ws.reference_whitepoint()).to_rgb(ws)
-    }
-
-    fn from_rgb(rgb: Rgb, ws: RgbWorkingSpace) -> Self {
-        Self::from_xyz(Xyz::from_rgb(rgb, ws), ws.reference_whitepoint())
     }
 }
 

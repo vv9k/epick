@@ -1,6 +1,6 @@
 #![allow(clippy::many_single_char_names)]
 use crate::color::hsv::Hsv;
-use crate::color::{CIEColor, Cmyk, Color, Hsl, CIE_E, CIE_K, U8_MAX};
+use crate::color::{CIEColor, Cmyk, Color, Hsl, Xyz, CIE_E, CIE_K, U8_MAX};
 use egui::color::{Hsva, HsvaGamma};
 use egui::{Color32, Rgba};
 
@@ -206,11 +206,11 @@ impl From<Color> for Rgb {
             Color::Hsv(c) => c.into(),
             Color::Hsl(c) => c.into(),
             Color::Xyz(c, ws) => c.to_rgb(ws),
-            Color::xyY(c, ws) => c.to_rgb(ws),
-            Color::Luv(c, ws) => c.to_rgb(ws),
-            Color::LchUV(c, ws) => c.to_rgb(ws),
-            Color::Lab(c, ws) => c.to_rgb(ws),
-            Color::LchAB(c, ws) => c.to_rgb(ws),
+            Color::xyY(c, ws) => Xyz::from(c).to_rgb(ws),
+            Color::Luv(c, ws) => Xyz::from(c).to_rgb(ws),
+            Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws),
+            Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws),
+            Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws),
         }
     }
 }

@@ -1,6 +1,5 @@
 use crate::color::illuminant::Illuminant;
-use crate::color::rgb::Rgb;
-use crate::color::{CIEColor, LchUV, RgbWorkingSpace, Xyz, CIE_E, CIE_K};
+use crate::color::{LchUV, Xyz, CIE_E, CIE_K};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Luv {
@@ -34,16 +33,6 @@ impl Luv {
     /// Returns V coordinate
     pub fn v(&self) -> f32 {
         self.v
-    }
-}
-
-impl CIEColor for Luv {
-    fn to_rgb(self, ws: RgbWorkingSpace) -> Rgb {
-        Xyz::from(self).to_rgb(ws)
-    }
-
-    fn from_rgb(rgb: Rgb, ws: RgbWorkingSpace) -> Self {
-        Xyz::from_rgb(rgb, ws).into()
     }
 }
 

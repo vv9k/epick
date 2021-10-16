@@ -154,8 +154,8 @@ pub enum Color {
     xyY(xyY, RgbWorkingSpace),
     Luv(Luv, RgbWorkingSpace),
     LchUV(LchUV, RgbWorkingSpace),
-    Lab(Lab, RgbWorkingSpace),
-    LchAB(LchAB, RgbWorkingSpace),
+    Lab(Lab, RgbWorkingSpace, Illuminant),
+    LchAB(LchAB, RgbWorkingSpace, Illuminant),
 }
 
 impl Color {
@@ -276,12 +276,28 @@ impl Color {
         self.into()
     }
 
-    pub fn lab(&self, ws: RgbWorkingSpace) -> Lab {
-        Lab::from_xyz(Xyz::from_rgb(self.rgb(), ws), ws.reference_whitepoint())
+    pub fn lab(
+        &self,
+        ws: RgbWorkingSpace,
+        ref_white: Illuminant,
+        method: ChromaticAdaptationMethod,
+    ) -> Lab {
+        let xyz = Xyz::from_rgb(self.rgb(), ws);
+        let xyz = if ref_white != ws.reference_whitepoint() {
+            xyz.chromatic_adaptation_transform(method, ws.reference_whitepoint(), ref_white)
+        } else {
+            xyz
+        };
+        Lab::from_xyz(xyz, ref_white)
     }
 
-    pub fn lch_ab(&self, ws: RgbWorkingSpace) -> LchAB {
-        Lab::from_xyz(Xyz::from_rgb(self.rgb(), ws), ws.reference_whitepoint()).into()
+    pub fn lch_ab(
+        &self,
+        ws: RgbWorkingSpace,
+        ref_white: Illuminant,
+        method: ChromaticAdaptationMethod,
+    ) -> LchAB {
+        self.lab(ws, ref_white, method).into()
     }
 
     pub fn luv(&self, ws: RgbWorkingSpace) -> Luv {
@@ -301,7 +317,7 @@ impl Color {
     }
 
     pub fn xyy(&self, working_space: RgbWorkingSpace) -> xyY {
-        xyY::from_rgb(self.rgb(), working_space)
+        Xyz::from_rgb(self.rgb(), working_space).into()
     }
 
     pub fn shades(&self, total: u8) -> Vec<Color> {
@@ -454,11 +470,11 @@ impl From<Color> for Color32 {
             Color::Hsv(c) => c.into(),
             Color::Hsl(c) => c.into(),
             Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::xyY(c, ws) => c.to_rgb(ws).into(),
-            Color::Luv(c, ws) => c.to_rgb(ws).into(),
-            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
-            Color::Lab(c, ws) => c.to_rgb(ws).into(),
-            Color::LchAB(c, ws) => c.to_rgb(ws).into(),
+            Color::xyY(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::Luv(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
+            Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
         }
     }
 }
@@ -477,11 +493,11 @@ macro_rules! convert_color {
             Color::Hsv(c) => Rgb::from(c).into(),
             Color::Hsl(c) => Rgb::from(c).into(),
             Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::xyY(c, ws) => c.to_rgb(ws).into(),
-            Color::Luv(c, ws) => c.to_rgb(ws).into(),
-            Color::LchUV(c, ws) => c.to_rgb(ws).into(),
-            Color::Lab(c, ws) => c.to_rgb(ws).into(),
-            Color::LchAB(c, ws) => c.to_rgb(ws).into(),
+            Color::xyY(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::Luv(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
+            Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
         }
     };
 }

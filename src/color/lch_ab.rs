@@ -1,5 +1,4 @@
-use crate::color::rgb::Rgb;
-use crate::color::{CIEColor, Illuminant, Lab, RgbWorkingSpace, Xyz};
+use crate::color::{Illuminant, Lab, Xyz};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LchAB {
@@ -41,16 +40,6 @@ impl LchAB {
 
     pub fn to_xyz(self, reference_white: Illuminant) -> Xyz {
         Lab::from(self).to_xyz(reference_white)
-    }
-}
-
-impl CIEColor for LchAB {
-    fn to_rgb(self, ws: RgbWorkingSpace) -> Rgb {
-        self.to_xyz(ws.reference_whitepoint()).to_rgb(ws)
-    }
-
-    fn from_rgb(rgb: Rgb, ws: RgbWorkingSpace) -> Self {
-        Self::from_xyz(Xyz::from_rgb(rgb, ws), ws.reference_whitepoint())
     }
 }
 

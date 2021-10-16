@@ -1,5 +1,4 @@
-use crate::color::rgb::Rgb;
-use crate::color::{CIEColor, Luv, RgbWorkingSpace, Xyz};
+use crate::color::{Luv, Xyz};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LchUV {
@@ -33,16 +32,6 @@ impl LchUV {
     /// Returns Hue in the range of 0.0 ..= 360.0
     pub fn h(&self) -> f32 {
         self.h
-    }
-}
-
-impl CIEColor for LchUV {
-    fn to_rgb(self, ws: RgbWorkingSpace) -> Rgb {
-        Xyz::from(Luv::from(self)).to_rgb(ws)
-    }
-
-    fn from_rgb(rgb: Rgb, ws: RgbWorkingSpace) -> Self {
-        Luv::from(Xyz::from_rgb(rgb, ws)).into()
     }
 }
 

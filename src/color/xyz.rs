@@ -2,7 +2,7 @@ use crate::color::illuminant::Illuminant;
 use crate::color::rgb::Rgb;
 use crate::color::working_space::ChromaticAdaptationMethod;
 use crate::color::xyy::xyY;
-use crate::color::{working_space::RgbWorkingSpace, CIEColor, Luv, CIE_E, CIE_K};
+use crate::color::{working_space::RgbWorkingSpace, CIEColor, LchUV, Luv, CIE_E, CIE_K};
 use crate::math::{Matrix1x3, Matrix3};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -141,6 +141,12 @@ impl From<Luv> for Xyz {
         let z = x * a + b;
 
         Xyz::new(x, y, z)
+    }
+}
+
+impl From<LchUV> for Xyz {
+    fn from(lch: LchUV) -> Self {
+        Luv::from(lch).into()
     }
 }
 
