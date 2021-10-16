@@ -1,3 +1,6 @@
+pub mod slider_1d;
+pub mod windows;
+
 use crate::color::{Color, DisplayFormat};
 
 use egui::{

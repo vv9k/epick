@@ -1,9 +1,11 @@
-use crate::app::render::color_slider_1d;
-use crate::app::sliders::ColorSliders;
+mod sliders;
+
+use crate::app::ui::slider_1d;
 use crate::color::{
     CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, Rgb,
     RgbWorkingSpace, Xyz, U8_MAX, U8_MIN,
 };
+use sliders::ColorSliders;
 
 use egui::Ui;
 use egui::{color::Hsva, DragValue};
@@ -13,7 +15,7 @@ macro_rules! slider {
     ($it:ident, $ui:ident, $field:ident, $label:literal, $range:expr, $($tt:tt)+) => {
         $ui.add_space(7.);
         $ui.horizontal(|mut ui| {
-            let resp = color_slider_1d(&mut ui, &mut $it.sliders.$field, $range, $($tt)+).on_hover_text($label);
+            let resp = slider_1d::color(&mut ui, &mut $it.sliders.$field, $range, $($tt)+).on_hover_text($label);
             if resp.changed() {
                 $it.check_color_change();
             }

@@ -4,11 +4,11 @@ mod render;
 mod saved_colors;
 mod scheme;
 mod screen_size;
-mod sliders;
 mod ui;
-mod windows;
 
-use self::windows::{ExportWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
+use crate::app::ui::windows::{
+    ExportWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow,
+};
 use crate::color::{Color, ColorHarmony};
 use crate::save_to_clipboard;
 use crate::wm_picker::{self, DisplayPickerExt};
