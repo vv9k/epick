@@ -17,7 +17,7 @@ pub fn color(
 ) -> Response {
     #![allow(clippy::identity_op)]
 
-    let width = ui.spacing().slider_width;
+    let width = ui.spacing().slider_width * 2.;
 
     let range_start = *range.start();
     let _range_end = *range.end();

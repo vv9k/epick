@@ -195,7 +195,7 @@ impl App {
         };
 
         let mut style = (*ctx.style()).clone();
-        style.spacing.slider_width = slider_size;
+        style.spacing.slider_width = slider_size / 2.;
         ctx.set_style(style);
     }
 
