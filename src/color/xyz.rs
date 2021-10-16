@@ -205,7 +205,7 @@ mod tests {
         test_case!(
             RgbWorkingSpace::SRGB;
             Rgb: 1., 1., 1.;
-            Xyz: 0.95047003, 1.0000001, 1.08883
+            Xyz: 0.9504699, 1., 1.0888301
         );
     }
 }
