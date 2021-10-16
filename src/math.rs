@@ -56,9 +56,9 @@ impl Matrix3 {
 
     pub fn mul_by_3x1(&self, other: [f32; 3]) -> [f32; 3] {
         let arr = &self.0;
-        let a = other[0] * arr[0][0] * arr[0][1] * arr[0][2];
-        let b = other[0] * arr[1][0] * arr[1][1] * arr[1][2];
-        let c = other[0] * arr[2][0] * arr[2][1] * arr[2][2];
+        let a = other[0] * arr[0][0] + other[1] * arr[0][1] + other[2] * arr[0][2];
+        let b = other[0] * arr[1][0] + other[1] * arr[1][1] + other[2] * arr[1][2];
+        let c = other[0] * arr[2][0] + other[1] * arr[2][1] + other[2] * arr[2][2];
         [a, b, c]
     }
 }
@@ -84,5 +84,13 @@ mod tests {
             [3. / 4., -1. / 3., 1. / 12.],
         ]);
         assert_eq!(got.0, want.0);
+    }
+
+    #[test]
+    fn matrix3_mul_by_3x1() {
+        let want = [20.0f32, 47., 56.];
+        let got =
+            Matrix3::from([[1., 2., 3.], [4., 5., 6.], [7., 2., 9.]]).mul_by_3x1([2., 3., 4.]);
+        assert_eq!(got, want);
     }
 }
