@@ -190,15 +190,73 @@ impl From<Rgb> for Hsv {
         } else if (max - r).abs() < f32::EPSILON {
             (g - b) / (delta * 6.)
         } else if (max - g).abs() < f32::EPSILON {
-            (b - r) / (delta * 6.) + 1.0 / 3.0
+            1. / 3. + (b - r) / (delta * 6.)
         } else {
-            (r - g) / (delta * 6.) + 2.0 / 3.0
+            2. / 3. + (r - g) / (delta * 6.)
         };
-        let h = (h + 1.).fract();
+
+        let h = if h < 0. { (h + 1.).fract() } else { h }; // wrap
 
         let v = max;
         let s = if v == 0. { 0. } else { 1. - min / max };
 
         Hsv::new(h, s, v)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Hsv, Rgb};
+    #[test]
+    fn rgb_to_hsv() {
+        macro_rules! test_case {
+            (Rgb: $r:expr, $g:expr, $b:expr ;Hsv: $h:expr, $s:expr, $v:expr) => {
+                let expected = Hsv::new($h, $s, $v);
+                let rgb = Rgb::new($r, $g, $b);
+                let got = Hsv::from(rgb);
+                assert_eq!(got, expected);
+            };
+        }
+
+        test_case!(
+            Rgb: 0., 0., 0.;
+            Hsv: 0., 0., 0.
+        );
+        test_case!(
+            Rgb: 255., 0., 0.;
+            Hsv: 0., 1., 1.
+        );
+        test_case!(
+            Rgb: 255., 255., 0.;
+            Hsv: 1./6., 1., 1.
+        );
+        test_case!(
+            Rgb: 127.5, 255., 0.;
+            Hsv: 1./4., 1., 1.
+        );
+        test_case!(
+            Rgb: 0., 255., 0.;
+            Hsv: 1./3., 1., 1.
+        );
+        test_case!(
+            Rgb: 0., 255., 255.;
+            Hsv: 1./2., 1., 1.
+        );
+        test_case!(
+            Rgb: 0., 0., 255.;
+            Hsv: 2./3., 1., 1.
+        );
+        test_case!(
+            Rgb: 127.5, 0., 255.;
+            Hsv: 3./4., 1., 1.
+        );
+        test_case!(
+            Rgb: 255., 0., 255.;
+            Hsv: 5./6., 1., 1.
+        );
+        test_case!(
+            Rgb: 255., 0., 0.;
+            Hsv: 0., 1., 1.
+        );
     }
 }
