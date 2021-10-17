@@ -14,27 +14,9 @@ pub struct Rgb {
 impl Rgb {
     /// Takes in values in the range 0.0 ..= 1.0 and returns an RGB color.
     pub fn new(red: f32, green: f32, blue: f32) -> Self {
-        let red = if red.is_nan() {
-            0.
-        } else if red > 1. {
-            red / U8_MAX
-        } else {
-            red
-        };
-        let green = if green.is_nan() {
-            0.
-        } else if green > 1. {
-            green / U8_MAX
-        } else {
-            green
-        };
-        let blue = if blue.is_nan() {
-            0.
-        } else if blue > 1. {
-            blue / U8_MAX
-        } else {
-            blue
-        };
+        let red = if red.is_nan() { 0. } else { red };
+        let green = if green.is_nan() { 0. } else { green };
+        let blue = if blue.is_nan() { 0. } else { blue };
 
         Self {
             r: red,

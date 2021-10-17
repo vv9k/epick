@@ -13,27 +13,9 @@ pub struct Hsv {
 impl Hsv {
     /// Takes in values in the range of 0.0 ..= 1.0 and returns a HSV color.
     pub fn new(hue: f32, saturation: f32, value: f32) -> Self {
-        let hue = if hue.is_nan() {
-            0.
-        } else if hue > 1. {
-            hue / 360.
-        } else {
-            hue
-        };
-        let saturation = if saturation.is_nan() {
-            0.
-        } else if saturation > 1. {
-            saturation / 100.
-        } else {
-            saturation
-        };
-        let value = if value.is_nan() {
-            0.
-        } else if value > 1. {
-            value / 100.
-        } else {
-            value
-        };
+        let hue = if hue.is_nan() { 0. } else { hue };
+        let saturation = if saturation.is_nan() { 0. } else { saturation };
+        let value = if value.is_nan() { 0. } else { value };
         Self {
             h: hue,
             s: saturation,

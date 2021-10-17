@@ -20,6 +20,7 @@
 - Shades, tints and hues can now all be open at the same time
 - Add settings to change the reference white illuminant
 - The harmonies section is now on the top
+- Fix sliders behaviour in the 0.0 ..= 1.0 range
 
 # 0.4.0
 

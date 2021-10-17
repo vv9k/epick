@@ -88,7 +88,7 @@ impl ColorPicker {
             || (b - rgb.b_scaled()).abs() > f32::EPSILON
         {
             self.saved_sliders = None;
-            self.set_cur_color(Rgb::new(r, g, b));
+            self.set_cur_color(Rgb::new(r / U8_MAX, g / U8_MAX, b / U8_MAX));
             true
         } else {
             false
@@ -102,16 +102,16 @@ impl ColorPicker {
             || (self.sliders.y - cmyk.y_scaled()).abs() > f32::EPSILON
             || (self.sliders.k - cmyk.k_scaled()).abs() > f32::EPSILON
         {
-            if (self.sliders.k - 1.).abs() < f32::EPSILON {
+            if (self.sliders.k - 100.).abs() < f32::EPSILON {
                 self.save_sliders_if_unsaved();
-            } else if self.sliders.k < 1. {
+            } else if self.sliders.k < 100. {
                 self.restore_sliders_if_saved();
             }
             self.set_cur_color(Cmyk::new(
-                self.sliders.c,
-                self.sliders.m,
-                self.sliders.y,
-                self.sliders.k,
+                self.sliders.c / 100.,
+                self.sliders.m / 100.,
+                self.sliders.y / 100.,
+                self.sliders.k / 100.,
             ));
             true
         } else {
@@ -131,9 +131,9 @@ impl ColorPicker {
                 self.restore_sliders_if_saved();
             }
             self.set_cur_color(Hsva::new(
-                self.sliders.hue,
-                self.sliders.sat,
-                self.sliders.val,
+                self.sliders.hue / 360.,
+                self.sliders.sat / 100.,
+                self.sliders.val / 100.,
                 1.,
             ));
             true
@@ -149,9 +149,9 @@ impl ColorPicker {
             || (self.sliders.hsl_l - hsl.l_scaled()).abs() > f32::EPSILON
         {
             self.set_cur_color(Hsl::new(
-                self.sliders.hsl_h,
-                self.sliders.hsl_s,
-                self.sliders.hsl_l,
+                self.sliders.hsl_h / 360.,
+                self.sliders.hsl_s / 100.,
+                self.sliders.hsl_l / 100.,
             ));
             true
         } else {
@@ -277,13 +277,16 @@ impl ColorPicker {
     pub fn rgb_sliders(&mut self, ui: &mut Ui) {
         let opaque = self.current_color.rgb();
         ui.collapsing("RGB", |ui| {
-            slider!(self, ui, r, "red", U8_MIN..=U8_MAX, |r| {
+            slider!(self, ui, r, "red", U8_MIN..=U8_MAX, |mut r| {
+                r /= U8_MAX;
                 Rgb::new(r, opaque.g(), opaque.b()).into()
             });
-            slider!(self, ui, g, "green", U8_MIN..=U8_MAX, |g| {
+            slider!(self, ui, g, "green", U8_MIN..=U8_MAX, |mut g| {
+                g /= U8_MAX;
                 Rgb::new(opaque.r(), g, opaque.b()).into()
             });
-            slider!(self, ui, b, "blue", U8_MIN..=U8_MAX, |b| {
+            slider!(self, ui, b, "blue", U8_MIN..=U8_MAX, |mut b| {
+                b /= U8_MAX;
                 Rgb::new(opaque.r(), opaque.g(), b).into()
             });
         });
@@ -292,35 +295,38 @@ impl ColorPicker {
     pub fn cmyk_sliders(&mut self, ui: &mut Ui) {
         let opaque = self.current_color.cmyk();
         ui.collapsing("CMYK", |ui| {
-            slider!(self, ui, c, "cyan", 0. ..=100., |c| {
+            slider!(self, ui, c, "cyan", 0. ..=100., |mut c| {
+                c /= 100.;
                 Cmyk::new(c, opaque.m(), opaque.y(), opaque.k()).into()
             });
-            slider!(self, ui, m, "magenta", 0. ..=100., |m| {
+            slider!(self, ui, m, "magenta", 0. ..=100., |mut m| {
+                m /= 100.;
                 Cmyk::new(opaque.c(), m, opaque.y(), opaque.k()).into()
             });
-            slider!(self, ui, y, "yellow", 0. ..=100., |y| {
+            slider!(self, ui, y, "yellow", 0. ..=100., |mut y| {
+                y /= 100.;
                 Cmyk::new(opaque.c(), opaque.m(), y, opaque.k()).into()
             });
-            slider!(self, ui, k, "key", 0. ..=100., |k| Cmyk::new(
-                opaque.c(),
-                opaque.m(),
-                opaque.y(),
-                k
-            )
-            .into());
+            slider!(self, ui, k, "key", 0. ..=100., |mut k| {
+                k /= 100.;
+                Cmyk::new(opaque.c(), opaque.m(), opaque.y(), k).into()
+            });
         });
     }
 
     pub fn hsv_sliders(&mut self, ui: &mut Ui) {
         let opaque = self.current_color.hsv();
         ui.collapsing("HSV", |ui| {
-            slider!(self, ui, hue, "hue", 0. ..=360., |h| {
+            slider!(self, ui, hue, "hue", 0. ..=360., |mut h| {
+                h /= 360.;
                 Hsv::new(h, opaque.s(), opaque.v()).into()
             });
-            slider!(self, ui, sat, "saturation", 0. ..=100., |s| {
+            slider!(self, ui, sat, "saturation", 0. ..=100., |mut s| {
+                s /= 100.;
                 Hsv::new(opaque.h(), s, opaque.v()).into()
             });
-            slider!(self, ui, val, "value", 0. ..=100., |v| {
+            slider!(self, ui, val, "value", 0. ..=100., |mut v| {
+                v /= 100.;
                 Hsv::new(opaque.h(), opaque.s(), v).into()
             });
         });
@@ -329,13 +335,16 @@ impl ColorPicker {
     pub fn hsl_sliders(&mut self, ui: &mut Ui) {
         let opaque = self.current_color.hsl();
         ui.collapsing("HSL", |ui| {
-            slider!(self, ui, hsl_h, "hue", 0. ..=360., |h| {
+            slider!(self, ui, hsl_h, "hue", 0. ..=360., |mut h| {
+                h /= 360.;
                 Hsl::new(h, opaque.s(), opaque.l()).into()
             });
-            slider!(self, ui, hsl_s, "saturation", 0. ..=100., |s| {
+            slider!(self, ui, hsl_s, "saturation", 0. ..=100., |mut s| {
+                s /= 100.;
                 Hsl::new(opaque.h(), s, opaque.l()).into()
             });
-            slider!(self, ui, hsl_l, "light", 0. ..=100., |l| {
+            slider!(self, ui, hsl_l, "light", 0. ..=100., |mut l| {
+                l /= 100.;
                 Hsl::new(opaque.h(), opaque.s(), l).into()
             });
         });

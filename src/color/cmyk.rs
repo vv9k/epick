@@ -14,34 +14,10 @@ pub struct Cmyk {
 
 impl Cmyk {
     pub fn new(c: f32, m: f32, y: f32, k: f32) -> Self {
-        let c = if c.is_nan() {
-            0.
-        } else if c > 1. {
-            c / 100.
-        } else {
-            c
-        };
-        let m = if m.is_nan() {
-            0.
-        } else if m > 1. {
-            m / 100.
-        } else {
-            m
-        };
-        let y = if y.is_nan() {
-            0.
-        } else if y > 1. {
-            y / 100.
-        } else {
-            y
-        };
-        let k = if k.is_nan() {
-            0.
-        } else if k > 1. {
-            k / 100.
-        } else {
-            k
-        };
+        let c = if c.is_nan() { 0. } else { c };
+        let m = if m.is_nan() { 0. } else { m };
+        let y = if y.is_nan() { 0. } else { y };
+        let k = if k.is_nan() { 0. } else { k };
         Self { c, m, y, k }
     }
 

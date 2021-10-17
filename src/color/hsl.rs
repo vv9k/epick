@@ -13,27 +13,9 @@ pub struct Hsl {
 impl Hsl {
     /// Takes in values in the range 0.0 ..= 1.0 and returns an HSL color
     pub fn new(hue: f32, saturation: f32, light: f32) -> Self {
-        let hue = if hue.is_nan() {
-            0.
-        } else if hue > 1. {
-            hue / 360.
-        } else {
-            hue
-        };
-        let saturation = if saturation.is_nan() {
-            0.
-        } else if saturation > 1. {
-            saturation / 100.
-        } else {
-            saturation
-        };
-        let light = if light.is_nan() {
-            0.
-        } else if light > 1. {
-            light / 100.
-        } else {
-            light
-        };
+        let hue = if hue.is_nan() { 0. } else { hue };
+        let saturation = if saturation.is_nan() { 0. } else { saturation };
+        let light = if light.is_nan() { 0. } else { light };
         Self {
             h: hue,
             s: saturation,
