@@ -5,6 +5,7 @@ use crate::color::{
     CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, Rgb,
     RgbWorkingSpace, Xyz, U8_MAX, U8_MIN,
 };
+use crate::math;
 use sliders::ColorSliders;
 
 use egui::Ui;
@@ -83,9 +84,9 @@ impl ColorPicker {
         let r = self.sliders.r;
         let g = self.sliders.g;
         let b = self.sliders.b;
-        if (r - rgb.r_scaled()).abs() > f32::EPSILON
-            || (g - rgb.g_scaled()).abs() > f32::EPSILON
-            || (b - rgb.b_scaled()).abs() > f32::EPSILON
+        if !math::eq_f32(r, rgb.r_scaled())
+            || !math::eq_f32(g, rgb.g_scaled())
+            || !math::eq_f32(b, rgb.b_scaled())
         {
             self.saved_sliders = None;
             self.set_cur_color(Rgb::new(r / U8_MAX, g / U8_MAX, b / U8_MAX));
@@ -97,12 +98,12 @@ impl ColorPicker {
 
     fn cmyk_changed(&mut self) -> bool {
         let cmyk = Cmyk::from(self.current_color);
-        if (self.sliders.c - cmyk.c_scaled()).abs() > f32::EPSILON
-            || (self.sliders.m - cmyk.m_scaled()).abs() > f32::EPSILON
-            || (self.sliders.y - cmyk.y_scaled()).abs() > f32::EPSILON
-            || (self.sliders.k - cmyk.k_scaled()).abs() > f32::EPSILON
+        if !math::eq_f32(self.sliders.c, cmyk.c_scaled())
+            || !math::eq_f32(self.sliders.m, cmyk.y_scaled())
+            || !math::eq_f32(self.sliders.y, cmyk.m_scaled())
+            || !math::eq_f32(self.sliders.k, cmyk.k_scaled())
         {
-            if (self.sliders.k - 100.).abs() < f32::EPSILON {
+            if math::eq_f32(self.sliders.k, 100.) {
                 self.save_sliders_if_unsaved();
             } else if self.sliders.k < 100. {
                 self.restore_sliders_if_saved();
@@ -121,9 +122,9 @@ impl ColorPicker {
 
     fn hsv_changed(&mut self) -> bool {
         let hsv = Hsv::from(self.current_color);
-        if (self.sliders.hue - hsv.h_scaled()).abs() > f32::EPSILON
-            || (self.sliders.sat - hsv.s_scaled()).abs() > f32::EPSILON
-            || (self.sliders.val - hsv.v_scaled()).abs() > f32::EPSILON
+        if !math::eq_f32(self.sliders.hue, hsv.h_scaled())
+            || !math::eq_f32(self.sliders.sat, hsv.s_scaled())
+            || !math::eq_f32(self.sliders.val, hsv.v_scaled())
         {
             if self.sliders.val == 0. {
                 self.save_sliders_if_unsaved();
@@ -144,9 +145,9 @@ impl ColorPicker {
 
     fn hsl_changed(&mut self) -> bool {
         let hsl = Hsl::from(self.current_color);
-        if (self.sliders.hsl_h - hsl.h_scaled()).abs() > f32::EPSILON
-            || (self.sliders.hsl_s - hsl.s_scaled()).abs() > f32::EPSILON
-            || (self.sliders.hsl_l - hsl.l_scaled()).abs() > f32::EPSILON
+        if !math::eq_f32(self.sliders.hsl_h, hsl.h_scaled())
+            || !math::eq_f32(self.sliders.hsl_s, hsl.s_scaled())
+            || !math::eq_f32(self.sliders.hsl_l, hsl.l_scaled())
         {
             self.set_cur_color(Hsl::new(
                 self.sliders.hsl_h / 360.,
@@ -161,9 +162,9 @@ impl ColorPicker {
 
     fn luv_changed(&mut self) -> bool {
         let luv = Luv::from(self.current_color.xyz(self.sliders.rgb_working_space));
-        if (self.sliders.luv_l - luv.l()).abs() > f32::EPSILON
-            || (self.sliders.luv_u - luv.u()).abs() > f32::EPSILON
-            || (self.sliders.luv_v - luv.v()).abs() > f32::EPSILON
+        if !math::eq_f32(self.sliders.luv_l, luv.l())
+            || !math::eq_f32(self.sliders.luv_u, luv.u())
+            || !math::eq_f32(self.sliders.luv_v, luv.v())
         {
             self.set_cie_color(Xyz::from(Luv::new(
                 self.sliders.luv_l,
@@ -178,9 +179,9 @@ impl ColorPicker {
 
     fn lch_uv_changed(&mut self) -> bool {
         let lch = LchUV::from(self.current_color.xyz(self.sliders.rgb_working_space));
-        if (self.sliders.lch_uv_l - lch.l()).abs() > f32::EPSILON
-            || (self.sliders.lch_uv_c - lch.c()).abs() > f32::EPSILON
-            || (self.sliders.lch_uv_h - lch.h()).abs() > f32::EPSILON
+        if !math::eq_f32(self.sliders.lch_uv_l, lch.l())
+            || !math::eq_f32(self.sliders.lch_uv_c, lch.c())
+            || !math::eq_f32(self.sliders.lch_uv_h, lch.h())
         {
             self.set_cie_color(Xyz::from(LchUV::new(
                 self.sliders.lch_uv_l,
@@ -199,9 +200,9 @@ impl ColorPicker {
             self.sliders.illuminant,
             self.sliders.chromatic_adaptation_method,
         );
-        if (self.sliders.lab_l - lab.l()).abs() > f32::EPSILON
-            || (self.sliders.lab_a - lab.a()).abs() > f32::EPSILON
-            || (self.sliders.lab_b - lab.b()).abs() > f32::EPSILON
+        if !math::eq_f32(self.sliders.lab_l, lab.l())
+            || !math::eq_f32(self.sliders.lab_a, lab.a())
+            || !math::eq_f32(self.sliders.lab_b, lab.b())
         {
             let rgb = Lab::new(self.sliders.lab_l, self.sliders.lab_a, self.sliders.lab_b)
                 .to_xyz(self.sliders.illuminant)
@@ -219,9 +220,9 @@ impl ColorPicker {
             self.sliders.illuminant,
             self.sliders.chromatic_adaptation_method,
         );
-        if (self.sliders.lch_ab_l - lch.l()).abs() > f32::EPSILON
-            || (self.sliders.lch_ab_c - lch.c()).abs() > f32::EPSILON
-            || (self.sliders.lch_ab_h - lch.h()).abs() > f32::EPSILON
+        if !math::eq_f32(self.sliders.lch_ab_l, lch.l())
+            || !math::eq_f32(self.sliders.lch_ab_c, lch.c())
+            || !math::eq_f32(self.sliders.lch_ab_h, lch.h())
         {
             self.set_cie_color(
                 LchAB::new(

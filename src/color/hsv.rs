@@ -170,9 +170,9 @@ impl From<Rgb> for Hsv {
 
         let h = if delta == 0. {
             0.
-        } else if (max - r).abs() < f32::EPSILON {
+        } else if math::eq_f32(max, r) {
             (g - b) / (delta * 6.)
-        } else if (max - g).abs() < f32::EPSILON {
+        } else if math::eq_f32(max, g) {
             1. / 3. + (b - r) / (delta * 6.)
         } else {
             2. / 3. + (r - g) / (delta * 6.)

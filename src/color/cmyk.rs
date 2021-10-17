@@ -3,6 +3,7 @@ use egui::color::{Color32, Hsva, Rgba};
 use crate::color::hsv::Hsv;
 use crate::color::rgb::Rgb;
 use crate::color::{CIEColor, Color, Hsl, Xyz};
+use crate::math;
 
 #[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub struct Cmyk {
@@ -150,7 +151,7 @@ impl From<Rgb> for Cmyk {
         let rgb = [r, g, b];
         let k = 1. - rgb.iter().copied().fold(f32::NAN, f32::max);
 
-        if (k - 1.).abs() < f32::EPSILON {
+        if math::eq_f32(k, 1.) {
             return Cmyk::new(0., 0., 0., k);
         }
 
