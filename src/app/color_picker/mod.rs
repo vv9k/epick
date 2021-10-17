@@ -18,7 +18,7 @@ macro_rules! slider {
         $ui.horizontal(|mut ui| {
             let resp = slider_1d::color(&mut ui, &mut $it.sliders.$field, $range, $($tt)+).on_hover_text($label);
             if resp.changed() {
-                $it.check_color_change();
+                $it.check_for_change();
             }
             ui.add_space(7.);
             ui.label(format!("{}: ", $label));
@@ -238,7 +238,7 @@ impl ColorPicker {
         }
     }
 
-    pub fn check_color_change(&mut self) {
+    fn workspace_changed(&mut self) -> bool {
         if let Some(ws) = mem::take(&mut self.new_workspace) {
             self.sliders.rgb_working_space = ws;
             self.set_cur_color(Rgb::new(
@@ -246,9 +246,12 @@ impl ColorPicker {
                 self.sliders.g / U8_MAX,
                 self.sliders.b / U8_MAX,
             ));
-            return;
+            return true;
         }
+        false
+    }
 
+    fn illuminant_changed(&mut self) -> bool {
         if let Some(illuminant) = mem::take(&mut self.new_illuminant) {
             self.sliders.illuminant = illuminant;
             self.set_cur_color(Rgb::new(
@@ -256,31 +259,44 @@ impl ColorPicker {
                 self.sliders.g / U8_MAX,
                 self.sliders.b / U8_MAX,
             ));
-            return;
+            return true;
         }
+        false
+    }
 
+    fn color_changed(&mut self) -> bool {
         if self.rgb_changed() {
-            return;
+            return true;
         }
         if self.cmyk_changed() {
-            return;
+            return true;
         }
         if self.hsv_changed() {
-            return;
+            return true;
         }
         if self.hsl_changed() {
-            return;
+            return true;
         }
         if self.luv_changed() {
-            return;
+            return true;
         }
         if self.lch_uv_changed() {
-            return;
+            return true;
         }
         if self.lab_changed() {
+            return true;
+        }
+        self.lch_ab_changed()
+    }
+
+    pub fn check_for_change(&mut self) {
+        if self.workspace_changed() {
             return;
         }
-        self.lch_ab_changed();
+        if self.illuminant_changed() {
+            return;
+        }
+        self.color_changed();
     }
 
     pub fn rgb_sliders(&mut self, ui: &mut Ui) {

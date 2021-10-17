@@ -604,9 +604,9 @@ impl App {
 
         self.handle_display_picker(ui, tex_allocator);
 
-        self.picker.check_color_change();
-        ui.add_space(7.);
+        self.picker.check_for_change();
 
+        ui.add_space(7.);
         ScrollArea::auto_sized()
             .id_source("picker scroll")
             .show(ui, |ui| {
