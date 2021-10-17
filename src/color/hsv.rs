@@ -1,6 +1,7 @@
 #![allow(clippy::many_single_char_names)]
 use crate::color::rgb::Rgb;
 use crate::color::{CIEColor, Cmyk, Color, Hsl, Xyz};
+use crate::math;
 use egui::color::{Color32, Hsva, Rgba};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -57,11 +58,11 @@ impl Hsv {
     }
 
     pub fn offset_hue(&mut self, offset: f32) {
-        self.h = (self.h + offset) % 360.;
+        self.h = math::wrap_f32(self.h + offset);
     }
 
     pub fn offset_saturation(&mut self, offset: f32) {
-        self.s = (self.s + offset) % 100.;
+        self.s = math::wrap_f32(self.s + offset);
     }
 }
 
@@ -177,7 +178,7 @@ impl From<Rgb> for Hsv {
             2. / 3. + (r - g) / (delta * 6.)
         };
 
-        let h = if h < 0. { (h + 1.).fract() } else { h }; // wrap
+        let h = if h < 0. { math::wrap_f32(h) } else { h }; // wrap
 
         let v = max;
         let s = if v == 0. { 0. } else { 1. - min / max };
