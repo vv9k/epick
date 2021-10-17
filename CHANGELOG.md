@@ -1,3 +1,6 @@
+# 0.5.1
+- Fix switching between working spaces and illuminants
+
 # 0.5.0
 - Add ability to spawn a window that will follow the cursor and display a zoomed in image with a pointer to a pixel (Only X11 and Windows)
 - Make RGB and CMYK sliders adjust color when values change

@@ -240,13 +240,21 @@ impl ColorPicker {
     pub fn check_color_change(&mut self) {
         if let Some(ws) = mem::take(&mut self.new_workspace) {
             self.sliders.rgb_working_space = ws;
-            self.set_cur_color(Rgb::new(self.sliders.r, self.sliders.g, self.sliders.b));
+            self.set_cur_color(Rgb::new(
+                self.sliders.r / U8_MAX,
+                self.sliders.g / U8_MAX,
+                self.sliders.b / U8_MAX,
+            ));
             return;
         }
 
         if let Some(illuminant) = mem::take(&mut self.new_illuminant) {
             self.sliders.illuminant = illuminant;
-            self.set_cur_color(Rgb::new(self.sliders.r, self.sliders.g, self.sliders.b));
+            self.set_cur_color(Rgb::new(
+                self.sliders.r / U8_MAX,
+                self.sliders.g / U8_MAX,
+                self.sliders.b / U8_MAX,
+            ));
             return;
         }
 
