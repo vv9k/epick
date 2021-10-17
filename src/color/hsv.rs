@@ -201,15 +201,15 @@ mod tests {
         }
 
         test_case!(Rgb: 0., 0., 0.; Hsv: 0., 0., 0.);
-        test_case!(Rgb: 255., 0., 0.; Hsv: 0., 1., 1.);
-        test_case!(Rgb: 255., 255., 0.; Hsv: 1./6., 1., 1.);
-        test_case!(Rgb: 127.5, 255., 0.; Hsv: 1./4., 1., 1.);
-        test_case!(Rgb: 0., 255., 0.; Hsv: 1./3., 1., 1.);
-        test_case!(Rgb: 0., 255., 255.; Hsv: 1./2., 1., 1.);
-        test_case!(Rgb: 0., 0., 255.; Hsv: 2./3., 1., 1.);
-        test_case!(Rgb: 127.5, 0., 255.; Hsv: 3./4., 1., 1.);
-        test_case!(Rgb: 255., 0., 255.; Hsv: 5./6., 1., 1.);
-        test_case!(Rgb: 255., 0., 0.; Hsv: 0., 1., 1.);
+        test_case!(Rgb: 1., 0., 0.; Hsv: 0., 1., 1.);
+        test_case!(Rgb: 1., 1., 0.; Hsv: 1./6., 1., 1.);
+        test_case!(Rgb: 0.5, 1., 0.; Hsv: 1./4., 1., 1.);
+        test_case!(Rgb: 0., 1., 0.; Hsv: 1./3., 1., 1.);
+        test_case!(Rgb: 0., 1., 1.; Hsv: 1./2., 1., 1.);
+        test_case!(Rgb: 0., 0., 1.; Hsv: 2./3., 1., 1.);
+        test_case!(Rgb: 0.5, 0., 1.; Hsv: 3./4., 1., 1.);
+        test_case!(Rgb: 1., 0., 1.; Hsv: 5./6., 1., 1.);
+        test_case!(Rgb: 1., 0., 0.; Hsv: 0., 1., 1.);
     }
     #[test]
     fn hsl_to_hsv() {
