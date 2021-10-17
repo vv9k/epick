@@ -28,6 +28,7 @@ pub use xyy::xyY;
 pub use xyz::Xyz;
 
 use egui::color::{Color32, Hsva, HsvaGamma, Rgba};
+use serde::{Deserialize, Serialize};
 
 pub const CIE_E: f32 = 216. / 24389.;
 pub const CIE_K: f32 = 24389. / 27.;
@@ -103,7 +104,7 @@ impl AsRef<str> for ColorHarmony {
 
 //################################################################################
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub enum DisplayFormat {
     Hex,
     HexUpercase,

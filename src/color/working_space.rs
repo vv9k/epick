@@ -2,7 +2,9 @@
 use crate::color::{illuminant::Illuminant, xyY, Rgb};
 use crate::math::{Matrix1x3, Matrix3};
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Serialize)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum RgbWorkingSpace {
     Adobe,
@@ -183,7 +185,7 @@ impl AsRef<str> for RgbWorkingSpace {
 
 //####################################################################################################
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Serialize)]
 pub enum ChromaticAdaptationMethod {
     Bradford,
     VonKries,

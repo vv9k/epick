@@ -1,6 +1,8 @@
 use crate::color::{ChromaticAdaptationMethod, DisplayFormat, Illuminant, RgbWorkingSpace};
 
-#[derive(Debug)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Deserialize, Serialize)]
 pub struct ColorSpaceSettings {
     pub rgb: bool,
     pub cmyk: bool,
@@ -27,7 +29,7 @@ impl Default for ColorSpaceSettings {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct Settings {
     pub color_display_format: DisplayFormat,
     pub color_spaces: ColorSpaceSettings,
