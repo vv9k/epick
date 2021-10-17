@@ -4,6 +4,7 @@ mod render;
 mod saved_colors;
 mod scheme;
 mod screen_size;
+mod settings;
 mod ui;
 
 use crate::app::ui::windows::{
@@ -200,17 +201,18 @@ impl App {
     }
 
     fn check_settings_change(&mut self) {
-        if self.settings_window.chromatic_adaptation_method
+        if self.settings_window.settings.chromatic_adaptation_method
             != self.picker.sliders.chromatic_adaptation_method
         {
             self.picker.sliders.chromatic_adaptation_method =
-                self.settings_window.chromatic_adaptation_method;
+                self.settings_window.settings.chromatic_adaptation_method;
         }
-        if self.settings_window.rgb_working_space != self.picker.sliders.rgb_working_space {
-            self.picker.new_workspace = Some(self.settings_window.rgb_working_space);
+        if self.settings_window.settings.rgb_working_space != self.picker.sliders.rgb_working_space
+        {
+            self.picker.new_workspace = Some(self.settings_window.settings.rgb_working_space);
         }
-        if self.settings_window.illuminant != self.picker.sliders.illuminant {
-            self.picker.new_illuminant = Some(self.settings_window.illuminant);
+        if self.settings_window.settings.illuminant != self.picker.sliders.illuminant {
+            self.picker.new_illuminant = Some(self.settings_window.settings.illuminant);
         }
     }
 
@@ -259,11 +261,16 @@ impl App {
     }
 
     fn display_color(&self, color: &Color) -> String {
-        color.display_padded(self.settings_window.color_display_format)
+        color.display_padded(self.settings_window.settings.color_display_format)
     }
 
     fn clipboard_color(&self, color: &Color) -> String {
-        color.display(self.settings_window.color_display_format.no_degree())
+        color.display(
+            self.settings_window
+                .settings
+                .color_display_format
+                .no_degree(),
+        )
     }
 
     fn color_box_label_under(
@@ -318,7 +325,7 @@ impl App {
             size,
             Some(&color_tooltip(
                 color,
-                self.settings_window.color_display_format,
+                self.settings_window.settings.color_display_format,
             )),
         );
         if let Some(color_box) = color_box {
@@ -622,28 +629,28 @@ impl App {
 
     fn sliders(&mut self, ui: &mut Ui) {
         ui.vertical(|ui| {
-            if self.settings_window.color_spaces.rgb {
+            if self.settings_window.settings.color_spaces.rgb {
                 self.picker.rgb_sliders(ui);
             }
-            if self.settings_window.color_spaces.cmyk {
+            if self.settings_window.settings.color_spaces.cmyk {
                 self.picker.cmyk_sliders(ui);
             }
-            if self.settings_window.color_spaces.hsv {
+            if self.settings_window.settings.color_spaces.hsv {
                 self.picker.hsv_sliders(ui);
             }
-            if self.settings_window.color_spaces.hsl {
+            if self.settings_window.settings.color_spaces.hsl {
                 self.picker.hsl_sliders(ui);
             }
-            if self.settings_window.color_spaces.luv {
+            if self.settings_window.settings.color_spaces.luv {
                 self.picker.luv_sliders(ui);
             }
-            if self.settings_window.color_spaces.lch_uv {
+            if self.settings_window.settings.color_spaces.lch_uv {
                 self.picker.lch_uv_sliders(ui);
             }
-            if self.settings_window.color_spaces.lab {
+            if self.settings_window.settings.color_spaces.lab {
                 self.picker.lab_sliders(ui);
             }
-            if self.settings_window.color_spaces.lch_ab {
+            if self.settings_window.settings.color_spaces.lch_ab {
                 self.picker.lch_ab_sliders(ui);
             }
         });
