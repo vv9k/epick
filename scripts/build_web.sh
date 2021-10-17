@@ -26,6 +26,8 @@ WASM_FLAGS="--out-dir ${OUT_DIR} \
             --omit-imports"
 
 
+rustup target add $TARGET
+cargo install wasm-bindgen-cli
 
 # This is required to enable the web_sys clipboard API which egui_web uses
 # https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Clipboard.html
