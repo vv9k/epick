@@ -1,6 +1,7 @@
 #![allow(clippy::many_single_char_names)]
 use crate::color::hsv::Hsv;
 use crate::color::{CIEColor, Cmyk, Color, Hsl, Xyz, CIE_E, CIE_K, U8_MAX};
+use crate::math::Matrix1x3;
 use egui::color::{Hsva, HsvaGamma};
 use egui::{Color32, Rgba};
 
@@ -240,6 +241,22 @@ impl From<Hsv> for Rgb {
             5 => Rgb::new(v,  p,  q ),
             _ => Rgb::new(0., 0., 0.),
         }
+    }
+}
+
+impl From<Matrix1x3> for Rgb {
+    fn from(mx: Matrix1x3) -> Self {
+        Self {
+            r: mx[0],
+            g: mx[1],
+            b: mx[2],
+        }
+    }
+}
+
+impl From<Rgb> for Matrix1x3 {
+    fn from(color: Rgb) -> Self {
+        [color.r, color.g, color.b].into()
     }
 }
 

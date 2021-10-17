@@ -86,34 +86,13 @@ impl Xyz {
 
 impl CIEColor for Xyz {
     fn to_rgb(self, working_space: RgbWorkingSpace) -> Rgb {
-        let space_matrix = working_space.inverse_rgb_matrix();
-
-        let r =
-            self.x * space_matrix[0][0] + self.y * space_matrix[0][1] + self.z * space_matrix[0][2];
-        let g =
-            self.x * space_matrix[1][0] + self.y * space_matrix[1][1] + self.z * space_matrix[1][2];
-        let b =
-            self.x * space_matrix[2][0] + self.y * space_matrix[2][1] + self.z * space_matrix[2][2];
-
-        let rgb = Rgb::new(r, g, b);
+        let rgb = Rgb::from(working_space.inverse_rgb_matrix() * Matrix1x3::from(self));
         working_space.compand_channels(rgb)
     }
 
-    #[allow(clippy::many_single_char_names)]
     fn from_rgb(rgb: Rgb, working_space: RgbWorkingSpace) -> Self {
-        let space_matrix = working_space.rgb_matrix().0;
-
-        let rgb = working_space.inverse_compand_channels(rgb);
-
-        let r = rgb.r();
-        let g = rgb.g();
-        let b = rgb.b();
-
-        let x = r * space_matrix[0][0] + g * space_matrix[0][1] + b * space_matrix[0][2];
-        let y = r * space_matrix[1][0] + g * space_matrix[1][1] + b * space_matrix[1][2];
-        let z = r * space_matrix[2][0] + g * space_matrix[2][1] + b * space_matrix[2][2];
-
-        Self { x, y, z }
+        let rgb: Matrix1x3 = working_space.inverse_compand_channels(rgb).into();
+        (working_space.rgb_matrix() * rgb).into()
     }
 }
 
