@@ -99,8 +99,8 @@ impl ColorPicker {
     fn cmyk_changed(&mut self) -> bool {
         let cmyk = Cmyk::from(self.current_color);
         if !math::eq_f32(self.sliders.c, cmyk.c_scaled())
-            || !math::eq_f32(self.sliders.m, cmyk.y_scaled())
-            || !math::eq_f32(self.sliders.y, cmyk.m_scaled())
+            || !math::eq_f32(self.sliders.m, cmyk.m_scaled())
+            || !math::eq_f32(self.sliders.y, cmyk.y_scaled())
             || !math::eq_f32(self.sliders.k, cmyk.k_scaled())
         {
             if math::eq_f32(self.sliders.k, 100.) {
