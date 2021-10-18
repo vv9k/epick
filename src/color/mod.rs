@@ -106,9 +106,13 @@ impl AsRef<str> for ColorHarmony {
 
 #[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub enum DisplayFormat {
+    #[serde(rename = "hex")]
     Hex,
+    #[serde(rename = "hex-uppercase")]
     HexUpercase,
+    #[serde(rename = "css-rgb")]
     CssRgb,
+    #[serde(rename = "css-hsl")]
     CssHsl { degree_symbol: bool },
 }
 

@@ -1,16 +1,47 @@
 use crate::color::{ChromaticAdaptationMethod, DisplayFormat, Illuminant, RgbWorkingSpace};
 
+use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::Path;
 
-#[derive(Debug, Deserialize, Serialize)]
+fn enabled() -> bool {
+    true
+}
+
+fn is_false(it: &bool) -> bool {
+    !*it
+}
+
+fn is_true(it: &bool) -> bool {
+    *it
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct ColorSpaceSettings {
+    #[serde(default = "enabled")]
+    #[serde(skip_serializing_if = "is_true")]
     pub rgb: bool,
+    #[serde(default = "enabled")]
+    #[serde(skip_serializing_if = "is_true")]
     pub cmyk: bool,
+    #[serde(default = "enabled")]
+    #[serde(skip_serializing_if = "is_true")]
     pub hsv: bool,
+    #[serde(default = "enabled")]
+    #[serde(skip_serializing_if = "is_true")]
     pub hsl: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
     pub luv: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
     pub lch_uv: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
     pub lab: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
     pub lch_ab: bool,
 }
 
@@ -48,5 +79,74 @@ impl Default for Settings {
             chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
             illuminant: ws.reference_illuminant(),
         }
+    }
+}
+
+impl Settings {
+    /// Loads the settings from the configuration file located at `path`. The configuration file is
+    /// expected to be a valid YAML file.
+    pub fn load(path: impl AsRef<Path>) -> Result<Self> {
+        let data = fs::read(path).context("failed to read configuration file")?;
+        serde_yaml::from_slice(&data).context("failed to deserialize configuration")
+    }
+
+    /// Saves this settings as YAML file in the provided `path`.
+    pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
+        let data = serde_yaml::to_vec(&self).context("failed to serialize settings")?;
+        fs::write(path, &data).context("failed to write settings to file")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::app::settings::Settings;
+    use crate::color::{ChromaticAdaptationMethod, DisplayFormat, Illuminant, RgbWorkingSpace};
+    use std::fs;
+
+    #[test]
+    fn loads_settings() {
+        let tmp = tempdir::TempDir::new("settings-test").unwrap();
+        let settings_str = r#"---
+color_display_format:
+  css-hsl:
+    degree_symbol: true
+color_spaces:
+  hsv: false
+  luv: true
+  lab: true
+rgb_working_space: Adobe
+chromatic_adaptation_method: VonKries
+illuminant: D50
+"#;
+        let path = tmp.path().join("settings.yaml");
+        fs::write(&path, settings_str).unwrap();
+
+        let settings = Settings::load(&path).unwrap();
+        assert_eq!(settings.illuminant, Illuminant::D50);
+        assert_eq!(settings.rgb_working_space, RgbWorkingSpace::Adobe);
+        assert_eq!(
+            settings.color_display_format,
+            DisplayFormat::CssHsl {
+                degree_symbol: true
+            }
+        );
+        assert_eq!(
+            settings.chromatic_adaptation_method,
+            ChromaticAdaptationMethod::VonKries
+        );
+
+        assert!(settings.color_spaces.rgb);
+        assert!(settings.color_spaces.cmyk);
+        assert!(settings.color_spaces.hsl);
+        assert!(settings.color_spaces.luv);
+        assert!(settings.color_spaces.lab);
+        assert!(!settings.color_spaces.hsv);
+        assert!(!settings.color_spaces.lch_uv);
+        assert!(!settings.color_spaces.lch_ab);
+
+        let path = tmp.path().join("new_settings.yaml");
+        settings.save(&path).unwrap();
+
+        assert_eq!(fs::read_to_string(&path).unwrap(), settings_str);
     }
 }
