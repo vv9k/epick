@@ -2,6 +2,8 @@
 - Add support for persistent configuration. A configuration file with a YAML syntax will be loaded on startup from appropriate config directory depending on OS.
   Supported options are the same as in settings window. The settings window now contains a `save settings` button.
 - Persist colors throughout launches. On exit all current colors will be saved to a cache file and loaded back on startup.
+- Add option to disable color caching
+- Add keyboard shortcuts to display zoomed window, pick and save the color under the cursor
 
 # 0.5.1
 - Fix switching between working spaces and illuminants
