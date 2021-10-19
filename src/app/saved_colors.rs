@@ -1,6 +1,11 @@
 use crate::color::Color;
 
-#[derive(Default, Debug)]
+use anyhow::{Context, Result};
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::{Path, PathBuf};
+
+#[derive(Default, Debug, Deserialize, Serialize)]
 pub struct SavedColors(Vec<(String, Color)>);
 
 impl SavedColors {
@@ -43,6 +48,10 @@ impl SavedColors {
         self.0.swap(a, b);
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
     pub fn as_gimp_palette(&self, name: &str) -> String {
         let mut gpl = format!("GIMP Palette\nName: {}.gpl\nColumns: 1\n#\n", name);
         for (i, (_, color)) in self.0.iter().enumerate() {
@@ -65,6 +74,37 @@ impl SavedColors {
             s.push('\n');
             s
         })
+    }
+
+    /// Loads the saved colors from the specified file located at `path`. The file is expected to
+    /// be a valid YAML file.
+    pub fn load(path: impl AsRef<Path>) -> Result<Self> {
+        let data = fs::read(path).context("failed to read saved colors file")?;
+        serde_yaml::from_slice(&data).context("failed to deserialize saved colors file")
+    }
+
+    /// Saves this colors as YAML file in the provided `path`.
+    pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
+        let data = serde_yaml::to_vec(&self).context("failed to serialize saved colors")?;
+        fs::write(path, &data).context("failed to write saved colors to a file")
+    }
+
+    /// Returns system directory where saved colors should be placed joined by the `name` parameter.
+    pub fn dir(name: impl AsRef<str>) -> Option<PathBuf> {
+        let name = name.as_ref();
+        if let Some(dir) = dirs::cache_dir() {
+            return Some(dir.join(name));
+        }
+
+        if let Some(dir) = dirs::config_dir() {
+            return Some(dir.join(name));
+        }
+
+        if let Some(dir) = dirs::home_dir() {
+            return Some(dir.join(name));
+        }
+
+        None
     }
 }
 

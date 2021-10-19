@@ -22,6 +22,7 @@ use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light
 use egui::{color::Color32, vec2, Button, Layout, Rgba, Ui};
 use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
+use std::fs;
 use std::rc::Rc;
 
 #[cfg(target_os = "linux")]
@@ -126,6 +127,7 @@ impl epi::App for App {
     }
 
     fn setup(&mut self, ctx: &egui::CtxRef, _: &mut epi::Frame<'_>, _: Option<&dyn epi::Storage>) {
+        self.load_colors();
         self.load_settings();
 
         let mut fonts = egui::FontDefinitions::default();
@@ -147,6 +149,10 @@ impl epi::App for App {
         );
         ctx.set_fonts(fonts);
         ctx.set_visuals(dark_visuals());
+    }
+
+    fn on_exit(&mut self) {
+        self.save_colors();
     }
 
     fn name(&self) -> &str {
@@ -187,6 +193,38 @@ impl Default for App {
 }
 
 impl App {
+    #[cfg(target_arch = "wasm32")]
+    fn load_colors(&mut self) {}
+
+    #[cfg(target_arch = "wasm32")]
+    fn load_settings(&mut self) {}
+
+    #[cfg(target_arch = "wasm32")]
+    fn save_colors(&mut self) {}
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn load_colors(&mut self) {
+        if let Some(dir) = SavedColors::dir("epick") {
+            if let Ok(colors) = SavedColors::load(dir.join("colors.yaml")) {
+                self.saved_colors = colors;
+                if !self.saved_colors.is_empty() {
+                    self.show_side_panel = true;
+                }
+            }
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn save_colors(&self) {
+        if let Some(dir) = SavedColors::dir("epick") {
+            if !dir.exists() {
+                let _ = fs::create_dir_all(&dir);
+            }
+            let _ = self.saved_colors.save(dir.join("colors.yaml"));
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     fn load_settings(&mut self) {
         if let Some(config_dir) = Settings::dir("epick") {
             let path = config_dir.join("config.yaml");
