@@ -215,6 +215,8 @@ impl SettingsWindow {
                     ui.checkbox(&mut self.settings.color_spaces.lab, "Lab");
                     ui.checkbox(&mut self.settings.color_spaces.lch_ab, "LCH(ab)");
                 });
+
+                #[cfg(not(target_arch = "wasm32"))]
                 if ui.button("Save settings").clicked() {
                     if let Some(dir) = Settings::dir("epick") {
                         if !dir.exists() {
