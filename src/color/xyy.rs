@@ -1,7 +1,9 @@
 use crate::color::Xyz;
 
+use serde::{Deserialize, Serialize};
+
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub struct xyY {
     x: f32,
     y: f32,

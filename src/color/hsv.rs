@@ -3,8 +3,9 @@ use crate::color::rgb::Rgb;
 use crate::color::{CIEColor, Cmyk, Color, Hsl, Xyz};
 use crate::math;
 use egui::color::{Color32, Hsva, Rgba};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Hsv {
     h: f32,
     s: f32,

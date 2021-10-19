@@ -5,7 +5,9 @@ use crate::color::xyy::xyY;
 use crate::color::{working_space::RgbWorkingSpace, CIEColor, LchUV, Luv, CIE_E, CIE_K};
 use crate::math::{Matrix1x3, Matrix3};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Xyz {
     x: f32,
     y: f32,

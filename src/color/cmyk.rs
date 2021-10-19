@@ -4,8 +4,9 @@ use crate::color::hsv::Hsv;
 use crate::color::rgb::Rgb;
 use crate::color::{CIEColor, Color, Hsl, Xyz};
 use crate::math;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Default, Debug, PartialEq)]
+#[derive(Clone, Copy, Default, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Cmyk {
     c: f32,
     m: f32,

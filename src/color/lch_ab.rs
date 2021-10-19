@@ -1,6 +1,8 @@
 use crate::color::{Illuminant, Lab, Xyz};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub struct LchAB {
     l: f32,
     c: f32,

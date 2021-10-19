@@ -1,6 +1,8 @@
 use crate::color::{Luv, Xyz};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub struct LchUV {
     l: f32,
     c: f32,

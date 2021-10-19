@@ -2,7 +2,9 @@ use crate::color::illuminant::Illuminant;
 use crate::color::lch_ab::LchAB;
 use crate::color::{Xyz, CIE_E, CIE_K};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Lab {
     l: f32,
     a: f32,

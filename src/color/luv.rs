@@ -1,7 +1,9 @@
 use crate::color::illuminant::Illuminant;
 use crate::color::{LchUV, Xyz, CIE_E, CIE_K};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Luv {
     l: f32,
     u: f32,

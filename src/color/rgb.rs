@@ -4,8 +4,9 @@ use crate::color::{CIEColor, Cmyk, Color, Hsl, Xyz, CIE_E, CIE_K, U8_MAX};
 use crate::math::Matrix1x3;
 use egui::color::{Hsva, HsvaGamma};
 use egui::{Color32, Rgba};
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub struct Rgb {
     r: f32,
     g: f32,

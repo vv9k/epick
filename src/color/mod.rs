@@ -149,7 +149,7 @@ pub trait CIEColor {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
 pub enum Color {
     Rgb(Rgb),
     Cmyk(Cmyk),
