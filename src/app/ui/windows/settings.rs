@@ -1,19 +1,48 @@
 use crate::app::settings::Settings;
 use crate::color::{ChromaticAdaptationMethod, DisplayFormat, Illuminant, RgbWorkingSpace};
 
-use egui::{ComboBox, Window};
+use egui::{Color32, ComboBox, Window};
+use std::fmt::Display;
+use std::fs;
 
 #[derive(Debug, Default)]
 pub struct SettingsWindow {
     pub show: bool,
+    pub error: Option<String>,
+    pub message: Option<String>,
     pub settings: Settings,
 }
 
 impl SettingsWindow {
+    fn set_error(&mut self, error: impl Display) {
+        self.clear_message();
+        self.error = Some(error.to_string());
+    }
+
+    fn clear_error(&mut self) {
+        self.error = None;
+    }
+
+    fn set_message(&mut self, message: impl Display) {
+        self.clear_error();
+        self.message = Some(message.to_string());
+    }
+
+    fn clear_message(&mut self) {
+        self.message = None;
+    }
+
     pub fn display(&mut self, ctx: &egui::CtxRef) {
         if self.show {
             let mut show = true;
             Window::new("settings").open(&mut show).show(ctx, |ui| {
+                if let Some(err) = &self.error {
+                    ui.colored_label(Color32::RED, err);
+                }
+                if let Some(msg) = &self.message {
+                    ui.colored_label(Color32::GREEN, msg);
+                }
+
                 ComboBox::from_label("Color display format")
                     .selected_text(self.settings.color_display_format.as_ref())
                     .show_ui(ui, |ui| {
@@ -186,10 +215,30 @@ impl SettingsWindow {
                     ui.checkbox(&mut self.settings.color_spaces.lab, "Lab");
                     ui.checkbox(&mut self.settings.color_spaces.lch_ab, "LCH(ab)");
                 });
+                if ui.button("Save settings").clicked() {
+                    if let Some(dir) = Settings::dir("epick") {
+                        if !dir.exists() {
+                            if let Err(e) = fs::create_dir_all(&dir) {
+                                self.set_error(e);
+                            }
+                        }
+                        let path = dir.join("config.yaml");
+                        if let Err(e) = self.settings.save(&path) {
+                            self.set_error(e);
+                        } else {
+                            self.set_message(format!(
+                                "Successfully saved settings to {}",
+                                path.display()
+                            ));
+                        }
+                    }
+                }
             });
 
             if !show {
                 self.show = false;
+                self.clear_error();
+                self.clear_message();
             }
         }
     }

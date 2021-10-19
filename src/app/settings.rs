@@ -3,7 +3,7 @@ use crate::color::{ChromaticAdaptationMethod, DisplayFormat, Illuminant, RgbWork
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 fn enabled() -> bool {
     true
@@ -94,6 +94,20 @@ impl Settings {
     pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
         let data = serde_yaml::to_vec(&self).context("failed to serialize settings")?;
         fs::write(path, &data).context("failed to write settings to file")
+    }
+
+    /// Returns system directory where configuration should be placed joined by the `name` parameter.
+    pub fn dir(name: impl AsRef<str>) -> Option<PathBuf> {
+        let name = name.as_ref();
+        if let Some(dir) = dirs::config_dir() {
+            return Some(dir.join(name));
+        }
+
+        if let Some(dir) = dirs::home_dir() {
+            return Some(dir.join(name));
+        }
+
+        None
     }
 }
 

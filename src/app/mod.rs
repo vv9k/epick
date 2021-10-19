@@ -27,6 +27,7 @@ use std::rc::Rc;
 #[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;
 
+use crate::app::settings::Settings;
 #[cfg(windows)]
 use crate::wm_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 
@@ -125,6 +126,8 @@ impl epi::App for App {
     }
 
     fn setup(&mut self, ctx: &egui::CtxRef, _: &mut epi::Frame<'_>, _: Option<&dyn epi::Storage>) {
+        self.load_settings();
+
         let mut fonts = egui::FontDefinitions::default();
         fonts.font_data.insert(
             "Firacode".to_string(),
@@ -184,6 +187,16 @@ impl Default for App {
 }
 
 impl App {
+    fn load_settings(&mut self) {
+        if let Some(config_dir) = Settings::dir("epick") {
+            let path = config_dir.join("config.yaml");
+
+            if let Ok(settings) = Settings::load(&path) {
+                self.settings_window.settings = settings;
+            }
+        }
+    }
+
     fn set_styles(&mut self, ctx: &egui::CtxRef, screen_size: ScreenSize) {
         self.screen_size = screen_size;
 
