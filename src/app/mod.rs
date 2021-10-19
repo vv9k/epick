@@ -127,8 +127,8 @@ impl epi::App for App {
     }
 
     fn setup(&mut self, ctx: &egui::CtxRef, _: &mut epi::Frame<'_>, _: Option<&dyn epi::Storage>) {
-        self.load_colors();
         self.load_settings();
+        self.load_colors();
 
         let mut fonts = egui::FontDefinitions::default();
         fonts.font_data.insert(
@@ -204,11 +204,13 @@ impl App {
 
     #[cfg(not(target_arch = "wasm32"))]
     fn load_colors(&mut self) {
-        if let Some(dir) = SavedColors::dir("epick") {
-            if let Ok(colors) = SavedColors::load(dir.join("colors.yaml")) {
-                self.saved_colors = colors;
-                if !self.saved_colors.is_empty() {
-                    self.show_side_panel = true;
+        if self.settings_window.settings.cache_colors {
+            if let Some(dir) = SavedColors::dir("epick") {
+                if let Ok(colors) = SavedColors::load(dir.join("colors.yaml")) {
+                    self.saved_colors = colors;
+                    if !self.saved_colors.is_empty() {
+                        self.show_side_panel = true;
+                    }
                 }
             }
         }
@@ -216,11 +218,13 @@ impl App {
 
     #[cfg(not(target_arch = "wasm32"))]
     fn save_colors(&self) {
-        if let Some(dir) = SavedColors::dir("epick") {
-            if !dir.exists() {
-                let _ = fs::create_dir_all(&dir);
+        if self.settings_window.settings.cache_colors {
+            if let Some(dir) = SavedColors::dir("epick") {
+                if !dir.exists() {
+                    let _ = fs::create_dir_all(&dir);
+                }
+                let _ = self.saved_colors.save(dir.join("colors.yaml"));
             }
-            let _ = self.saved_colors.save(dir.join("colors.yaml"));
         }
     }
 
@@ -714,6 +718,15 @@ impl App {
     ) {
         if let Some(picker) = self.display_picker.clone() {
             if let Ok(color) = picker.get_color_under_cursor() {
+                if ui.ctx().input().key_pressed(egui::Key::P) {
+                    self.picker.set_cur_color(color);
+                }
+                if ui.ctx().input().key_pressed(egui::Key::Z) {
+                    self.toggle_zoom_window(&picker);
+                }
+                if ui.ctx().input().key_pressed(egui::Key::S) {
+                    self.saved_colors.add(color);
+                }
                 ui.horizontal(|mut ui| {
                     ui.label("Color at cursor: ");
                     self.color_box_label_side(&color, vec2(25., 25.), &mut ui, tex_allocator);
@@ -726,27 +739,36 @@ impl App {
         };
     }
 
+    #[cfg(not(any(target_os = "linux", windows)))]
+    fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {}
+
+    #[cfg(target_os = "linux")]
+    fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
+        let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
+        if self.picker_window.is_none() {
+            if let Ok(window) = picker.spawn_window(
+                CURSOR_PICKER_WINDOW_NAME,
+                (cursor_pos.0 + ZOOM_WIN_OFFSET) as i16,
+                (cursor_pos.1 + ZOOM_WIN_OFFSET) as i16,
+                ZOOM_WIN_WIDTH,
+                ZOOM_WIN_HEIGHT,
+                picker.screen_num(),
+                crate::wm_picker::x11::WindowType::Dialog,
+            ) {
+                self.picker_window = Some(window);
+            }
+        } else {
+            // Close the window on second click
+            let _ = picker.destroy_window(self.picker_window.unwrap().0);
+            self.picker_window = None;
+        }
+    }
+
     #[cfg(target_os = "linux")]
     fn handle_zoom_picker(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
         let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
         if ui.button(ZOOM_PICKER_ICON).clicked() {
-            if self.picker_window.is_none() {
-                if let Ok(window) = picker.spawn_window(
-                    CURSOR_PICKER_WINDOW_NAME,
-                    (cursor_pos.0 + ZOOM_WIN_OFFSET) as i16,
-                    (cursor_pos.1 + ZOOM_WIN_OFFSET) as i16,
-                    ZOOM_WIN_WIDTH,
-                    ZOOM_WIN_HEIGHT,
-                    picker.screen_num(),
-                    crate::wm_picker::x11::WindowType::Dialog,
-                ) {
-                    self.picker_window = Some(window);
-                }
-            } else {
-                // Close the window on second click
-                let _ = picker.destroy_window(self.picker_window.unwrap().0);
-                self.picker_window = None;
-            }
+            self.toggle_zoom_window(&picker);
         } else if let Some((window, gc)) = self.picker_window {
             if let Ok(img) = picker.get_image(
                 picker.screen().root,
@@ -785,31 +807,37 @@ impl App {
     }
 
     #[cfg(windows)]
+    fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
+        let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
+        if self.picker_window.is_none() {
+            if let Ok(window) = picker.spawn_window(
+                "EPICK_DIALOG",
+                CURSOR_PICKER_WINDOW_NAME,
+                (cursor_pos.0 + ZOOM_WIN_OFFSET) as i32,
+                (cursor_pos.1 + ZOOM_WIN_OFFSET) as i32,
+                ZOOM_WIN_WIDTH as i32,
+                ZOOM_WIN_HEIGHT as i32,
+                WS_POPUP | WS_BORDER,
+            ) {
+                self.picker_window = Some(window);
+                if let Err(e) = picker.show_window(window, SW_SHOWDEFAULT) {
+                    self.error_message = Some(e.to_string());
+                }
+            }
+        } else {
+            // Close the window on second click
+            if let Err(e) = picker.destroy_window(self.picker_window.unwrap()) {
+                self.error_message = Some(e.to_string());
+            }
+            self.picker_window = None;
+        }
+    }
+
+    #[cfg(windows)]
     fn handle_zoom_picker(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
         let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
         if ui.button(ZOOM_PICKER_ICON).clicked() {
-            if self.picker_window.is_none() {
-                if let Ok(window) = picker.spawn_window(
-                    "EPICK_DIALOG",
-                    CURSOR_PICKER_WINDOW_NAME,
-                    (cursor_pos.0 + ZOOM_WIN_OFFSET) as i32,
-                    (cursor_pos.1 + ZOOM_WIN_OFFSET) as i32,
-                    ZOOM_WIN_WIDTH as i32,
-                    ZOOM_WIN_HEIGHT as i32,
-                    WS_POPUP | WS_BORDER,
-                ) {
-                    self.picker_window = Some(window);
-                    if let Err(e) = picker.show_window(window, SW_SHOWDEFAULT) {
-                        self.error_message = Some(e.to_string());
-                    }
-                }
-            } else {
-                // Close the window on second click
-                if let Err(e) = picker.destroy_window(self.picker_window.unwrap()) {
-                    self.error_message = Some(e.to_string());
-                }
-                self.picker_window = None;
-            }
+            self.toggle_zoom_window(&picker);
         } else if let Some(window) = self.picker_window {
             match picker.get_screenshot(
                 (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET) as i32,

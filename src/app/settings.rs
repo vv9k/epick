@@ -67,6 +67,9 @@ pub struct Settings {
     pub rgb_working_space: RgbWorkingSpace,
     pub chromatic_adaptation_method: ChromaticAdaptationMethod,
     pub illuminant: Illuminant,
+    #[serde(default = "enabled")]
+    #[serde(skip_serializing_if = "is_true")]
+    pub cache_colors: bool,
 }
 
 impl Default for Settings {
@@ -78,6 +81,7 @@ impl Default for Settings {
             rgb_working_space: ws,
             chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
             illuminant: ws.reference_illuminant(),
+            cache_colors: true,
         }
     }
 }
@@ -157,6 +161,7 @@ illuminant: D50
         assert!(!settings.color_spaces.hsv);
         assert!(!settings.color_spaces.lch_uv);
         assert!(!settings.color_spaces.lch_ab);
+        assert!(settings.cache_colors);
 
         let path = tmp.path().join("new_settings.yaml");
         settings.save(&path).unwrap();
