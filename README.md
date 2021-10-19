@@ -29,5 +29,13 @@ $ cargo build --release
 
 ![Demo GIF](https://github.com/vv9k/epick/blob/master/assets/epick.gif)
 
+## Keyboard shortcuts
+
+Here are some handy shortcuts to enhance the usage of **epick**:
+ - Only supported with screen picker:
+   - `z` to display zoomed window
+   - `p` to pick a color from under the cursor
+   - `s` to save a color from under the cursor
+
 ## License
 [GPLv3](https://github.com/vv9k/epick/blob/master/LICENSE)
