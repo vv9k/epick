@@ -739,6 +739,9 @@ impl App {
         };
     }
 
+    #[cfg(not(any(target_os = "linux", windows)))]
+    fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {}
+
     #[cfg(target_os = "linux")]
     fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
         let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
@@ -805,6 +808,7 @@ impl App {
 
     #[cfg(windows)]
     fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
+        let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
         if self.picker_window.is_none() {
             if let Ok(window) = picker.spawn_window(
                 "EPICK_DIALOG",

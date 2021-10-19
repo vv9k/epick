@@ -67,6 +67,8 @@ pub struct Settings {
     pub rgb_working_space: RgbWorkingSpace,
     pub chromatic_adaptation_method: ChromaticAdaptationMethod,
     pub illuminant: Illuminant,
+    #[serde(default = "enabled")]
+    #[serde(skip_serializing_if = "is_true")]
     pub cache_colors: bool,
 }
 
