@@ -228,7 +228,13 @@ impl Color {
     }
 
     pub fn from_hex(hex: &str) -> Option<Self> {
-        parse_hex(hex).map(|(r, g, b)| Color::Rgb(Rgb::new(r as f32, g as f32, b as f32)))
+        parse_hex(hex).map(|(r, g, b)| {
+            Color::Rgb(Rgb::new(
+                r as f32 / U8_MAX,
+                g as f32 / U8_MAX,
+                b as f32 / U8_MAX,
+            ))
+        })
     }
 
     pub fn as_hue_offset(&self, offset: f32) -> Color {
