@@ -77,12 +77,14 @@ pub fn contrast_color(color: impl Into<Rgba>) -> Color32 {
 
 //################################################################################
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
 pub enum ColorHarmony {
     Complementary,
     Triadic,
     Tetradic,
     Analogous,
+    #[serde(rename = "split-complementary")]
     SplitComplementary,
     Square,
     Monochromatic,
@@ -99,6 +101,12 @@ impl AsRef<str> for ColorHarmony {
             ColorHarmony::Square => "square",
             ColorHarmony::Monochromatic => "monochromatic",
         }
+    }
+}
+
+impl Default for ColorHarmony {
+    fn default() -> Self {
+        ColorHarmony::Analogous
     }
 }
 

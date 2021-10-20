@@ -137,6 +137,7 @@ impl epi::App for App {
     fn setup(&mut self, ctx: &egui::CtxRef, _: &mut epi::Frame<'_>, _: Option<&dyn epi::Storage>) {
         self.load_settings();
         self.load_colors();
+        self.apply_settings();
 
         let mut fonts = egui::FontDefinitions::default();
         fonts.font_data.insert(
@@ -209,6 +210,9 @@ impl App {
     fn load_settings(&mut self) {}
 
     #[cfg(target_arch = "wasm32")]
+    fn apply_settings(&mut self) {}
+
+    #[cfg(target_arch = "wasm32")]
     fn save_colors(&mut self) {}
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -245,6 +249,13 @@ impl App {
             if let Ok(settings) = Settings::load(&path) {
                 self.settings_window.settings = settings;
             }
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn apply_settings(&mut self) {
+        if self.settings_window.settings.color_harmony != self.picker.color_harmony {
+            self.picker.color_harmony = self.settings_window.settings.color_harmony;
         }
     }
 

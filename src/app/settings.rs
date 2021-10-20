@@ -1,4 +1,6 @@
-use crate::color::{ChromaticAdaptationMethod, DisplayFormat, Illuminant, RgbWorkingSpace};
+use crate::color::{
+    ChromaticAdaptationMethod, ColorHarmony, DisplayFormat, Illuminant, RgbWorkingSpace,
+};
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -15,6 +17,10 @@ fn is_false(it: &bool) -> bool {
 
 fn is_true(it: &bool) -> bool {
     *it
+}
+
+fn is_default_harmony(it: &ColorHarmony) -> bool {
+    *it == ColorHarmony::default()
 }
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -70,6 +76,9 @@ pub struct Settings {
     #[serde(default = "enabled")]
     #[serde(skip_serializing_if = "is_true")]
     pub cache_colors: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_default_harmony")]
+    pub color_harmony: ColorHarmony,
 }
 
 impl Default for Settings {
@@ -82,6 +91,7 @@ impl Default for Settings {
             chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
             illuminant: ws.reference_illuminant(),
             cache_colors: true,
+            color_harmony: ColorHarmony::default(),
         }
     }
 }
@@ -118,7 +128,9 @@ impl Settings {
 #[cfg(test)]
 mod tests {
     use crate::app::settings::Settings;
-    use crate::color::{ChromaticAdaptationMethod, DisplayFormat, Illuminant, RgbWorkingSpace};
+    use crate::color::{
+        ChromaticAdaptationMethod, ColorHarmony, DisplayFormat, Illuminant, RgbWorkingSpace,
+    };
     use std::fs;
 
     #[test]
@@ -152,6 +164,7 @@ illuminant: D50
             settings.chromatic_adaptation_method,
             ChromaticAdaptationMethod::VonKries
         );
+        assert_eq!(settings.color_harmony, ColorHarmony::default());
 
         assert!(settings.color_spaces.rgb);
         assert!(settings.color_spaces.cmyk);

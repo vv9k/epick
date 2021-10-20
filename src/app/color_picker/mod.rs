@@ -48,7 +48,7 @@ impl Default for ColorPicker {
             sliders: ColorSliders::default(),
             saved_sliders: None,
             scheme_color_size: 100.,
-            color_harmony: ColorHarmony::Complementary,
+            color_harmony: ColorHarmony::default(),
             new_workspace: None,
             new_illuminant: None,
         }
