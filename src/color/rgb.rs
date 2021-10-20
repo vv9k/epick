@@ -140,13 +140,22 @@ impl Rgb {
 
 impl From<Rgb> for Color32 {
     fn from(rgb: Rgb) -> Self {
-        egui::Rgba::from(rgb).into()
+        Color32::from_rgba_premultiplied(
+            rgb.r_scaled() as u8,
+            rgb.g_scaled() as u8,
+            rgb.b_scaled() as u8,
+            u8::MAX,
+        )
     }
 }
 
 impl From<Color32> for Rgb {
     fn from(color: Color32) -> Self {
-        Rgba::from(color).into()
+        Self::new(
+            color.r() as f32 / U8_MAX,
+            color.g() as f32 / U8_MAX,
+            color.b() as f32 / U8_MAX,
+        )
     }
 }
 
@@ -170,13 +179,13 @@ impl From<Rgb> for HsvaGamma {
 
 impl From<Rgba> for Rgb {
     fn from(rgb: Rgba) -> Self {
-        Rgb::new(rgb.r(), rgb.g(), rgb.b())
+        Color32::from(rgb).into()
     }
 }
 
 impl From<Rgb> for Rgba {
     fn from(rgb: Rgb) -> Self {
-        Rgba::from_rgb(rgb.r(), rgb.g(), rgb.b())
+        Color32::from(rgb).into()
     }
 }
 

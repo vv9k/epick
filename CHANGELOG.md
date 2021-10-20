@@ -4,6 +4,7 @@
 - Persist colors throughout launches. On exit all current colors will be saved to a cache file and loaded back on startup.
 - Add option to disable color caching
 - Add keyboard shortcuts to display zoomed window, pick and save the color under the cursor
+- Fix color rendering
 
 # 0.5.1
 - Fix switching between working spaces and illuminants
