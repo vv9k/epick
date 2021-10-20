@@ -1,5 +1,7 @@
 //! A module responsible for abstraction over a window manager
 
+#[cfg(target_os = "macos")]
+pub mod macos;
 #[cfg(windows)]
 pub mod windows;
 #[cfg(target_os = "linux")]
@@ -7,9 +9,12 @@ pub mod x11;
 
 #[cfg(windows)]
 pub use self::windows::DisplayPickerExt;
+#[cfg(target_os = "macos")]
+pub use macos::DisplayPickerExt;
 #[cfg(target_os = "linux")]
 pub use x11::DisplayPickerExt;
-#[cfg(not(any(target_os = "linux", windows)))]
+
+#[cfg(not(any(target_os = "linux", windows, target_os = "macos")))]
 pub trait DisplayPickerExt: DisplayPicker {}
 
 use crate::color::Color;
@@ -28,6 +33,8 @@ pub fn init_display_picker() -> Option<Rc<dyn DisplayPickerExt>> {
         .map(|conn| Rc::new(conn) as Rc<dyn DisplayPickerExt>);
     #[cfg(windows)]
     return Some(Rc::new(windows::WinConn::new()) as Rc<dyn DisplayPickerExt>);
-    #[cfg(all(not(windows), not(target_os = "linux")))]
+    #[cfg(target_os = "macos")]
+    return Some(Rc::new(macos::MacConn) as Rc<dyn DisplayPickerExt>);
+    #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
     return None;
 }
