@@ -13,4 +13,10 @@ fn main() {
             SHOW_WINDOW_CMD, WINDOW_EX_STYLE, WINDOW_STYLE, RegisterClassExW, ShowWindow, WNDCLASSEXW,
         }
     }
+
+    #[cfg(target_os = "macos")]
+    {
+        println!("cargo:rustc-link-lib=framework=Foundation");
+        println!("cargo:rustc-link-lib=framework=AppKit");
+    }
 }

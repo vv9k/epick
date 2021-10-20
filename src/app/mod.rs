@@ -740,7 +740,7 @@ impl App {
     }
 
     #[cfg(not(any(target_os = "linux", windows)))]
-    fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {}
+    fn toggle_zoom_window(&mut self, _: &Rc<dyn DisplayPickerExt>) {}
 
     #[cfg(target_os = "linux")]
     fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
