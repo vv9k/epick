@@ -1,4 +1,5 @@
 use crate::app::{App, ColorHarmony};
+use eframe::egui::TextStyle;
 use egui::{vec2, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
 
@@ -104,6 +105,7 @@ impl App {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
         CollapsingHeader::new("Harmonies")
+            .text_style(TextStyle::Heading)
             .default_open(true)
             .show(ui, |ui| {
                 let size = vec2(self.picker.scheme_color_size, self.picker.scheme_color_size);

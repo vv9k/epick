@@ -19,7 +19,7 @@ use saved_colors::SavedColors;
 use screen_size::ScreenSize;
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
-use egui::{color::Color32, vec2, Button, Layout, Rgba, Ui};
+use egui::{color::Color32, vec2, Button, CollapsingHeader, Layout, Rgba, TextStyle, Ui};
 use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
 use std::fs;
@@ -301,33 +301,36 @@ impl App {
     }
 
     fn hex_input(&mut self, ui: &mut Ui) {
-        ui.collapsing("Text input", |ui| {
-            ui.label("Enter a hex color: ");
-            ui.horizontal(|ui| {
-                let resp = ui.text_edit_singleline(&mut self.picker.hex_color);
-                if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
-                    || ui
-                        .button(PLAY_ICON)
-                        .on_hover_text("Use this color")
-                        .clicked()
-                {
-                    if self.picker.hex_color.len() < 6 {
-                        self.error_message =
-                            Some("Enter a color first (ex. ab12ff #1200ff)".to_owned());
-                    } else if let Some(color) =
-                        Color::from_hex(self.picker.hex_color.trim_start_matches('#'))
+        CollapsingHeader::new("Text input")
+            .text_style(TextStyle::Heading)
+            .show(ui, |ui| {
+                ui.label("Enter a hex color: ");
+                ui.horizontal(|ui| {
+                    let resp = ui.text_edit_singleline(&mut self.picker.hex_color);
+                    if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
+                        || ui
+                            .button(PLAY_ICON)
+                            .on_hover_text("Use this color")
+                            .clicked()
                     {
-                        self.picker.set_cur_color(color);
-                        self.error_message = None;
-                    } else {
-                        self.error_message = Some("The entered hex color is not valid".to_owned());
+                        if self.picker.hex_color.len() < 6 {
+                            self.error_message =
+                                Some("Enter a color first (ex. ab12ff #1200ff)".to_owned());
+                        } else if let Some(color) =
+                            Color::from_hex(self.picker.hex_color.trim_start_matches('#'))
+                        {
+                            self.picker.set_cur_color(color);
+                            self.error_message = None;
+                        } else {
+                            self.error_message =
+                                Some("The entered hex color is not valid".to_owned());
+                        }
                     }
-                }
-                if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
-                    self.add_cur_color()
-                }
+                    if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
+                        self.add_cur_color()
+                    }
+                });
             });
-        });
     }
 
     fn display_color(&self, color: &Color) -> String {
