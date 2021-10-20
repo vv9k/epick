@@ -36,6 +36,8 @@ Here are some handy shortcuts to enhance the usage of **epick**:
    - `z` to display zoomed window
    - `p` to pick a color from under the cursor
    - `s` to save a color from under the cursor
+ - Other:
+   - `h` toggle side panel
 
 ## License
 [GPLv3](https://github.com/vv9k/epick/blob/master/LICENSE)

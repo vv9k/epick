@@ -94,6 +94,8 @@ impl epi::App for App {
             self.set_styles(ctx, screen_size);
         }
 
+        self.check_keys_pressed(ctx);
+
         self.check_settings_change();
 
         self.top_panel(ctx);
@@ -268,6 +270,12 @@ impl App {
         }
         if self.settings_window.settings.illuminant != self.picker.sliders.illuminant {
             self.picker.new_illuminant = Some(self.settings_window.settings.illuminant);
+        }
+    }
+
+    fn check_keys_pressed(&mut self, ctx: &egui::CtxRef) {
+        if ctx.input().key_pressed(egui::Key::H) {
+            self.show_side_panel = !self.show_side_panel;
         }
     }
 
