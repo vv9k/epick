@@ -5,6 +5,8 @@ use crate::color::{
 
 use egui::{Color32, ComboBox, Ui, Window};
 use std::fmt::Display;
+
+#[cfg(not(target_arch = "wasm32"))]
 use std::fs;
 
 #[derive(Debug, Default)]

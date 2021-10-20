@@ -22,13 +22,14 @@ use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light
 use egui::{color::Color32, vec2, Button, CollapsingHeader, Layout, Rgba, TextStyle, Ui};
 use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
-use std::fs;
 use std::rc::Rc;
+
+#[cfg(not(target_arch = "wasm32"))]
+use {crate::app::settings::Settings, std::fs};
 
 #[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;
 
-use crate::app::settings::Settings;
 #[cfg(windows)]
 use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 
