@@ -5,6 +5,7 @@
 - Add option to disable color caching
 - Add keyboard shortcuts to display zoomed window, pick and save the color under the cursor
 - Fix color rendering
+- Add display picker on macOS
 
 # 0.5.1
 - Fix switching between working spaces and illuminants
