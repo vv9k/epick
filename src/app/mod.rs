@@ -801,11 +801,14 @@ impl App {
                     self.error_message = Some(e.to_string());
                     return;
                 };
+
+                // makes the position of the circle correct pixel wise when scaled up
+                let offset = if ZOOM_SCALE > 1. { ZOOM_SCALE / 2. } else { 0. } as i16;
                 if let Err(e) = picker.draw_circle(
                     window,
                     gc,
-                    ((ZOOM_WIN_WIDTH / 2) - ZOOM_WIN_POINTER_RADIUS) as i16,
-                    ((ZOOM_WIN_HEIGHT / 2) - ZOOM_WIN_POINTER_RADIUS) as i16,
+                    ((ZOOM_WIN_WIDTH / 2) - ZOOM_WIN_POINTER_RADIUS) as i16 + offset,
+                    ((ZOOM_WIN_HEIGHT / 2) - ZOOM_WIN_POINTER_RADIUS) as i16 + offset,
                     ZOOM_WIN_POINTER_DIAMETER,
                 ) {
                     self.error_message = Some(e.to_string());

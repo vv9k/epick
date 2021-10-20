@@ -8,6 +8,7 @@
 - Add display picker on macOS
 - Add shortcut to toggle side panel
 - Add a help window with keybindings
+- Fix circle of zoomed display picker on X11, the circle will now correctly point to a single pixel rather than four at a time.
 
 # 0.5.1
 - Fix switching between working spaces and illuminants
