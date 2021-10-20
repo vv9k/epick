@@ -32,17 +32,18 @@ use crate::app::settings::Settings;
 #[cfg(windows)]
 use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 
-static ADD_ICON: &str = "➕";
-static COPY_ICON: &str = "📋";
-static ZOOM_PICKER_ICON: &str = "💉";
-static SETTINGS_ICON: &str = "⚙";
-static EXPAND_ICON: &str = "↔";
-static EXPORT_ICON: &str = "🖹";
-static CLEAR_ICON: &str = "🗑";
-static DELETE_ICON: &str = "❌";
-static PLAY_ICON: &str = "▶";
-static DARK_MODE_ICON: &str = "🌙";
-static LIGHT_MODE_ICON: &str = "☀";
+static ADD_ICON: &str = "\u{2795}";
+static COPY_ICON: &str = "\u{1F3F7}";
+static ZOOM_PICKER_ICON: &str = "\u{1F489}";
+static SETTINGS_ICON: &str = "\u{2699}";
+static EXPAND_ICON: &str = "\u{2B0C}";
+static EXPORT_ICON: &str = "\u{1F5B9}";
+static CLEAR_ICON: &str = "\u{1F5D1}";
+static DELETE_ICON: &str = "\u{1F5D9}";
+static PLAY_ICON: &str = "\u{25B6}";
+static DARK_MODE_ICON: &str = "\u{1F319}";
+static LIGHT_MODE_ICON: &str = "\u{2600}";
+static HELP_ICON: &str = "\u{FF1F}";
 
 static ADD_DESCR: &str = "Add this color to saved colors";
 static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";
