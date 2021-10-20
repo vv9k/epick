@@ -7,6 +7,7 @@
 - Fix color rendering
 - Add display picker on macOS
 - Add shortcut to toggle side panel
+- Add a help window with keybindings
 
 # 0.5.1
 - Fix switching between working spaces and illuminants

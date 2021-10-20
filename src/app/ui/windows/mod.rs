@@ -1,8 +1,10 @@
 mod export;
+mod help;
 mod settings;
 
 use egui::{Slider, Ui};
 pub use export::ExportWindow;
+pub use help::HelpWindow;
 pub use settings::SettingsWindow;
 
 #[derive(Debug)]

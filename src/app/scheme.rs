@@ -3,7 +3,7 @@ use egui::{vec2, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
 
 impl App {
-    pub fn hues(
+    pub fn hues_window(
         &mut self,
         ctx: &egui::CtxRef,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
@@ -35,7 +35,7 @@ impl App {
         }
     }
 
-    pub fn tints(
+    pub fn tints_window(
         &mut self,
         ctx: &egui::CtxRef,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
@@ -66,7 +66,7 @@ impl App {
         }
     }
 
-    pub fn shades(
+    pub fn shades_window(
         &mut self,
         ctx: &egui::CtxRef,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,

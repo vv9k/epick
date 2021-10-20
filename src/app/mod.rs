@@ -8,7 +8,7 @@ mod settings;
 mod ui;
 
 use crate::app::ui::windows::{
-    ExportWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow,
+    ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow,
 };
 use crate::color::{Color, ColorHarmony};
 use crate::display_picker::{self, DisplayPickerExt};
@@ -76,6 +76,7 @@ pub struct App {
 
     pub settings_window: SettingsWindow,
     pub export_window: ExportWindow,
+    pub help_window: HelpWindow,
     pub hues_window: HuesWindow,
     pub tints_window: TintsWindow,
     pub shades_window: ShadesWindow,
@@ -105,7 +106,11 @@ impl epi::App for App {
         }
         self.central_panel(ctx, tex_allocator);
 
+        self.display_windows(ctx, tex_allocator);
+
         frame.set_window_size(ctx.used_size());
+
+        self.picker.check_for_change();
 
         // No need to repaint in wasm, there is no way to pick color from under the cursor anyway
         #[cfg(not(target_arch = "wasm32"))]
@@ -183,6 +188,7 @@ impl Default for App {
 
             settings_window: SettingsWindow::default(),
             export_window: ExportWindow::default(),
+            help_window: HelpWindow::default(),
             hues_window: HuesWindow::default(),
             tints_window: TintsWindow::default(),
             shades_window: ShadesWindow::default(),
@@ -467,7 +473,7 @@ impl App {
             ..Default::default()
         };
         egui::CentralPanel::default().frame(_frame).show(ctx, |ui| {
-            self.ui(ctx, ui, tex_allocator);
+            self.ui(ui, tex_allocator);
         });
     }
 
@@ -506,6 +512,9 @@ impl App {
             }
 
             ui.with_layout(Layout::right_to_left(), |ui| {
+                if ui.button(HELP_ICON).on_hover_text("Show help").clicked() {
+                    self.help_window.toggle_window();
+                }
                 if ui
                     .button(EXPAND_ICON)
                     .on_hover_text("Show/hide side panel")
@@ -637,18 +646,25 @@ impl App {
         });
     }
 
-    fn ui(
+    fn display_windows(
         &mut self,
         ctx: &egui::CtxRef,
-        ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
-        if let Some(err) = &self.error_message {
-            ui.colored_label(Color32::RED, err);
-        }
         self.settings_window.display(ctx);
         if let Err(e) = self.export_window.display(ctx, &self.saved_colors) {
             self.error_message = Some(e.to_string());
+        }
+
+        self.shades_window(ctx, tex_allocator);
+        self.tints_window(ctx, tex_allocator);
+        self.hues_window(ctx, tex_allocator);
+        self.help_window.display(ctx);
+    }
+
+    fn ui(&mut self, ui: &mut Ui, tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>) {
+        if let Some(err) = &self.error_message {
+            ui.colored_label(Color32::RED, err);
         }
 
         let color_str = self.display_color(&self.picker.current_color);
@@ -675,8 +691,6 @@ impl App {
 
         self.handle_display_picker(ui, tex_allocator);
 
-        self.picker.check_for_change();
-
         ui.add_space(7.);
         ScrollArea::auto_sized()
             .id_source("picker scroll")
@@ -685,10 +699,6 @@ impl App {
                 self.sliders(ui);
                 self.hex_input(ui);
             });
-
-        self.shades(ctx, tex_allocator);
-        self.tints(ctx, tex_allocator);
-        self.hues(ctx, tex_allocator);
     }
 
     fn sliders(&mut self, ui: &mut Ui) {
