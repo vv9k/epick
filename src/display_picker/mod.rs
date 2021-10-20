@@ -1,4 +1,4 @@
-//! A module responsible for abstraction over a window manager
+//! High level abstraction over display connection on multiple OS
 
 #[cfg(target_os = "macos")]
 pub mod macos;

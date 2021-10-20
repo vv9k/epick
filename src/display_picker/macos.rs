@@ -1,5 +1,5 @@
 use crate::color::{Color, Rgb};
-use crate::wm_picker::DisplayPicker;
+use crate::display_picker::DisplayPicker;
 
 use anyhow::{Error, Result};
 use core_graphics::base::CGFloat;

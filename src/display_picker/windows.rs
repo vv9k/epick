@@ -5,7 +5,7 @@ windows::include_bindings!();
 use std::ptr::{null, null_mut};
 
 use crate::color::Color;
-use crate::wm_picker::DisplayPicker;
+use crate::display_picker::DisplayPicker;
 use anyhow::{Error, Result};
 use egui::Color32;
 use Windows::Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, POINT, PWSTR, WPARAM};

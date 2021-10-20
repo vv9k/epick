@@ -11,8 +11,8 @@ use crate::app::ui::windows::{
     ExportWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow,
 };
 use crate::color::{Color, ColorHarmony};
+use crate::display_picker::{self, DisplayPickerExt};
 use crate::save_to_clipboard;
-use crate::wm_picker::{self, DisplayPickerExt};
 use color_picker::ColorPicker;
 use render::{tex_color, TextureManager};
 use saved_colors::SavedColors;
@@ -30,7 +30,7 @@ use x11rb::protocol::xproto;
 
 use crate::app::settings::Settings;
 #[cfg(windows)]
-use crate::wm_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
+use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 
 static ADD_ICON: &str = "➕";
 static COPY_ICON: &str = "📋";
@@ -169,7 +169,7 @@ impl Default for App {
         Self {
             picker: ColorPicker::default(),
             texture_manager: TextureManager::default(),
-            display_picker: wm_picker::init_display_picker(),
+            display_picker: display_picker::init_display_picker(),
             light_theme: light_visuals(),
             dark_theme: dark_visuals(),
             saved_colors: SavedColors::default(),
@@ -753,7 +753,7 @@ impl App {
                 ZOOM_WIN_WIDTH,
                 ZOOM_WIN_HEIGHT,
                 picker.screen_num(),
-                crate::wm_picker::x11::WindowType::Dialog,
+                crate::display_picker::x11::WindowType::Dialog,
             ) {
                 self.picker_window = Some(window);
             }
@@ -777,7 +777,7 @@ impl App {
                 ZOOM_IMAGE_WIDTH,
                 ZOOM_IMAGE_HEIGHT,
             ) {
-                let img = crate::wm_picker::x11::resize_image(&img, ZOOM_SCALE);
+                let img = crate::display_picker::x11::resize_image(&img, ZOOM_SCALE);
                 if let Err(e) = img.put(picker.conn(), window, gc, 0, 0) {
                     self.error_message = Some(e.to_string());
                     return;
