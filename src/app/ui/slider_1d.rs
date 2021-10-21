@@ -1,13 +1,13 @@
 use crate::color::contrast_color;
 use eframe::egui::epaint::Mesh;
 use eframe::egui::{lerp, remap_clamp, Shape, Stroke};
-use egui::{pos2, vec2, Color32, Response, Sense, Ui};
+use egui::{pos2, remap, vec2, Color32, Response, Sense, Ui};
 use std::ops::{Neg, RangeInclusive};
 
 /// Number of vertices per dimension in the color sliders.
 /// We need at least 6 for hues, and more for smooth 2D areas.
 /// Should always be a multiple of 6 to hit the peak hues in HSV/HSL (every 60°).
-const N: u32 = 6 * 6;
+pub const NUM_OF_VERTICES: u32 = 6 * 6;
 
 pub fn color(
     ui: &mut Ui,
@@ -40,14 +40,14 @@ pub fn color(
     {
         // fill color:
         let mut mesh = Mesh::default();
-        for i in 0..=N {
-            let pos = i as f32 / (N as f32);
+        for i in 0..=NUM_OF_VERTICES {
+            let pos = i as f32 / (NUM_OF_VERTICES as f32);
             let color_pos = lerp(range_start..=_range_end, pos);
             let color = color_at(color_pos);
             let mesh_pos = lerp(rect.left()..=rect.right(), pos);
             mesh.colored_vertex(pos2(mesh_pos, rect.top()), color);
             mesh.colored_vertex(pos2(mesh_pos, rect.bottom()), color);
-            if i < N {
+            if i < NUM_OF_VERTICES {
                 mesh.add_triangle(2 * i + 0, 2 * i + 1, 2 * i + 2);
                 mesh.add_triangle(2 * i + 1, 2 * i + 2, 2 * i + 3);
             }
@@ -65,9 +65,10 @@ pub fn color(
         } else {
             x
         };
-        // Show where the slider is at:
         let x = rect.left() + (x / range_end) * width;
         let r = rect.height() / 4.0;
+
+        // Show where the slider is at:
         ui.painter().add(Shape::convex_polygon(
             vec![
                 pos2(x - r, rect.bottom()),

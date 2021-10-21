@@ -1,6 +1,6 @@
 mod sliders;
 
-use crate::app::ui::slider_1d;
+use crate::app::ui::{slider_1d, slider_2d};
 use crate::color::{
     CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, Rgb,
     RgbWorkingSpace, Xyz, U8_MAX, U8_MIN,
@@ -361,6 +361,19 @@ impl ColorPicker {
                     v /= 100.;
                     Hsv::new(opaque.h(), opaque.s(), v).into()
                 });
+                ui.add_space(7.);
+                slider_2d::color(
+                    ui,
+                    &mut self.sliders.sat,
+                    &mut self.sliders.val,
+                    0.0..=100.,
+                    0.0..=100.,
+                    |mut s, mut v| {
+                        s /= 100.;
+                        v /= 100.;
+                        Hsv::new(opaque.h(), s, v).into()
+                    },
+                )
             });
     }
 
