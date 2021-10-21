@@ -4,7 +4,7 @@ use crate::color::contrast_color;
 use eframe::egui::epaint::Mesh;
 use eframe::egui::{lerp, remap_clamp, Sense, Shape, Stroke, Vec2};
 use egui::{pos2, Color32, Response, Ui};
-use std::ops::{Neg, RangeInclusive};
+use std::ops::RangeInclusive;
 
 pub fn color(
     ui: &mut Ui,

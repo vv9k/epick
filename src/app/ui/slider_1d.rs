@@ -1,7 +1,7 @@
 use crate::color::contrast_color;
 use eframe::egui::epaint::Mesh;
 use eframe::egui::{lerp, remap_clamp, Shape, Stroke};
-use egui::{pos2, remap, vec2, Color32, Response, Sense, Ui};
+use egui::{pos2, vec2, Color32, Response, Sense, Ui};
 use std::ops::{Neg, RangeInclusive};
 
 /// Number of vertices per dimension in the color sliders.
@@ -15,8 +15,6 @@ pub fn color(
     range: RangeInclusive<f32>,
     color_at: impl Fn(f32) -> Color32,
 ) -> Response {
-    #![allow(clippy::identity_op)]
-
     let width = ui.spacing().slider_width * 2.;
 
     let range_start = *range.start();
@@ -48,7 +46,7 @@ pub fn color(
             mesh.colored_vertex(pos2(mesh_pos, rect.top()), color);
             mesh.colored_vertex(pos2(mesh_pos, rect.bottom()), color);
             if i < NUM_OF_VERTICES {
-                mesh.add_triangle(2 * i + 0, 2 * i + 1, 2 * i + 2);
+                mesh.add_triangle(2 * i, 2 * i + 1, 2 * i + 2);
                 mesh.add_triangle(2 * i + 1, 2 * i + 2, 2 * i + 3);
             }
         }

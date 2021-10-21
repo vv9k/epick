@@ -25,7 +25,7 @@ use std::borrow::Cow;
 use std::rc::Rc;
 
 #[cfg(not(target_arch = "wasm32"))]
-use {crate::app::settings::Settings, std::fs};
+use crate::app::settings::Settings;
 
 #[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;

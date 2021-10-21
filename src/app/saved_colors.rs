@@ -88,7 +88,7 @@ impl SavedColors {
     }
 
     pub fn from_yaml_str(yaml: &str) -> Result<Self> {
-        serde_yaml::from_str(&yaml).context("failed to deserialize saved colors from YAML")
+        serde_yaml::from_str(yaml).context("failed to deserialize saved colors from YAML")
     }
 
     pub fn as_yaml_str(&self) -> Result<String> {
