@@ -106,7 +106,7 @@ impl AsRef<str> for ColorHarmony {
 
 impl Default for ColorHarmony {
     fn default() -> Self {
-        ColorHarmony::Analogous
+        ColorHarmony::Complementary
     }
 }
 
