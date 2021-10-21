@@ -16,9 +16,27 @@ pub struct Rgb {
 impl Rgb {
     /// Takes in values in the range 0.0 ..= 1.0 and returns an RGB color.
     pub fn new(red: f32, green: f32, blue: f32) -> Self {
-        let red = if red.is_nan() { 0. } else { red };
-        let green = if green.is_nan() { 0. } else { green };
-        let blue = if blue.is_nan() { 0. } else { blue };
+        let red = if red.is_nan() || red.is_sign_negative() {
+            0.
+        } else if red > 1. {
+            1.
+        } else {
+            red
+        };
+        let green = if green.is_nan() || green.is_sign_negative() {
+            0.
+        } else if green > 1. {
+            1.
+        } else {
+            green
+        };
+        let blue = if blue.is_nan() || blue.is_sign_negative() {
+            0.
+        } else if blue > 1. {
+            1.
+        } else {
+            blue
+        };
 
         Self {
             r: red,
@@ -256,11 +274,7 @@ impl From<Hsv> for Rgb {
 
 impl From<Matrix1x3> for Rgb {
     fn from(mx: Matrix1x3) -> Self {
-        Self {
-            r: mx[0],
-            g: mx[1],
-            b: mx[2],
-        }
+        Self::new(mx[0], mx[1], mx[2])
     }
 }
 

@@ -205,10 +205,9 @@ impl ColorPicker {
             || !math::eq_f32(self.sliders.lab_a, lab.a())
             || !math::eq_f32(self.sliders.lab_b, lab.b())
         {
-            let rgb = Lab::new(self.sliders.lab_l, self.sliders.lab_a, self.sliders.lab_b)
-                .to_xyz(self.sliders.illuminant)
-                .to_rgb(self.sliders.rgb_working_space);
-            self.set_cur_color(rgb);
+            let xyz = Lab::new(self.sliders.lab_l, self.sliders.lab_a, self.sliders.lab_b)
+                .to_xyz(self.sliders.illuminant);
+            self.set_cie_color(xyz);
             true
         } else {
             false
