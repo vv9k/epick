@@ -216,6 +216,14 @@ impl App {
     #[cfg(target_arch = "wasm32")]
     fn save_colors(&mut self) {}
 
+    fn set_error(&mut self, error: impl std::fmt::Display) {
+        self.error_message = Some(error.to_string());
+    }
+
+    fn clear_error(&mut self) {
+        self.error_message = None;
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     fn load_colors(&mut self) {
         if self.settings_window.settings.cache_colors {
@@ -301,9 +309,9 @@ impl App {
     fn add_color(&mut self, color: Color) {
         if !self.saved_colors.add(color) {
             let color_str = self.display_color(&color);
-            self.error_message = Some(format!("Color {} already saved!", color_str));
+            self.set_error(format!("Color {} already saved!", color_str));
         } else {
-            self.error_message = None;
+            self.clear_error();
             self.show_side_panel = true;
         }
     }
@@ -326,16 +334,16 @@ impl App {
                             .clicked()
                     {
                         if self.picker.hex_color.len() < 6 {
-                            self.error_message =
-                                Some("Enter a color first (ex. ab12ff #1200ff)".to_owned());
+                            self.set_error(
+                                "Enter a color first (ex. ab12ff #1200ff)".to_owned());
                         } else if let Some(color) =
                             Color::from_hex(self.picker.hex_color.trim_start_matches('#'))
                         {
                             self.picker.set_cur_color(color);
-                            self.error_message = None;
+                            self.clear_error();
                         } else {
-                            self.error_message =
-                                Some("The entered hex color is not valid".to_owned());
+                            self.set_error(
+                                "The entered hex color is not valid".to_owned());
                         }
                     }
                     if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
@@ -668,7 +676,7 @@ impl App {
     ) {
         self.settings_window.display(ctx);
         if let Err(e) = self.export_window.display(ctx, &self.saved_colors) {
-            self.error_message = Some(e.to_string());
+            self.set_error(e);
         }
 
         self.shades_window(ctx, tex_allocator);
@@ -694,9 +702,9 @@ impl App {
             {
                 if let Err(e) = save_to_clipboard(self.clipboard_color(&self.picker.current_color))
                 {
-                    self.error_message = Some(format!("Failed to save color to clipboard - {}", e));
+                    self.set_error(format!("Failed to save color to clipboard - {}", e));
                 } else {
-                    self.error_message = None;
+                    self.clear_error();
                 }
             }
             if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
@@ -813,7 +821,7 @@ impl App {
             ) {
                 let img = crate::display_picker::x11::resize_image(&img, ZOOM_SCALE);
                 if let Err(e) = img.put(picker.conn(), window, gc, 0, 0) {
-                    self.error_message = Some(e.to_string());
+                    self.set_error(e);
                     return;
                 };
 
@@ -824,7 +832,7 @@ impl App {
                     (ZOOM_WIN_HEIGHT / 2) as i16,
                     ZOOM_WIN_POINTER_DIAMETER,
                 ) {
-                    self.error_message = Some(e.to_string());
+                    self.set_error(e);
                 };
             }
             if let Err(e) = picker.update_window_pos(
@@ -832,11 +840,11 @@ impl App {
                 cursor_pos.0 + ZOOM_WIN_OFFSET,
                 cursor_pos.1 + ZOOM_WIN_OFFSET,
             ) {
-                self.error_message = Some(e.to_string());
+                self.set_error(e);
                 return;
             }
             if let Err(e) = picker.flush() {
-                self.error_message = Some(e.to_string());
+                self.set_error(e);
             }
         }
     }
@@ -856,13 +864,13 @@ impl App {
             ) {
                 self.picker_window = Some(window);
                 if let Err(e) = picker.show_window(window, SW_SHOWDEFAULT) {
-                    self.error_message = Some(e.to_string());
+                    self.set_error(e);
                 }
             }
         } else {
             // Close the window on second click
             if let Err(e) = picker.destroy_window(self.picker_window.unwrap()) {
-                self.error_message = Some(e.to_string());
+                self.set_error(e);
             }
             self.picker_window = None;
         }
@@ -882,7 +890,7 @@ impl App {
             ) {
                 Ok(bitmap) => {
                     if let Err(e) = picker.render_bitmap(&bitmap, window, 0, 0, ZOOM_SCALE) {
-                        self.error_message = Some(e.to_string());
+                        self.set_error(e);
                     }
                     let left = ((ZOOM_WIN_WIDTH / 2) - ZOOM_WIN_POINTER_RADIUS) as i32;
                     let top = ((ZOOM_WIN_HEIGHT / 2) - ZOOM_WIN_POINTER_RADIUS) as i32;
@@ -894,11 +902,11 @@ impl App {
                         top + ZOOM_WIN_POINTER_DIAMETER as i32,
                         true,
                     ) {
-                        self.error_message = Some(e.to_string());
+                        self.set_error(e);
                     }
                 }
                 Err(e) => {
-                    self.error_message = Some(e.to_string());
+                    self.set_error(e);
                 }
             }
             if let Err(e) = picker.move_window(
@@ -908,7 +916,7 @@ impl App {
                 ZOOM_WIN_WIDTH as i32,
                 ZOOM_WIN_HEIGHT as i32,
             ) {
-                self.error_message = Some(e.to_string());
+                self.set_error(e);
             }
         }
     }
