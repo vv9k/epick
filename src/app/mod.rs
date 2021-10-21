@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+mod color_format;
 mod color_picker;
 mod render;
 mod saved_colors;
