@@ -7,6 +7,9 @@ pub use export::ExportWindow;
 pub use help::HelpWindow;
 pub use settings::SettingsWindow;
 
+pub const WINDOW_X_OFFSET: f32 = 10.;
+pub const WINDOW_Y_OFFSET: f32 = 30.;
+
 #[derive(Debug)]
 pub struct ShadesWindow {
     pub is_open: bool,

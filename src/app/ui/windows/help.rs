@@ -1,3 +1,4 @@
+use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use eframe::egui::TextStyle;
 use egui::{Label, Window};
 
@@ -22,9 +23,11 @@ impl HelpWindow {
             };
         }
         if self.is_open {
+            let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
             Window::new("Help")
                 .collapsible(false)
+                .default_pos((offset, WINDOW_Y_OFFSET))
                 .open(&mut is_open)
                 .show(ctx, |ui| {
                     ui.vertical(|ui| {

@@ -1,4 +1,6 @@
+use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::app::{App, ColorHarmony};
+
 use eframe::egui::TextStyle;
 use egui::{vec2, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
@@ -10,8 +12,10 @@ impl App {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
         if self.hues_window.is_open {
+            let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
             Window::new("Hues")
+                .default_pos((offset, WINDOW_Y_OFFSET))
                 .collapsible(false)
                 .scroll(true)
                 .open(&mut is_open)
@@ -42,9 +46,12 @@ impl App {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
         if self.tints_window.is_open {
+            let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
+            let pos = (offset, WINDOW_Y_OFFSET);
             let mut is_open = true;
             Window::new("Tints")
                 .collapsible(false)
+                .default_pos(pos)
                 .scroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
@@ -73,9 +80,11 @@ impl App {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
         if self.shades_window.is_open {
+            let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
             Window::new("Shades")
                 .collapsible(false)
+                .default_pos((offset, WINDOW_Y_OFFSET))
                 .scroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {

@@ -1,4 +1,5 @@
 use crate::app::settings::Settings;
+use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::color::{
     ChromaticAdaptationMethod, ColorHarmony, DisplayFormat, Illuminant, RgbWorkingSpace,
 };
@@ -38,44 +39,48 @@ impl SettingsWindow {
 
     pub fn display(&mut self, ctx: &egui::CtxRef) {
         if self.show {
+            let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut show = true;
-            Window::new("settings").open(&mut show).show(ctx, |ui| {
-                if let Some(err) = &self.error {
-                    ui.colored_label(Color32::RED, err);
-                }
-                if let Some(msg) = &self.message {
-                    ui.colored_label(Color32::GREEN, msg);
-                }
+            Window::new("settings")
+                .open(&mut show)
+                .default_pos((offset, WINDOW_Y_OFFSET))
+                .show(ctx, |ui| {
+                    if let Some(err) = &self.error {
+                        ui.colored_label(Color32::RED, err);
+                    }
+                    if let Some(msg) = &self.message {
+                        ui.colored_label(Color32::GREEN, msg);
+                    }
 
-                self.color_display_format(ui);
-                self.rgb_working_space(ui);
-                self.illuminant(ui);
-                self.chromatic_adaptation_method(ui);
-                self.color_harmony(ui);
-                self.color_spaces(ui);
+                    self.color_display_format(ui);
+                    self.rgb_working_space(ui);
+                    self.illuminant(ui);
+                    self.chromatic_adaptation_method(ui);
+                    self.color_harmony(ui);
+                    self.color_spaces(ui);
 
-                #[cfg(not(target_arch = "wasm32"))]
-                if ui.button("Save settings").clicked() {
-                    if let Some(dir) = Settings::dir("epick") {
-                        if !dir.exists() {
-                            if let Err(e) = fs::create_dir_all(&dir) {
+                    #[cfg(not(target_arch = "wasm32"))]
+                    if ui.button("Save settings").clicked() {
+                        if let Some(dir) = Settings::dir("epick") {
+                            if !dir.exists() {
+                                if let Err(e) = fs::create_dir_all(&dir) {
+                                    self.set_error(e);
+                                }
+                            }
+                            let path = dir.join("config.yaml");
+                            if let Err(e) = self.settings.save(&path) {
                                 self.set_error(e);
+                            } else {
+                                self.set_message(format!(
+                                    "Successfully saved settings to {}",
+                                    path.display()
+                                ));
                             }
                         }
-                        let path = dir.join("config.yaml");
-                        if let Err(e) = self.settings.save(&path) {
-                            self.set_error(e);
-                        } else {
-                            self.set_message(format!(
-                                "Successfully saved settings to {}",
-                                path.display()
-                            ));
-                        }
                     }
-                }
 
-                ui.checkbox(&mut self.settings.cache_colors, "Cache colors");
-            });
+                    ui.checkbox(&mut self.settings.cache_colors, "Cache colors");
+                });
 
             if !show {
                 self.show = false;

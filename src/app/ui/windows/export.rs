@@ -1,4 +1,5 @@
 use crate::app::saved_colors::{PaletteFormat, SavedColors};
+use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 
 use anyhow::Result;
 use egui::color::Color32;
@@ -37,84 +38,90 @@ impl Default for ExportWindow {
 impl ExportWindow {
     pub fn display(&mut self, ctx: &egui::CtxRef, saved_colors: &SavedColors) -> Result<()> {
         if self.show {
+            let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut show = true;
-            Window::new("export").open(&mut show).show(ctx, |ui| {
-                ui.vertical(|ui| {
-                    ui.horizontal(|ui| {
-                        ComboBox::from_label("format")
-                            .selected_text(self.format.as_ref())
-                            .show_ui(ui, |ui| {
-                                ui.selectable_value(
-                                    &mut self.format,
-                                    PaletteFormat::Gimp,
-                                    PaletteFormat::Gimp.as_ref(),
-                                );
-                                ui.selectable_value(
-                                    &mut self.format,
-                                    PaletteFormat::Text,
-                                    PaletteFormat::Text.as_ref(),
-                                );
-                            });
-                    });
-                    ui.label("Export path:");
-                    #[cfg(not(target_arch = "wasm32"))]
-                    {
-                        if ui
-                            .add(
-                                TextEdit::singleline(&mut self.path)
-                                    .enabled(self.export_path_editable),
-                            )
-                            .clicked()
-                            && !self.export_path_editable
+            Window::new("export")
+                .open(&mut show)
+                .default_pos((offset, WINDOW_Y_OFFSET))
+                .show(ctx, |ui| {
+                    ui.vertical(|ui| {
+                        ui.horizontal(|ui| {
+                            ComboBox::from_label("format")
+                                .selected_text(self.format.as_ref())
+                                .show_ui(ui, |ui| {
+                                    ui.selectable_value(
+                                        &mut self.format,
+                                        PaletteFormat::Gimp,
+                                        PaletteFormat::Gimp.as_ref(),
+                                    );
+                                    ui.selectable_value(
+                                        &mut self.format,
+                                        PaletteFormat::Text,
+                                        PaletteFormat::Text.as_ref(),
+                                    );
+                                });
+                        });
+                        ui.label("Export path:");
+                        #[cfg(not(target_arch = "wasm32"))]
                         {
-                            let location = if let Ok(path) = std::env::current_dir() {
-                                path.to_string_lossy().to_string()
-                            } else {
-                                "".into()
-                            };
-
-                            match native_dialog::FileDialog::new()
-                                .set_location(&location)
-                                .add_filter("GIMP Palette", &["gpl"])
-                                .add_filter("Text file", &["txt"])
-                                .show_save_single_file()
+                            if ui
+                                .add(
+                                    TextEdit::singleline(&mut self.path)
+                                        .enabled(self.export_path_editable),
+                                )
+                                .clicked()
+                                && !self.export_path_editable
                             {
-                                Ok(Some(path)) => self.path = path.to_string_lossy().to_string(),
-                                Err(_) => {
-                                    self.export_path_editable = true;
+                                let location = if let Ok(path) = std::env::current_dir() {
+                                    path.to_string_lossy().to_string()
+                                } else {
+                                    "".into()
+                                };
+
+                                match native_dialog::FileDialog::new()
+                                    .set_location(&location)
+                                    .add_filter("GIMP Palette", &["gpl"])
+                                    .add_filter("Text file", &["txt"])
+                                    .show_save_single_file()
+                                {
+                                    Ok(Some(path)) => {
+                                        self.path = path.to_string_lossy().to_string()
+                                    }
+                                    Err(_) => {
+                                        self.export_path_editable = true;
+                                    }
+                                    Ok(None) => {}
                                 }
-                                Ok(None) => {}
-                            }
-                        };
-                    }
-                    #[cfg(target_arch = "wasm32")]
-                    {
-                        ui.text_edit_singleline(&mut self.path);
-                    }
-
-                    ui.label("Name:");
-                    ui.text_edit_singleline(&mut self.name);
-
-                    match &self.export_status {
-                        Ok(msg) => ui.colored_label(Color32::GREEN, msg),
-                        Err(msg) => ui.colored_label(Color32::RED, msg),
-                    };
-
-                    if ui.button("export").clicked() {
-                        let palette = match self.format {
-                            PaletteFormat::Gimp => saved_colors.as_gimp_palette(&self.name),
-                            PaletteFormat::Text => saved_colors.as_hex_list(),
-                        };
-                        let p = PathBuf::from(&self.path);
-                        let filename = format!("{}.{}", &self.name, self.format.extension());
-                        if let Err(e) = fs::write(p.join(&filename), palette) {
-                            self.export_status = Err(e.to_string());
-                        } else {
-                            self.export_status = Ok("export succesful".to_string());
+                            };
                         }
-                    }
+                        #[cfg(target_arch = "wasm32")]
+                        {
+                            ui.text_edit_singleline(&mut self.path);
+                        }
+
+                        ui.label("Name:");
+                        ui.text_edit_singleline(&mut self.name);
+
+                        match &self.export_status {
+                            Ok(msg) => ui.colored_label(Color32::GREEN, msg),
+                            Err(msg) => ui.colored_label(Color32::RED, msg),
+                        };
+
+                        if ui.button("export").clicked() {
+                            let palette = match self.format {
+                                PaletteFormat::Gimp => saved_colors.as_gimp_palette(&self.name),
+                                PaletteFormat::Text => saved_colors.as_hex_list(),
+                            };
+                            let p = PathBuf::from(&self.path);
+                            let filename = format!("{}.{}", &self.name, self.format.extension());
+                            if let Err(e) = fs::write(p.join(&filename), palette) {
+                                self.export_status = Err(e.to_string());
+                            } else {
+                                self.export_status = Ok("export succesful".to_string());
+                            }
+                        }
+                    });
                 });
-            });
 
             if !show {
                 self.show = false;
