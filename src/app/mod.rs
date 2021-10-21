@@ -32,6 +32,7 @@ use x11rb::protocol::xproto;
 
 #[cfg(windows)]
 use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
+use epi::Storage;
 
 static ADD_ICON: &str = "\u{2795}";
 static COPY_ICON: &str = "\u{1F3F7}";
@@ -135,9 +136,19 @@ impl epi::App for App {
         }
     }
 
-    fn setup(&mut self, ctx: &egui::CtxRef, _: &mut epi::Frame<'_>, _: Option<&dyn epi::Storage>) {
+    fn save(&mut self, storage: &mut dyn Storage) {
+        println!("saving colors!");
+        self.save_colors(storage);
+    }
+
+    fn setup(
+        &mut self,
+        ctx: &egui::CtxRef,
+        _: &mut epi::Frame<'_>,
+        storage: Option<&dyn epi::Storage>,
+    ) {
         self.load_settings();
-        self.load_colors();
+        self.load_colors(storage);
         self.apply_settings();
 
         let mut fonts = egui::FontDefinitions::default();
@@ -159,10 +170,6 @@ impl epi::App for App {
         );
         ctx.set_fonts(fonts);
         ctx.set_visuals(dark_visuals());
-    }
-
-    fn on_exit(&mut self) {
-        self.save_colors();
     }
 
     fn name(&self) -> &str {
@@ -205,16 +212,10 @@ impl Default for App {
 
 impl App {
     #[cfg(target_arch = "wasm32")]
-    fn load_colors(&mut self) {}
-
-    #[cfg(target_arch = "wasm32")]
     fn load_settings(&mut self) {}
 
     #[cfg(target_arch = "wasm32")]
     fn apply_settings(&mut self) {}
-
-    #[cfg(target_arch = "wasm32")]
-    fn save_colors(&mut self) {}
 
     fn set_error(&mut self, error: impl std::fmt::Display) {
         self.error_message = Some(error.to_string());
@@ -224,28 +225,25 @@ impl App {
         self.error_message = None;
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    fn load_colors(&mut self) {
+    fn load_colors(&mut self, storage: Option<&dyn Storage>) {
         if self.settings_window.settings.cache_colors {
-            if let Some(dir) = SavedColors::dir("epick") {
-                if let Ok(colors) = SavedColors::load(dir.join("colors.yaml")) {
-                    self.saved_colors = colors;
-                    if !self.saved_colors.is_empty() {
-                        self.show_side_panel = true;
+            if let Some(storage) = storage {
+                if let Some(yaml) = storage.get_string(SavedColors::storage_key()) {
+                    if let Ok(colors) = SavedColors::from_yaml_str(&yaml) {
+                        self.saved_colors = colors;
+                        if !self.saved_colors.is_empty() {
+                            self.show_side_panel = true;
+                        }
                     }
                 }
             }
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    fn save_colors(&self) {
+    fn save_colors(&self, storage: &mut dyn Storage) {
         if self.settings_window.settings.cache_colors {
-            if let Some(dir) = SavedColors::dir("epick") {
-                if !dir.exists() {
-                    let _ = fs::create_dir_all(&dir);
-                }
-                let _ = self.saved_colors.save(dir.join("colors.yaml"));
+            if let Ok(yaml) = self.saved_colors.as_yaml_str() {
+                storage.set_string(SavedColors::storage_key(), yaml);
             }
         }
     }
@@ -334,16 +332,14 @@ impl App {
                             .clicked()
                     {
                         if self.picker.hex_color.len() < 6 {
-                            self.set_error(
-                                "Enter a color first (ex. ab12ff #1200ff)".to_owned());
+                            self.set_error("Enter a color first (ex. ab12ff #1200ff)".to_owned());
                         } else if let Some(color) =
                             Color::from_hex(self.picker.hex_color.trim_start_matches('#'))
                         {
                             self.picker.set_cur_color(color);
                             self.clear_error();
                         } else {
-                            self.set_error(
-                                "The entered hex color is not valid".to_owned());
+                            self.set_error("The entered hex color is not valid".to_owned());
                         }
                     }
                     if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {

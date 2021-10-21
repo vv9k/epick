@@ -9,6 +9,10 @@ use std::path::{Path, PathBuf};
 pub struct SavedColors(Vec<(String, Color)>);
 
 impl SavedColors {
+    pub const fn storage_key() -> &'static str {
+        "epick.saved.colors"
+    }
+
     pub fn add(&mut self, color: Color) -> bool {
         let hex = color.as_hex();
         if !self.0.iter().any(|(_hex, _)| _hex == &hex) {
@@ -81,6 +85,14 @@ impl SavedColors {
     pub fn load(path: impl AsRef<Path>) -> Result<Self> {
         let data = fs::read(path).context("failed to read saved colors file")?;
         serde_yaml::from_slice(&data).context("failed to deserialize saved colors file")
+    }
+
+    pub fn from_yaml_str(yaml: &str) -> Result<Self> {
+        serde_yaml::from_str(&yaml).context("failed to deserialize saved colors from YAML")
+    }
+
+    pub fn as_yaml_str(&self) -> Result<String> {
+        serde_yaml::to_string(&self).context("failed to serialize saved colors as YAML")
     }
 
     /// Saves this colors as YAML file in the provided `path`.
