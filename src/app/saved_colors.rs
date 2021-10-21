@@ -9,10 +9,6 @@ use std::path::{Path, PathBuf};
 pub struct SavedColors(Vec<(String, Color)>);
 
 impl SavedColors {
-    pub const fn storage_key() -> &'static str {
-        "epick.saved.colors"
-    }
-
     pub fn add(&mut self, color: Color) -> bool {
         let hex = color.as_hex();
         if !self.0.iter().any(|(_hex, _)| _hex == &hex) {

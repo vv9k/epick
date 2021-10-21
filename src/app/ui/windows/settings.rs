@@ -74,7 +74,6 @@ impl SettingsWindow {
                     }
                 }
 
-                #[cfg(not(target_arch = "wasm32"))]
                 ui.checkbox(&mut self.settings.cache_colors, "Cache colors");
             });
 

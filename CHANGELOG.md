@@ -11,6 +11,7 @@
 - Fix circle of zoomed display picker on X11, the circle will now correctly point to a single pixel rather than four at a time.
 - Add setting to set default color harmony
 - Add 2D slider to HSV
+- Add persistent colors and settings to WASM by using local browser storage
 
 # 0.5.1
 - Fix switching between working spaces and illuminants

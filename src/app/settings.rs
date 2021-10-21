@@ -97,6 +97,14 @@ impl Default for Settings {
 }
 
 impl Settings {
+    pub fn from_yaml_str(yaml: &str) -> Result<Self> {
+        serde_yaml::from_str(yaml).context("failed to deserialize settings from YAML")
+    }
+
+    pub fn as_yaml_str(&self) -> Result<String> {
+        serde_yaml::to_string(&self).context("failed to serialize settings as YAML")
+    }
+
     /// Loads the settings from the configuration file located at `path`. The configuration file is
     /// expected to be a valid YAML file.
     pub fn load(path: impl AsRef<Path>) -> Result<Self> {

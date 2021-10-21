@@ -7,6 +7,7 @@ mod screen_size;
 mod settings;
 mod ui;
 
+use crate::app::settings::Settings;
 use crate::app::ui::windows::{
     ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow,
 };
@@ -23,9 +24,6 @@ use egui::{color::Color32, vec2, Button, CollapsingHeader, Layout, Rgba, TextSty
 use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
 use std::rc::Rc;
-
-#[cfg(not(target_arch = "wasm32"))]
-use crate::app::settings::Settings;
 
 #[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;
@@ -60,6 +58,11 @@ const ZOOM_WIN_POINTER_DIAMETER: u16 = 10;
 const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
 const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
 const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as i32;
+
+const SK_SAVED_COLORS: &str = "epick.saved.colors";
+const SK_SAVED_SETTINGS: &str = "epick.saved.settings";
+const FN_SAVED_COLORS: &str = "colors.yaml";
+const FN_SAVED_SETTINGS: &str = "config.yaml";
 
 //####################################################################################################
 
@@ -137,8 +140,9 @@ impl epi::App for App {
     }
 
     fn save(&mut self, storage: &mut dyn Storage) {
-        println!("saving colors!");
         self.save_colors(storage);
+        self.save_settings(storage);
+        storage.flush();
     }
 
     fn setup(
@@ -147,7 +151,7 @@ impl epi::App for App {
         _: &mut epi::Frame<'_>,
         storage: Option<&dyn epi::Storage>,
     ) {
-        self.load_settings();
+        self.load_settings(storage);
         self.load_colors(storage);
         self.apply_settings();
 
@@ -211,12 +215,6 @@ impl Default for App {
 }
 
 impl App {
-    #[cfg(target_arch = "wasm32")]
-    fn load_settings(&mut self) {}
-
-    #[cfg(target_arch = "wasm32")]
-    fn apply_settings(&mut self) {}
-
     fn set_error(&mut self, error: impl std::fmt::Display) {
         self.error_message = Some(error.to_string());
     }
@@ -225,10 +223,11 @@ impl App {
         self.error_message = None;
     }
 
-    fn load_colors(&mut self, storage: Option<&dyn Storage>) {
+    fn load_colors(&mut self, _storage: Option<&dyn Storage>) {
         if self.settings_window.settings.cache_colors {
-            if let Some(storage) = storage {
-                if let Some(yaml) = storage.get_string(SavedColors::storage_key()) {
+            #[cfg(target_arch = "wasm32")]
+            if let Some(storage) = _storage {
+                if let Some(yaml) = storage.get_string(SK_SAVED_COLORS) {
                     if let Ok(colors) = SavedColors::from_yaml_str(&yaml) {
                         self.saved_colors = colors;
                         if !self.saved_colors.is_empty() {
@@ -237,21 +236,57 @@ impl App {
                     }
                 }
             }
-        }
-    }
-
-    fn save_colors(&self, storage: &mut dyn Storage) {
-        if self.settings_window.settings.cache_colors {
-            if let Ok(yaml) = self.saved_colors.as_yaml_str() {
-                storage.set_string(SavedColors::storage_key(), yaml);
+            #[cfg(not(target_arch = "wasm32"))]
+            if let Some(path) = SavedColors::dir("epick") {
+                if let Ok(colors) = SavedColors::load(path.join(FN_SAVED_COLORS)) {
+                    self.saved_colors = colors;
+                    if !self.saved_colors.is_empty() {
+                        self.show_side_panel = true;
+                    }
+                }
             }
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
-    fn load_settings(&mut self) {
+    fn save_colors(&self, _storage: &mut dyn Storage) {
+        #[cfg(target_arch = "wasm32")]
+        if self.settings_window.settings.cache_colors {
+            if let Ok(yaml) = self.saved_colors.as_yaml_str() {
+                _storage.set_string(SK_SAVED_COLORS, yaml);
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(dir) = SavedColors::dir("epick") {
+            let _ = self.saved_colors.save(dir.join(FN_SAVED_COLORS));
+        }
+    }
+
+    fn save_settings(&self, _storage: &mut dyn Storage) {
+        #[cfg(target_arch = "wasm32")]
+        if let Ok(yaml) = self.settings_window.settings.as_yaml_str() {
+            _storage.set_string(SK_SAVED_SETTINGS, yaml);
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(dir) = Settings::dir("epick") {
+            let _ = self
+                .settings_window
+                .settings
+                .save(dir.join(FN_SAVED_SETTINGS));
+        }
+    }
+
+    fn load_settings(&mut self, _storage: Option<&dyn Storage>) {
+        #[cfg(target_arch = "wasm32")]
+        if let Some(storage) = _storage {
+            if let Some(yaml) = storage.get_string(SK_SAVED_SETTINGS) {
+                if let Ok(settings) = Settings::from_yaml_str(&yaml) {
+                    self.settings_window.settings = settings;
+                }
+            }
+        }
+        #[cfg(not(target_arch = "wasm32"))]
         if let Some(config_dir) = Settings::dir("epick") {
-            let path = config_dir.join("config.yaml");
+            let path = config_dir.join(FN_SAVED_SETTINGS);
 
             if let Ok(settings) = Settings::load(&path) {
                 self.settings_window.settings = settings;
@@ -259,7 +294,6 @@ impl App {
         }
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     fn apply_settings(&mut self) {
         if self.settings_window.settings.color_harmony != self.picker.color_harmony {
             self.picker.color_harmony = self.settings_window.settings.color_harmony;
