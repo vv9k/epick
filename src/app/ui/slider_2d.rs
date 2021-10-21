@@ -3,7 +3,7 @@ use crate::color::contrast_color;
 
 use eframe::egui::epaint::Mesh;
 use eframe::egui::{lerp, remap_clamp, Sense, Shape, Stroke, Vec2};
-use egui::{pos2, Color32, Response, Ui};
+use egui::{pos2, Color32, CursorIcon, Response, Ui};
 use std::ops::RangeInclusive;
 
 pub fn color(
@@ -15,7 +15,7 @@ pub fn color(
     color_at: impl Fn(f32, f32) -> Color32,
 ) -> Response {
     let desired_size = Vec2::splat(ui.spacing().slider_width * 1.2);
-    let (rect, response) = ui.allocate_at_least(desired_size, Sense::click_and_drag());
+    let (rect, mut response) = ui.allocate_at_least(desired_size, Sense::click_and_drag());
 
     if let Some(mpos) = response.interact_pointer_pos() {
         *x_value = remap_clamp(mpos.x, rect.left()..=rect.right(), x_range.clone());
@@ -61,6 +61,8 @@ pub fn color(
         fill: picked_color,
         stroke: Stroke::new(visuals.fg_stroke.width, contrast_color(picked_color)),
     });
+
+    response = response.on_hover_cursor(CursorIcon::Move);
 
     response
 }

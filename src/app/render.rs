@@ -1,6 +1,6 @@
 use crate::color::Gradient;
 use egui::color::Color32;
-use egui::{pos2, ImageButton, Rect, Response, TextureId, Ui, Vec2};
+use egui::{pos2, CursorIcon, ImageButton, Rect, Response, TextureId, Ui, Vec2};
 use std::collections::HashMap;
 
 pub fn tex_color(
@@ -29,7 +29,7 @@ pub fn tex_gradient(
             let texel_offset = 0.5 / (gradient.0.len() as f32);
             let uv = Rect::from_min_max(pos2(texel_offset, 0.0), pos2(1.0 - texel_offset, 1.0));
             let image = ImageButton::new(tex, size).uv(uv);
-            let mut resp = ui.add(image);
+            let mut resp = ui.add(image).on_hover_cursor(CursorIcon::PointingHand);
 
             if let Some(on_hover) = on_hover {
                 resp = resp.on_hover_text(on_hover);

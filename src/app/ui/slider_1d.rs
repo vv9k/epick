@@ -1,7 +1,7 @@
 use crate::color::contrast_color;
 use eframe::egui::epaint::Mesh;
 use eframe::egui::{lerp, remap_clamp, Shape, Stroke};
-use egui::{pos2, vec2, Color32, Response, Sense, Ui};
+use egui::{pos2, vec2, Color32, CursorIcon, Response, Sense, Ui};
 use std::ops::{Neg, RangeInclusive};
 
 /// Number of vertices per dimension in the color sliders.
@@ -27,7 +27,7 @@ pub fn color(
     };
 
     let desired_size = vec2(width, ui.spacing().interact_size.y * 2.);
-    let (rect, response) = ui.allocate_at_least(desired_size, Sense::click_and_drag());
+    let (rect, mut response) = ui.allocate_at_least(desired_size, Sense::click_and_drag());
 
     if let Some(mpos) = response.interact_pointer_pos() {
         *value = remap_clamp(mpos.x, rect.left()..=rect.right(), range);
@@ -77,6 +77,8 @@ pub fn color(
             Stroke::new(visuals.fg_stroke.width, contrast_color(picked_color)),
         ));
     }
+
+    response = response.on_hover_cursor(CursorIcon::ResizeHorizontal);
 
     response
 }

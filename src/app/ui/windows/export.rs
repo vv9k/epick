@@ -3,7 +3,7 @@ use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 
 use anyhow::Result;
 use egui::color::Color32;
-use egui::{ComboBox, Window};
+use egui::{ComboBox, CursorIcon, Window};
 use std::path::PathBuf;
 use std::{env, fs};
 
@@ -107,7 +107,11 @@ impl ExportWindow {
                             Err(msg) => ui.colored_label(Color32::RED, msg),
                         };
 
-                        if ui.button("export").clicked() {
+                        if ui
+                            .button("export")
+                            .on_hover_cursor(CursorIcon::PointingHand)
+                            .clicked()
+                        {
                             let palette = match self.format {
                                 PaletteFormat::Gimp => saved_colors.as_gimp_palette(&self.name),
                                 PaletteFormat::Text => saved_colors.as_hex_list(),

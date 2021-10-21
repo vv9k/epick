@@ -13,6 +13,7 @@
 - Add 2D slider to HSV
 - Add persistent colors and settings to WASM by using local browser storage
 - All windows will now open in the empty area after sliders so that nothing is hidden
+- Use different cursor when hovering over different elements
 
 # 0.5.1
 - Fix switching between working spaces and illuminants

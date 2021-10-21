@@ -4,7 +4,7 @@ use crate::color::{
     ChromaticAdaptationMethod, ColorHarmony, DisplayFormat, Illuminant, RgbWorkingSpace,
 };
 
-use egui::{Color32, ComboBox, Ui, Window};
+use egui::{Color32, ComboBox, CursorIcon, Ui, Window};
 use std::fmt::Display;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -60,7 +60,11 @@ impl SettingsWindow {
                     self.color_spaces(ui);
 
                     #[cfg(not(target_arch = "wasm32"))]
-                    if ui.button("Save settings").clicked() {
+                    if ui
+                        .button("Save settings")
+                        .on_hover_cursor(CursorIcon::PointingHand)
+                        .clicked()
+                    {
                         if let Some(dir) = Settings::dir("epick") {
                             if !dir.exists() {
                                 if let Err(e) = fs::create_dir_all(&dir) {

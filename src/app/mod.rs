@@ -20,7 +20,9 @@ use saved_colors::SavedColors;
 use screen_size::ScreenSize;
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
-use egui::{color::Color32, vec2, Button, CollapsingHeader, Layout, Rgba, TextStyle, Ui};
+use egui::{
+    color::Color32, vec2, Button, CollapsingHeader, CursorIcon, Label, Layout, Rgba, TextStyle, Ui,
+};
 use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
 use std::rc::Rc;
@@ -76,6 +78,7 @@ pub struct App {
     pub saved_colors: SavedColors,
     pub error_message: Option<String>,
     pub screen_size: ScreenSize,
+    pub cursor_icon: CursorIcon,
 
     pub show_side_panel: bool,
 
@@ -94,6 +97,7 @@ pub struct App {
 
 impl epi::App for App {
     fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
+        ctx.output().cursor_icon = self.cursor_icon;
         let tex_allocator = &mut Some(frame.tex_allocator());
 
         let screen_size = ScreenSize::from(ctx.available_rect());
@@ -196,6 +200,7 @@ impl Default for App {
             saved_colors: SavedColors::default(),
             error_message: None,
             screen_size: ScreenSize::Desktop(0., 0.),
+            cursor_icon: CursorIcon::default(),
 
             show_side_panel: false,
 
@@ -363,6 +368,7 @@ impl App {
                         || ui
                             .button(PLAY_ICON)
                             .on_hover_text("Use this color")
+                            .on_hover_cursor(CursorIcon::PointingHand)
                             .clicked()
                     {
                         if self.picker.hex_color.len() < 6 {
@@ -376,7 +382,12 @@ impl App {
                             self.set_error("The entered hex color is not valid".to_owned());
                         }
                     }
-                    if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
+                    if ui
+                        .button(ADD_ICON)
+                        .on_hover_text(ADD_DESCR)
+                        .on_hover_cursor(CursorIcon::Copy)
+                        .clicked()
+                    {
                         self.add_cur_color()
                     }
                 });
@@ -533,49 +544,84 @@ impl App {
     fn top_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
             if self.hues_window.is_open {
-                if ui.button("hues").clicked() {
+                if ui
+                    .button("hues")
+                    .on_hover_cursor(CursorIcon::PointingHand)
+                    .clicked()
+                {
                     self.hues_window.is_open = false;
                 }
             } else {
                 let btn = Button::new("hues").fill(Rgba::from_black_alpha(0.));
-                if ui.add(btn).clicked() {
+                if ui
+                    .add(btn)
+                    .on_hover_cursor(CursorIcon::PointingHand)
+                    .clicked()
+                {
                     self.hues_window.is_open = true;
                 }
             }
             if self.tints_window.is_open {
-                if ui.button("tints").clicked() {
+                if ui
+                    .button("tints")
+                    .on_hover_cursor(CursorIcon::PointingHand)
+                    .clicked()
+                {
                     self.tints_window.is_open = false;
                 }
             } else {
                 let btn = Button::new("tints").fill(Rgba::from_black_alpha(0.));
-                if ui.add(btn).clicked() {
+                if ui
+                    .add(btn)
+                    .on_hover_cursor(CursorIcon::PointingHand)
+                    .clicked()
+                {
                     self.tints_window.is_open = true;
                 }
             }
 
             if self.shades_window.is_open {
-                if ui.button("shades").clicked() {
+                if ui
+                    .button("shades")
+                    .on_hover_cursor(CursorIcon::PointingHand)
+                    .clicked()
+                {
                     self.shades_window.is_open = false;
                 }
             } else {
                 let btn = Button::new("shades").fill(Rgba::from_black_alpha(0.));
-                if ui.add(btn).clicked() {
+                if ui
+                    .add(btn)
+                    .on_hover_cursor(CursorIcon::PointingHand)
+                    .clicked()
+                {
                     self.shades_window.is_open = true;
                 }
             }
 
             ui.with_layout(Layout::right_to_left(), |ui| {
-                if ui.button(HELP_ICON).on_hover_text("Show help").clicked() {
+                if ui
+                    .button(HELP_ICON)
+                    .on_hover_text("Show help")
+                    .on_hover_cursor(CursorIcon::Help)
+                    .clicked()
+                {
                     self.help_window.toggle_window();
                 }
                 if ui
                     .button(EXPAND_ICON)
                     .on_hover_text("Show/hide side panel")
+                    .on_hover_cursor(CursorIcon::ResizeHorizontal)
                     .clicked()
                 {
                     self.show_side_panel = !self.show_side_panel;
                 }
-                if ui.button(SETTINGS_ICON).on_hover_text("Settings").clicked() {
+                if ui
+                    .button(SETTINGS_ICON)
+                    .on_hover_text("Settings")
+                    .on_hover_cursor(CursorIcon::PointingHand)
+                    .clicked()
+                {
                     self.settings_window.show = true;
                 }
                 self.dark_light_switch(ui);
@@ -594,6 +640,7 @@ impl App {
         if ui
             .button(btn)
             .on_hover_text("Switch ui color theme")
+            .on_hover_cursor(CursorIcon::PointingHand)
             .clicked()
         {
             if is_dark {
@@ -607,21 +654,31 @@ impl App {
     fn side_ui(&mut self, ui: &mut Ui, tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>) {
         ui.vertical(|ui| {
             ui.horizontal(|ui| {
-                ui.heading("Saved colors");
+                let heading = Label::new("Saved colors")
+                    .text_style(TextStyle::Heading)
+                    .strong();
+                ui.add(heading);
                 ui.add_space(7.);
                 if ui
                     .button(CLEAR_ICON)
                     .on_hover_text("Clear colors")
+                    .on_hover_cursor(CursorIcon::PointingHand)
                     .clicked()
                 {
                     self.saved_colors.clear();
                 }
-                if ui.button(EXPORT_ICON).on_hover_text("Export").clicked() {
+                if ui
+                    .button(EXPORT_ICON)
+                    .on_hover_text("Export")
+                    .on_hover_cursor(CursorIcon::PointingHand)
+                    .clicked()
+                {
                     self.export_window.show = true;
                 }
                 if ui
                     .button(COPY_ICON)
                     .on_hover_text("Copy all colors to clipboard")
+                    .on_hover_cursor(CursorIcon::Alias)
                     .clicked()
                 {
                     let _ = save_to_clipboard(self.saved_colors.as_hex_list());
@@ -641,11 +698,17 @@ impl App {
                             if ui
                                 .button(DELETE_ICON)
                                 .on_hover_text("Delete this color")
+                                .on_hover_cursor(CursorIcon::PointingHand)
                                 .clicked()
                             {
                                 self.saved_colors.remove(color);
                             }
-                            if ui.button(COPY_ICON).on_hover_text("Copy color").clicked() {
+                            if ui
+                                .button(COPY_ICON)
+                                .on_hover_text("Copy color")
+                                .on_hover_cursor(CursorIcon::Alias)
+                                .clicked()
+                            {
                                 let _ = save_to_clipboard(
                                     self.clipboard_color(&self.picker.current_color),
                                 );
@@ -653,6 +716,7 @@ impl App {
                             if ui
                                 .button(PLAY_ICON)
                                 .on_hover_text("Use this color")
+                                .on_hover_cursor(CursorIcon::PointingHand)
                                 .clicked()
                             {
                                 self.picker.set_cur_color(*color);
@@ -728,6 +792,7 @@ impl App {
             if ui
                 .button(COPY_ICON)
                 .on_hover_text("Copy color to clipboard")
+                .on_hover_cursor(CursorIcon::Alias)
                 .clicked()
             {
                 if let Err(e) = save_to_clipboard(self.clipboard_color(&self.picker.current_color))
@@ -737,7 +802,12 @@ impl App {
                     self.clear_error();
                 }
             }
-            if ui.button(ADD_ICON).on_hover_text(ADD_DESCR).clicked() {
+            if ui
+                .button(ADD_ICON)
+                .on_hover_text(ADD_DESCR)
+                .on_hover_cursor(CursorIcon::Copy)
+                .clicked()
+            {
                 self.add_cur_color();
             }
         });
@@ -814,8 +884,17 @@ impl App {
     #[cfg(not(any(target_os = "linux", windows)))]
     fn toggle_zoom_window(&mut self, _: &Rc<dyn DisplayPickerExt>) {}
 
+    fn toggle_mouse(&mut self, icon: CursorIcon) {
+        self.cursor_icon = if icon == self.cursor_icon {
+            CursorIcon::default()
+        } else {
+            icon
+        }
+    }
+
     #[cfg(target_os = "linux")]
     fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
+        self.toggle_mouse(CursorIcon::Crosshair);
         let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
         if self.picker_window.is_none() {
             if let Ok(window) = picker.spawn_window(
@@ -839,7 +918,11 @@ impl App {
     #[cfg(target_os = "linux")]
     fn handle_zoom_picker(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
         let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
-        if ui.button(ZOOM_PICKER_ICON).clicked() {
+        if ui
+            .button(ZOOM_PICKER_ICON)
+            .on_hover_cursor(CursorIcon::ZoomIn)
+            .clicked()
+        {
             self.toggle_zoom_window(&picker);
         } else if let Some((window, gc)) = self.picker_window {
             if let Ok(img) = picker.get_image(
@@ -881,6 +964,7 @@ impl App {
 
     #[cfg(windows)]
     fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
+        self.toggle_mouse(CursorIcon::Crosshair);
         let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
         if self.picker_window.is_none() {
             if let Ok(window) = picker.spawn_window(
@@ -909,7 +993,11 @@ impl App {
     #[cfg(windows)]
     fn handle_zoom_picker(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
         let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
-        if ui.button(ZOOM_PICKER_ICON).clicked() {
+        if ui
+            .button(ZOOM_PICKER_ICON)
+            .on_hover_cursor(CursorIcon::ZoomIn)
+            .clicked()
+        {
             self.toggle_zoom_window(&picker);
         } else if let Some(window) = self.picker_window {
             match picker.get_screenshot(
