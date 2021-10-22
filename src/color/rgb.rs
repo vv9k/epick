@@ -297,13 +297,14 @@ impl From<Rgb> for Matrix1x3 {
 #[cfg(test)]
 mod tests {
     use crate::color::{Cmyk, Hsv, Rgb};
+    use crate::math::eq_f32;
 
     #[test]
     fn rgb_scaled_init() {
         let rgb = Rgb::new_scaled(255, 85, 0);
-        assert_eq!(rgb.r(), 1.);
-        assert_eq!(rgb.g(), 1. / 3.);
-        assert_eq!(rgb.b(), 0.);
+        assert!(eq_f32(rgb.r(), 1.));
+        assert!(eq_f32(rgb.g(), 1. / 3.));
+        assert!(eq_f32(rgb.b(), 0.));
         assert_eq!(rgb.r_scaled() as u32, 255);
         assert_eq!(rgb.g_scaled() as u32, 85);
         assert_eq!(rgb.b_scaled() as u32, 0);
