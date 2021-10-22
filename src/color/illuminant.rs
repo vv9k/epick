@@ -60,3 +60,9 @@ impl AsRef<str> for Illuminant {
         }
     }
 }
+
+impl Default for Illuminant {
+    fn default() -> Self {
+        Illuminant::D65
+    }
+}

@@ -2,7 +2,7 @@ pub mod slider_1d;
 pub mod slider_2d;
 pub mod windows;
 
-use crate::color::{Color, DisplayFormat};
+use crate::color::{Color, DisplayFormat, Illuminant, RgbWorkingSpace};
 
 use egui::{
     color,
@@ -108,10 +108,15 @@ pub fn drop_target<R>(
     InnerResponse::new(ret, response)
 }
 
-pub fn color_tooltip(color: &Color, display_format: DisplayFormat) -> String {
+pub fn color_tooltip(
+    color: &Color,
+    display_format: DisplayFormat,
+    ws: RgbWorkingSpace,
+    illuminant: Illuminant,
+) -> String {
     format!(
         "{}\n\nPrimary click: set current\nMiddle click: save color\nSecondary click: copy color",
-        color.display(display_format)
+        color.display(display_format, ws, illuminant)
     )
 }
 

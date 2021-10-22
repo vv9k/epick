@@ -1,4 +1,5 @@
 mod cmyk;
+mod format;
 mod gradient;
 mod hsl;
 mod hsv;
@@ -27,6 +28,7 @@ pub use working_space::{ChromaticAdaptationMethod, RgbWorkingSpace};
 pub use xyy::xyY;
 pub use xyz::Xyz;
 
+use crate::color::format::ColorFormat;
 use egui::color::{Color32, Hsva, HsvaGamma, Rgba};
 use serde::{Deserialize, Serialize};
 
@@ -112,8 +114,8 @@ impl Default for ColorHarmony {
 
 //################################################################################
 
-#[derive(Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
-pub enum DisplayFormat {
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+pub enum DisplayFormat<'fmt> {
     #[serde(rename = "hex")]
     Hex,
     #[serde(rename = "hex-uppercase")]
@@ -121,30 +123,20 @@ pub enum DisplayFormat {
     #[serde(rename = "css-rgb")]
     CssRgb,
     #[serde(rename = "css-hsl")]
-    CssHsl { degree_symbol: bool },
+    CssHsl {
+        degree_symbol: bool,
+    },
+    Custom(&'fmt str),
 }
 
-impl DisplayFormat {
+impl<'fmt> DisplayFormat<'fmt> {
     pub fn no_degree(self) -> Self {
         use DisplayFormat::*;
         match self {
-            Hex => Hex,
-            HexUpercase => HexUpercase,
-            CssRgb => CssRgb,
             CssHsl { .. } => CssHsl {
                 degree_symbol: false,
             },
-        }
-    }
-}
-
-impl AsRef<str> for DisplayFormat {
-    fn as_ref(&self) -> &str {
-        match &self {
-            DisplayFormat::Hex => "hex",
-            DisplayFormat::HexUpercase => "hex uppercase",
-            DisplayFormat::CssRgb => "css rgb",
-            DisplayFormat::CssHsl { .. } => "css hsl",
+            fmt => fmt,
         }
     }
 }
@@ -217,21 +209,24 @@ impl Color {
         )
     }
 
-    pub fn display(&self, format: DisplayFormat) -> String {
+    pub fn display(
+        &self,
+        format: DisplayFormat,
+        ws: RgbWorkingSpace,
+        illuminant: Illuminant,
+    ) -> String {
         match format {
             DisplayFormat::Hex => self.as_hex(),
             DisplayFormat::HexUpercase => self.as_hex().to_uppercase(),
             DisplayFormat::CssRgb => self.as_css_rgb(),
             DisplayFormat::CssHsl { degree_symbol } => self.as_css_hsl(degree_symbol),
-        }
-    }
-
-    pub fn display_padded(&self, format: DisplayFormat) -> String {
-        match format {
-            DisplayFormat::Hex => self.as_hex(),
-            DisplayFormat::HexUpercase => self.as_hex().to_uppercase(),
-            DisplayFormat::CssRgb => self.as_css_rgb_padded(),
-            DisplayFormat::CssHsl { degree_symbol } => self.as_css_hsl_padded(degree_symbol),
+            DisplayFormat::Custom(fmt) => {
+                if let Ok(fmt) = ColorFormat::parse(fmt) {
+                    fmt.format_color(self, ws, illuminant)
+                } else {
+                    self.as_hex()
+                }
+            }
         }
     }
 

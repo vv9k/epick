@@ -1,6 +1,4 @@
-use crate::color::{
-    ChromaticAdaptationMethod, ColorHarmony, DisplayFormat, Illuminant, RgbWorkingSpace,
-};
+use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -68,10 +66,21 @@ impl Default for ColorSpaceSettings {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Settings {
-    pub color_display_format: DisplayFormat,
+    #[serde(default)]
+    pub color_display_format: DisplayFmtEnum,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub custom_display_fmt_str: String,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub custom_clipboard_fmt_str: String,
+    #[serde(default)]
     pub color_spaces: ColorSpaceSettings,
+    #[serde(default)]
     pub rgb_working_space: RgbWorkingSpace,
+    #[serde(default)]
     pub chromatic_adaptation_method: ChromaticAdaptationMethod,
+    #[serde(default)]
     pub illuminant: Illuminant,
     #[serde(default = "enabled")]
     #[serde(skip_serializing_if = "is_true")]
@@ -85,7 +94,9 @@ impl Default for Settings {
     fn default() -> Self {
         let ws = RgbWorkingSpace::default();
         Self {
-            color_display_format: DisplayFormat::Hex,
+            color_display_format: DisplayFmtEnum::default(),
+            custom_display_fmt_str: String::new(),
+            custom_clipboard_fmt_str: String::new(),
             color_spaces: ColorSpaceSettings::default(),
             rgb_working_space: ws,
             chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
@@ -136,21 +147,51 @@ impl Settings {
     }
 }
 
+#[derive(Debug, PartialEq, Deserialize, Serialize)]
+pub enum DisplayFmtEnum {
+    #[serde(rename = "hex")]
+    Hex,
+    #[serde(rename = "hex-uppercase")]
+    HexUppercase,
+    #[serde(rename = "css-rgb")]
+    CssRgb,
+    #[serde(rename = "css-hsl")]
+    CssHsl,
+    #[serde(rename = "custom")]
+    Custom,
+}
+
+impl Default for DisplayFmtEnum {
+    fn default() -> Self {
+        DisplayFmtEnum::Hex
+    }
+}
+
+impl AsRef<str> for DisplayFmtEnum {
+    fn as_ref(&self) -> &str {
+        use DisplayFmtEnum::*;
+        match &self {
+            Hex => "hex",
+            HexUppercase => "hex uppercase",
+            CssRgb => "css rgb",
+            CssHsl => "css hsl",
+            Custom => "custom",
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::app::settings::Settings;
-    use crate::color::{
-        ChromaticAdaptationMethod, ColorHarmony, DisplayFormat, Illuminant, RgbWorkingSpace,
-    };
+    use crate::app::settings::{DisplayFmtEnum, Settings};
+    use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
     use std::fs;
 
     #[test]
     fn loads_settings() {
         let tmp = tempdir::TempDir::new("settings-test").unwrap();
         let settings_str = r#"---
-color_display_format:
-  css-hsl:
-    degree_symbol: true
+color_display_format: custom
+custom_display_fmt_str: "{r} {g} {b}"
 color_spaces:
   hsv: false
   luv: true
@@ -165,12 +206,8 @@ illuminant: D50
         let settings = Settings::load(&path).unwrap();
         assert_eq!(settings.illuminant, Illuminant::D50);
         assert_eq!(settings.rgb_working_space, RgbWorkingSpace::Adobe);
-        assert_eq!(
-            settings.color_display_format,
-            DisplayFormat::CssHsl {
-                degree_symbol: true
-            }
-        );
+        assert_eq!(settings.color_display_format, DisplayFmtEnum::Custom,);
+        assert_eq!(settings.custom_display_fmt_str, "{r} {g} {b}");
         assert_eq!(
             settings.chromatic_adaptation_method,
             ChromaticAdaptationMethod::VonKries

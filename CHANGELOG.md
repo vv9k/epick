@@ -14,6 +14,8 @@
 - Add persistent colors and settings to WASM by using local browser storage
 - All windows will now open in the empty area after sliders so that nothing is hidden
 - Use different cursor when hovering over different elements
+- Add custom color format support, you can now fully customise the way the colors next to color boxes are displayed.
+  A simple formatting language has been introduced that has a syntax simillar to Rust's format macros.
 
 # 0.5.1
 - Fix switching between working spaces and illuminants

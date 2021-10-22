@@ -1,8 +1,6 @@
-use crate::app::settings::Settings;
+use crate::app::settings::{DisplayFmtEnum, Settings};
 use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
-use crate::color::{
-    ChromaticAdaptationMethod, ColorHarmony, DisplayFormat, Illuminant, RgbWorkingSpace,
-};
+use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
 
 use egui::{Color32, ComboBox, CursorIcon, Ui, Window};
 use std::fmt::Display;
@@ -296,29 +294,35 @@ impl SettingsWindow {
             .show_ui(ui, |ui| {
                 ui.selectable_value(
                     &mut self.settings.color_display_format,
-                    DisplayFormat::Hex,
-                    DisplayFormat::Hex.as_ref(),
+                    DisplayFmtEnum::Hex,
+                    DisplayFmtEnum::Hex.as_ref(),
                 );
                 ui.selectable_value(
                     &mut self.settings.color_display_format,
-                    DisplayFormat::HexUpercase,
-                    DisplayFormat::HexUpercase.as_ref(),
+                    DisplayFmtEnum::HexUppercase,
+                    DisplayFmtEnum::HexUppercase.as_ref(),
                 );
                 ui.selectable_value(
                     &mut self.settings.color_display_format,
-                    DisplayFormat::CssRgb,
-                    DisplayFormat::CssRgb.as_ref(),
+                    DisplayFmtEnum::CssRgb,
+                    DisplayFmtEnum::CssRgb.as_ref(),
                 );
                 ui.selectable_value(
                     &mut self.settings.color_display_format,
-                    DisplayFormat::CssHsl {
-                        degree_symbol: true,
-                    },
-                    DisplayFormat::CssHsl {
-                        degree_symbol: true,
-                    }
-                    .as_ref(),
+                    DisplayFmtEnum::CssHsl,
+                    DisplayFmtEnum::CssHsl.as_ref(),
+                );
+                ui.selectable_value(
+                    &mut self.settings.color_display_format,
+                    DisplayFmtEnum::Custom,
+                    DisplayFmtEnum::Custom.as_ref(),
                 );
             });
+        if let DisplayFmtEnum::Custom = self.settings.color_display_format {
+            ui.label("Custom display format:");
+            ui.text_edit_singleline(&mut self.settings.custom_display_fmt_str);
+            ui.label("Custom clipboard format:");
+            ui.text_edit_singleline(&mut self.settings.custom_clipboard_fmt_str);
+        }
     }
 }

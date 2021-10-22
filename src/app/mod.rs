@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-mod color_format;
 mod color_picker;
 mod render;
 mod saved_colors;
@@ -8,11 +7,11 @@ mod screen_size;
 mod settings;
 mod ui;
 
-use crate::app::settings::Settings;
+use crate::app::settings::{DisplayFmtEnum, Settings};
 use crate::app::ui::windows::{
     ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow,
 };
-use crate::color::{Color, ColorHarmony};
+use crate::color::{Color, ColorHarmony, DisplayFormat};
 use crate::display_picker::{self, DisplayPickerExt};
 use crate::save_to_clipboard;
 use color_picker::ColorPicker;
@@ -390,16 +389,44 @@ impl App {
             });
     }
 
+    fn display_format(&self) -> DisplayFormat {
+        match self.settings_window.settings.color_display_format {
+            DisplayFmtEnum::Hex => DisplayFormat::Hex,
+            DisplayFmtEnum::HexUppercase => DisplayFormat::HexUpercase,
+            DisplayFmtEnum::CssRgb => DisplayFormat::CssRgb,
+            DisplayFmtEnum::CssHsl => DisplayFormat::CssHsl {
+                degree_symbol: true,
+            },
+            DisplayFmtEnum::Custom => {
+                DisplayFormat::Custom(&self.settings_window.settings.custom_display_fmt_str)
+            }
+        }
+    }
+
     fn display_color(&self, color: &Color) -> String {
-        color.display_padded(self.settings_window.settings.color_display_format)
+        color.display(
+            self.display_format(),
+            self.settings_window.settings.rgb_working_space,
+            self.settings_window.settings.illuminant,
+        )
     }
 
     fn clipboard_color(&self, color: &Color) -> String {
+        let format = match &self.settings_window.settings.color_display_format {
+            DisplayFmtEnum::Hex => DisplayFormat::Hex,
+            DisplayFmtEnum::HexUppercase => DisplayFormat::HexUpercase,
+            DisplayFmtEnum::CssRgb => DisplayFormat::CssRgb,
+            DisplayFmtEnum::CssHsl => DisplayFormat::CssHsl {
+                degree_symbol: false,
+            },
+            DisplayFmtEnum::Custom => {
+                DisplayFormat::Custom(&self.settings_window.settings.custom_clipboard_fmt_str)
+            }
+        };
         color.display(
-            self.settings_window
-                .settings
-                .color_display_format
-                .no_degree(),
+            format,
+            self.settings_window.settings.rgb_working_space,
+            self.settings_window.settings.illuminant,
         )
     }
 
@@ -447,16 +474,20 @@ impl App {
         with_label: bool,
     ) {
         let color_str = self.display_color(color);
+        let format = self.display_format();
+        let on_hover = color_tooltip(
+            color,
+            format,
+            self.settings_window.settings.rgb_working_space,
+            self.settings_window.settings.illuminant,
+        );
         let color_box = tex_color(
             ui,
             texture_allocator,
             &mut self.texture_manager,
             color.color32(),
             size,
-            Some(&color_tooltip(
-                color,
-                self.settings_window.settings.color_display_format,
-            )),
+            Some(&on_hover),
         );
         if let Some(color_box) = color_box {
             if with_label {

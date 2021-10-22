@@ -285,16 +285,19 @@ impl DigitFormat {
         num = num.abs();
 
         DigitFormat::Decimal.format_num(num.trunc() as u32, text, stack);
-        text.push('.');
-
         let mut fract = num.fract() * radix;
+
         while fract.fract() != 0. {
             fract *= radix;
         }
 
         if let Some(precision) = precision {
+            if precision > 0 {
+                text.push('.');
+            }
             DigitFormat::Decimal.format_num_count(fract as u32, text, stack, precision);
         } else {
+            text.push('.');
             DigitFormat::Decimal.format_num(fract as u32, text, stack);
         }
     }
@@ -557,9 +560,7 @@ fn parse_color_format(i: &str) -> IResult<&str, ColorFormat, ColorParseError<&st
 
 #[cfg(test)]
 mod tests {
-    use crate::app::color_format::{
-        ColorField, ColorFormat, ColorSymbol, DigitFormat, FormatToken,
-    };
+    use crate::color::format::{ColorField, ColorFormat, ColorSymbol, DigitFormat, FormatToken};
     use crate::color::{Color, Illuminant, Rgb, RgbWorkingSpace};
     macro_rules! field {
         ($sym:tt) => {
@@ -612,7 +613,7 @@ mod tests {
             Color::Rgb(Rgb::new(0.5, 0.5, 0.5))
         );
         test_case!(
-            "{lab_l} {lab_a:.0} {lab_b:.2}" => "55.6818 -17. -27.27",
+            "{lab_l} {lab_a:.0} {lab_b:.2}" => "55.6818 -17 -27.27",
             Color::Rgb(Rgb::new_scaled(35, 144, 180))
         );
     }
