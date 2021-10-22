@@ -97,6 +97,9 @@ impl Default for Settings {
 }
 
 impl Settings {
+    pub const STORAGE_KEY: &'static str = "epick.saved.settings";
+    pub const FILE_NAME: &'static str = "settings.yaml";
+
     pub fn from_yaml_str(yaml: &str) -> Result<Self> {
         serde_yaml::from_str(yaml).context("failed to deserialize settings from YAML")
     }

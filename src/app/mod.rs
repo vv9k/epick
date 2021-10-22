@@ -62,11 +62,6 @@ const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
 const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
 const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as i32;
 
-const SK_SAVED_COLORS: &str = "epick.saved.colors";
-const SK_SAVED_SETTINGS: &str = "epick.saved.settings";
-const FN_SAVED_COLORS: &str = "colors.yaml";
-const FN_SAVED_SETTINGS: &str = "config.yaml";
-
 //####################################################################################################
 
 #[derive(Debug)]
@@ -233,7 +228,7 @@ impl App {
         if self.settings_window.settings.cache_colors {
             #[cfg(target_arch = "wasm32")]
             if let Some(storage) = _storage {
-                if let Some(yaml) = storage.get_string(SK_SAVED_COLORS) {
+                if let Some(yaml) = storage.get_string(SavedColors::STORAGE_KEY) {
                     if let Ok(colors) = SavedColors::from_yaml_str(&yaml) {
                         self.saved_colors = colors;
                         if !self.saved_colors.is_empty() {
@@ -244,7 +239,7 @@ impl App {
             }
             #[cfg(not(target_arch = "wasm32"))]
             if let Some(path) = SavedColors::dir("epick") {
-                if let Ok(colors) = SavedColors::load(path.join(FN_SAVED_COLORS)) {
+                if let Ok(colors) = SavedColors::load(path.join(SavedColors::FILE_NAME)) {
                     self.saved_colors = colors;
                     if !self.saved_colors.is_empty() {
                         self.show_side_panel = true;
@@ -258,33 +253,33 @@ impl App {
         #[cfg(target_arch = "wasm32")]
         if self.settings_window.settings.cache_colors {
             if let Ok(yaml) = self.saved_colors.as_yaml_str() {
-                _storage.set_string(SK_SAVED_COLORS, yaml);
+                _storage.set_string(SavedColors::STORAGE_KEY, yaml);
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(dir) = SavedColors::dir("epick") {
-            let _ = self.saved_colors.save(dir.join(FN_SAVED_COLORS));
+            let _ = self.saved_colors.save(dir.join(SavedColors::FILE_NAME));
         }
     }
 
     fn save_settings(&self, _storage: &mut dyn Storage) {
         #[cfg(target_arch = "wasm32")]
         if let Ok(yaml) = self.settings_window.settings.as_yaml_str() {
-            _storage.set_string(SK_SAVED_SETTINGS, yaml);
+            _storage.set_string(Settings::STORAGE_KEY, yaml);
         }
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(dir) = Settings::dir("epick") {
             let _ = self
                 .settings_window
                 .settings
-                .save(dir.join(FN_SAVED_SETTINGS));
+                .save(dir.join(Settings::FILE_NAME));
         }
     }
 
     fn load_settings(&mut self, _storage: Option<&dyn Storage>) {
         #[cfg(target_arch = "wasm32")]
         if let Some(storage) = _storage {
-            if let Some(yaml) = storage.get_string(SK_SAVED_SETTINGS) {
+            if let Some(yaml) = storage.get_string(Settings::STORAGE_KEY) {
                 if let Ok(settings) = Settings::from_yaml_str(&yaml) {
                     self.settings_window.settings = settings;
                 }
@@ -292,7 +287,7 @@ impl App {
         }
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(config_dir) = Settings::dir("epick") {
-            let path = config_dir.join(FN_SAVED_SETTINGS);
+            let path = config_dir.join(Settings::FILE_NAME);
 
             if let Ok(settings) = Settings::load(&path) {
                 self.settings_window.settings = settings;
