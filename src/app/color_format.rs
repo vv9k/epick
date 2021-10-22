@@ -36,6 +36,7 @@ impl<'a> ColorFormat<'a> {
     ) -> String {
         use ColorSymbol::*;
 
+        let mut stack = LinkedList::new();
         let rgb = color.rgb();
         let cmyk = Cmyk::from(rgb);
         let hsl = Hsl::from(rgb);
@@ -128,7 +129,7 @@ impl<'a> ColorFormat<'a> {
                             _ => unreachable!(),
                         } as u32;
 
-                        format_num(&mut s, num, digit_format);
+                        digit_format.format_num(num, &mut s, &mut stack);
                     }
                 },
             }
@@ -141,26 +142,6 @@ impl<'a> ColorFormat<'a> {
 impl<'a> From<Vec<FormatToken<'a>>> for ColorFormat<'a> {
     fn from(vec: Vec<FormatToken<'a>>) -> Self {
         Self(vec)
-    }
-}
-
-fn format_num(text: &mut String, mut num: u32, format: &DigitFormat) {
-    match &format {
-        DigitFormat::Decimal => {
-            let mut stack = LinkedList::new();
-            while num > 0 {
-                stack.push_front(num % 10);
-                num /= 10;
-            }
-            while let Some(num) = stack.pop_front() {
-                if let Some(ch) = std::char::from_digit(num, 10) {
-                    text.push(ch);
-                }
-            }
-        }
-        DigitFormat::Hex => text.push_str(&format!("{:x}", num)),
-        DigitFormat::UppercaseHex => text.push_str(&format!("{:X}", num)),
-        DigitFormat::Octal => text.push_str(&format!("{:o}", num)),
     }
 }
 
@@ -198,6 +179,41 @@ enum DigitFormat {
     UppercaseHex,
     Octal,
     Decimal,
+}
+
+impl DigitFormat {
+    #[inline]
+    pub fn radix(&self) -> u32 {
+        match &self {
+            DigitFormat::Octal => 8,
+            DigitFormat::Decimal => 10,
+            DigitFormat::Hex => 16,
+            DigitFormat::UppercaseHex => 16,
+        }
+    }
+
+    #[inline]
+    fn format_digit(&self, digit: u32) -> Option<char> {
+        let mut ch = std::char::from_digit(digit, self.radix());
+        if matches!(self, DigitFormat::UppercaseHex) {
+            ch = ch.map(|ch| ch.to_ascii_uppercase());
+        }
+        ch
+    }
+
+    #[inline]
+    fn format_num(&self, mut num: u32, text: &mut String, stack: &mut LinkedList<u32>) {
+        while num > 0 {
+            stack.push_front(num % self.radix());
+            num /= self.radix();
+        }
+
+        while let Some(num) = stack.pop_front() {
+            if let Some(ch) = self.format_digit(num) {
+                text.push(ch);
+            }
+        }
+    }
 }
 
 impl Default for DigitFormat {
