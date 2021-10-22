@@ -45,6 +45,14 @@ impl Rgb {
         }
     }
 
+    pub fn new_scaled(red: u8, green: u8, blue: u8) -> Self {
+        Self::new(
+            red as f32 / U8_MAX,
+            green as f32 / U8_MAX,
+            blue as f32 / U8_MAX,
+        )
+    }
+
     #[inline(always)]
     /// Returns Red value in the range 0.0 ..= 1.0
     pub fn r(&self) -> f32 {
@@ -289,6 +297,17 @@ impl From<Rgb> for Matrix1x3 {
 #[cfg(test)]
 mod tests {
     use crate::color::{Cmyk, Hsv, Rgb};
+
+    #[test]
+    fn rgb_scaled_init() {
+        let rgb = Rgb::new_scaled(255, 127, 0);
+        assert!(rgb.r() == 1.);
+        assert!(rgb.g() == 0.5);
+        assert!(rgb.b() == 0.);
+        assert!(rgb.r_scaled() == 255);
+        assert!(rgb.g_scaled() == 127);
+        assert!(rgb.b_scaled() == 0);
+    }
 
     #[test]
     fn cmyk_to_rgb() {
