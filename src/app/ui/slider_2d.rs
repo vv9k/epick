@@ -14,7 +14,8 @@ pub fn color(
     y_range: RangeInclusive<f32>,
     color_at: impl Fn(f32, f32) -> Color32,
 ) -> Response {
-    let desired_size = Vec2::splat(ui.spacing().slider_width * 1.2);
+    let width = ui.spacing().slider_width * 2.;
+    let desired_size = Vec2::new(width, width * 2. / 3.);
     let (rect, mut response) = ui.allocate_at_least(desired_size, Sense::click_and_drag());
 
     if let Some(mpos) = response.interact_pointer_pos() {
@@ -57,7 +58,7 @@ pub fn color(
     // Show where the slider is at:
     ui.painter().add(Shape::Circle {
         center: pos2(x, y),
-        radius: rect.width() / 24.0,
+        radius: 7.,
         fill: picked_color,
         stroke: Stroke::new(visuals.fg_stroke.width, contrast_color(picked_color)),
     });
