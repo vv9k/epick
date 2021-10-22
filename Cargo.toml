@@ -2,7 +2,7 @@
 name = "epick"
 version = "0.6.0-beta"
 authors = ["Wojciech Kępka <wojciech@wkepka.dev>"]
-edition = "2018"
+edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
