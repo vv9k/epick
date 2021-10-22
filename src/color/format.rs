@@ -123,13 +123,22 @@ impl<'a> ColorFormat<'a> {
                             _ => unreachable!(),
                         };
 
-                        let precision = if let DigitFormat::Float { precision } = digit_format {
-                            *precision
-                        } else {
-                            4
-                        };
-
-                        DigitFormat::format_float(num, &mut s, &mut stack, Some(precision))
+                        match digit_format {
+                            Some(
+                                fmt
+                                @
+                                (DigitFormat::Hex
+                                | DigitFormat::UppercaseHex
+                                | DigitFormat::Octal
+                                | DigitFormat::Decimal),
+                            ) => {
+                                fmt.format_num(num.abs() as u32, &mut s, &mut stack);
+                            }
+                            Some(DigitFormat::Float { precision }) => {
+                                DigitFormat::format_float(num, &mut s, &mut stack, Some(*precision))
+                            }
+                            None => DigitFormat::format_float(num, &mut s, &mut stack, None),
+                        }
                     }
                     Red255 | Green255 | Blue255 => {
                         let num = match symbol {
@@ -139,7 +148,12 @@ impl<'a> ColorFormat<'a> {
                             _ => unreachable!(),
                         } as u32;
 
-                        digit_format.format_num(num, &mut s, &mut stack);
+                        let fmt = if let Some(fmt) = digit_format {
+                            fmt
+                        } else {
+                            &DigitFormat::Decimal
+                        };
+                        fmt.format_num(num, &mut s, &mut stack);
                     }
                 },
             }
@@ -187,7 +201,7 @@ enum FormatToken<'a> {
 #[derive(Debug, PartialEq)]
 pub struct ColorField {
     symbol: ColorSymbol,
-    digit_format: DigitFormat,
+    digit_format: Option<DigitFormat>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -481,6 +495,10 @@ fn parse_color_symbol(i: &str) -> IResult<&str, ColorSymbol, ColorParseError<&st
     ))(i)
 }
 
+fn parse_decimal_format(i: &str) -> IResult<&str, DigitFormat, ColorParseError<&str>> {
+    map(char('d'), |_| DigitFormat::Decimal)(i)
+}
+
 fn parse_hex_format(i: &str) -> IResult<&str, DigitFormat, ColorParseError<&str>> {
     map(char('x'), |_| DigitFormat::Hex)(i)
 }
@@ -507,6 +525,7 @@ fn parse_digit_format(i: &str) -> IResult<&str, DigitFormat, ColorParseError<&st
             parse_hex_format,
             parse_hex_uppercase_format,
             parse_octal_format,
+            parse_decimal_format,
             parse_float_format,
         )),
     )(i)
@@ -521,7 +540,7 @@ fn parse_color_field(i: &str) -> IResult<&str, ColorField, ColorParseError<&str>
                 tuple((parse_color_symbol, opt(parse_digit_format))),
                 |(symbol, digit_format)| ColorField {
                     symbol,
-                    digit_format: digit_format.unwrap_or_default(),
+                    digit_format,
                 },
             ),
         ),
@@ -566,19 +585,19 @@ mod tests {
         ($sym:tt) => {
             FormatToken::Color(ColorField {
                 symbol: ColorSymbol::$sym,
-                digit_format: DigitFormat::default(),
+                digit_format: None,
             })
         };
         ($sym:tt, $fmt:tt) => {
             FormatToken::Color(ColorField {
                 symbol: ColorSymbol::$sym,
-                digit_format: DigitFormat::$fmt,
+                digit_format: Some(DigitFormat::$fmt),
             })
         };
         ($sym:tt, $fmt:expr) => {
             FormatToken::Color(ColorField {
                 symbol: ColorSymbol::$sym,
-                digit_format: $fmt,
+                digit_format: Some($fmt),
             })
         };
     }
@@ -613,8 +632,12 @@ mod tests {
             Color::Rgb(Rgb::new(0.5, 0.5, 0.5))
         );
         test_case!(
-            "{lab_l} {lab_a:.0} {lab_b:.2}" => "55.6818 -17 -27.27",
+            "{lab_l:.4} {lab_a:.0} {lab_b:.2}" => "55.6818 -17 -27.27",
             Color::Rgb(Rgb::new_scaled(35, 144, 180))
+        );
+        test_case!(
+            "{hsv_h360:d} {hsv_s100:X} {hsv_v100:x}" => "326 4B 2f",
+            Color::Rgb(Rgb::new_scaled(120, 30, 80))
         );
     }
 

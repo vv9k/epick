@@ -59,11 +59,11 @@ To specify the precision of a floating point number:
 "{r:.2} {g:.0} {b:.4}"
 ```
 
-To display a decimal value in octal, hex and uppercase hex respectively:
+To display a value in decimal, octal, hex or uppercase hex respectively:
 ```
-"{r255:o} {g255:x} {b255:X}"
+"{lab_l:d} {r255:o} {g255:x} {b255:X}"
 ```
-Only works for values in the 0-255 range.
+Using this flags on floating values will automatically truncate the fractional part and treat the number as an integer.
 
 ### Supported color fields:
 | Field       | Color value    | Value range      |
