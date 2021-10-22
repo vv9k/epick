@@ -119,7 +119,8 @@ impl<'a> ColorFormat<'a> {
                             XYZz => xyz.z(),
                             _ => unreachable!(),
                         };
-                        s.push_str(&num.to_string());
+
+                        DigitFormat::format_float(num, &mut s, &mut stack)
                     }
                     Red255 | Green255 | Blue255 => {
                         let num = match symbol {
@@ -203,9 +204,13 @@ impl DigitFormat {
 
     #[inline]
     fn format_num(&self, mut num: u32, text: &mut String, stack: &mut LinkedList<u32>) {
-        while num > 0 {
-            stack.push_front(num % self.radix());
-            num /= self.radix();
+        if num == 0 {
+            stack.push_front(num);
+        } else {
+            while num > 0 {
+                stack.push_front(num % self.radix());
+                num /= self.radix();
+            }
         }
 
         while let Some(num) = stack.pop_front() {
@@ -213,6 +218,28 @@ impl DigitFormat {
                 text.push(ch);
             }
         }
+    }
+
+    fn format_float(mut num: f32, text: &mut String, stack: &mut LinkedList<u32>) {
+        if num.is_nan() || num.is_infinite() || num.is_subnormal() {
+            return;
+        }
+        if num.is_sign_negative() {
+            text.push('-');
+        }
+
+        let radix = DigitFormat::Decimal.radix() as f32;
+        num = num.abs();
+
+        DigitFormat::Decimal.format_num(num.trunc() as u32, text, stack);
+        text.push('.');
+
+        let mut fract = num.fract() * radix;
+        while fract.fract() != 0. {
+            fract *= radix;
+        }
+
+        DigitFormat::Decimal.format_num(fract as u32, text, stack);
     }
 }
 
@@ -512,6 +539,10 @@ mod tests {
         test_case!(
             "r:0o{r255:o} g:0x{g255:X} b:0x{b255:x}" => "r:0o177 g:0x7F b:0x7f",
             Color::Rgb(Rgb::new(0.5, 0.5, 0.5))
+        );
+        test_case!(
+            "{lab_l} {lab_a} {lab_b}" => "55.6818085 -17.12739562 -27.2706623",
+            Color::Rgb(Rgb::new_scaled(35, 144, 180))
         );
     }
 

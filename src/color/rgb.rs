@@ -300,13 +300,13 @@ mod tests {
 
     #[test]
     fn rgb_scaled_init() {
-        let rgb = Rgb::new_scaled(255, 127, 0);
-        assert!(rgb.r() == 1.);
-        assert!(rgb.g() == 0.5);
-        assert!(rgb.b() == 0.);
-        assert!(rgb.r_scaled() == 255);
-        assert!(rgb.g_scaled() == 127);
-        assert!(rgb.b_scaled() == 0);
+        let rgb = Rgb::new_scaled(255, 85, 0);
+        assert_eq!(rgb.r(), 1.);
+        assert_eq!(rgb.g(), 1. / 3.);
+        assert_eq!(rgb.b(), 0.);
+        assert_eq!(rgb.r_scaled() as u32, 255);
+        assert_eq!(rgb.g_scaled() as u32, 85);
+        assert_eq!(rgb.b_scaled() as u32, 0);
     }
 
     #[test]
