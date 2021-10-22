@@ -20,6 +20,10 @@ serde_yaml = "0.8"
 dirs = "4"
 nom = "7"
 
+#https://github.com/rustwasm/wasm-bindgen/issues/2160
+parking_lot_core = "=0.8.0" # fix WASM build
+
+
 [target.'cfg(target_os = "linux")'.dependencies]
 x11rb = { version = "0.9", features = ["image", "cursor", "resource_manager"] }
 image = "0.23"
