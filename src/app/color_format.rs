@@ -3,7 +3,9 @@ use crate::color::{
 };
 
 use anyhow::{Error, Result};
-use nom::combinator::opt;
+use nom::character::complete::digit1;
+use nom::combinator::{map_res, opt};
+use nom::error::FromExternalError;
 use nom::multi::many0;
 use nom::sequence::tuple;
 use nom::{
@@ -16,6 +18,7 @@ use nom::{
     Err, IResult, Parser,
 };
 use std::collections::LinkedList;
+use std::num::ParseIntError;
 
 #[derive(Debug, PartialEq)]
 pub struct ColorFormat<'a>(Vec<FormatToken<'a>>);
@@ -120,7 +123,13 @@ impl<'a> ColorFormat<'a> {
                             _ => unreachable!(),
                         };
 
-                        DigitFormat::format_float(num, &mut s, &mut stack)
+                        let precision = if let DigitFormat::Float { precision } = digit_format {
+                            *precision
+                        } else {
+                            4
+                        };
+
+                        DigitFormat::format_float(num, &mut s, &mut stack, Some(precision))
                     }
                     Red255 | Green255 | Blue255 => {
                         let num = match symbol {
@@ -149,6 +158,7 @@ impl<'a> From<Vec<FormatToken<'a>>> for ColorFormat<'a> {
 #[derive(Debug, PartialEq)]
 enum ColorParseError<I> {
     InputEmpty,
+    InvalidPrecision,
     Nom(I, ErrorKind),
 }
 
@@ -159,6 +169,12 @@ impl<I> ParseError<I> for ColorParseError<I> {
 
     fn append(_: I, _: ErrorKind, other: Self) -> Self {
         other
+    }
+}
+
+impl FromExternalError<&str, ParseIntError> for ColorParseError<&str> {
+    fn from_external_error(_: &str, _: ErrorKind, _: ParseIntError) -> Self {
+        Self::InvalidPrecision
     }
 }
 
@@ -180,6 +196,7 @@ enum DigitFormat {
     UppercaseHex,
     Octal,
     Decimal,
+    Float { precision: u8 },
 }
 
 impl DigitFormat {
@@ -190,6 +207,7 @@ impl DigitFormat {
             DigitFormat::Decimal => 10,
             DigitFormat::Hex => 16,
             DigitFormat::UppercaseHex => 16,
+            DigitFormat::Float { precision: _ } => 10,
         }
     }
 
@@ -220,7 +238,42 @@ impl DigitFormat {
         }
     }
 
-    fn format_float(mut num: f32, text: &mut String, stack: &mut LinkedList<u32>) {
+    #[inline]
+    fn format_num_count(
+        &self,
+        mut num: u32,
+        text: &mut String,
+        stack: &mut LinkedList<u32>,
+        digit_count: u8,
+    ) {
+        if num == 0 {
+            stack.push_front(num);
+        } else {
+            while num > 0 {
+                stack.push_front(num % self.radix());
+                num /= self.radix();
+            }
+        }
+
+        let mut i = 0;
+        while let Some(num) = stack.pop_front() {
+            if i == digit_count {
+                stack.clear();
+                break;
+            }
+            if let Some(ch) = self.format_digit(num) {
+                text.push(ch);
+            }
+            i += 1;
+        }
+    }
+
+    fn format_float(
+        mut num: f32,
+        text: &mut String,
+        stack: &mut LinkedList<u32>,
+        precision: Option<u8>,
+    ) {
         if num.is_nan() || num.is_infinite() || num.is_subnormal() {
             return;
         }
@@ -239,7 +292,11 @@ impl DigitFormat {
             fract *= radix;
         }
 
-        DigitFormat::Decimal.format_num(fract as u32, text, stack);
+        if let Some(precision) = precision {
+            DigitFormat::Decimal.format_num_count(fract as u32, text, stack, precision);
+        } else {
+            DigitFormat::Decimal.format_num(fract as u32, text, stack);
+        }
     }
 }
 
@@ -433,6 +490,13 @@ fn parse_octal_format(i: &str) -> IResult<&str, DigitFormat, ColorParseError<&st
     map(char('o'), |_| DigitFormat::Octal)(i)
 }
 
+fn parse_float_format(i: &str) -> IResult<&str, DigitFormat, ColorParseError<&str>> {
+    map(
+        preceded(char('.'), map_res(digit1, |s: &str| s.parse::<u8>())),
+        |precision| DigitFormat::Float { precision },
+    )(i)
+}
+
 fn parse_digit_format(i: &str) -> IResult<&str, DigitFormat, ColorParseError<&str>> {
     preceded(
         char(':'),
@@ -440,6 +504,7 @@ fn parse_digit_format(i: &str) -> IResult<&str, DigitFormat, ColorParseError<&st
             parse_hex_format,
             parse_hex_uppercase_format,
             parse_octal_format,
+            parse_float_format,
         )),
     )(i)
 }
@@ -509,6 +574,12 @@ mod tests {
                 digit_format: DigitFormat::$fmt,
             })
         };
+        ($sym:tt, $fmt:expr) => {
+            FormatToken::Color(ColorField {
+                symbol: ColorSymbol::$sym,
+                digit_format: $fmt,
+            })
+        };
     }
     macro_rules! test_case {
         ($input:literal, $want:expr) => {
@@ -541,7 +612,7 @@ mod tests {
             Color::Rgb(Rgb::new(0.5, 0.5, 0.5))
         );
         test_case!(
-            "{lab_l} {lab_a} {lab_b}" => "55.6818085 -17.12739562 -27.2706623",
+            "{lab_l} {lab_a:.0} {lab_b:.2}" => "55.6818 -17. -27.27",
             Color::Rgb(Rgb::new_scaled(35, 144, 180))
         );
     }
@@ -591,7 +662,7 @@ mod tests {
     #[test]
     fn parses_digit_format() {
         test_case!(
-            "L:{ lch_ab_l:x } C:{lch_ab_c:X} H:{lch_ab_h:o}",
+            "L:{ lch_ab_l:x } C:{lch_ab_c:X} H:{lch_ab_h:o} r:{r:.4}",
             vec![
                 FormatToken::Text("L:"),
                 field!(LCHabL, Hex),
@@ -599,6 +670,8 @@ mod tests {
                 field!(LCHabC, UppercaseHex),
                 FormatToken::Text(" H:"),
                 field!(LCHabH, Octal),
+                FormatToken::Text(" r:"),
+                field!(Red, DigitFormat::Float { precision: 4 }),
             ]
             .into()
         );
