@@ -837,7 +837,6 @@ impl App {
 
         ui.horizontal(|ui| {
             ui.label("Current color: ");
-            ui.monospace(&color_str);
             if ui
                 .button(COPY_ICON)
                 .on_hover_text("Copy color to clipboard")
@@ -859,6 +858,7 @@ impl App {
             {
                 self.add_cur_color();
             }
+            ui.monospace(&color_str);
         });
 
         self.handle_display_picker(ui, tex_allocator);
@@ -920,11 +920,11 @@ impl App {
                 }
                 ui.horizontal(|ui| {
                     ui.label("Color at cursor: ");
-                    self.color_box_label_side(&color, vec2(25., 25.), ui, tex_allocator);
                     #[cfg(target_os = "linux")]
                     self.handle_zoom_picker(ui, picker);
                     #[cfg(windows)]
                     self.handle_zoom_picker(ui, picker);
+                    self.color_box_label_side(&color, vec2(25., 25.), ui, tex_allocator);
                 });
             }
         };
