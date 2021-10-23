@@ -739,7 +739,7 @@ impl App {
                 let resp = drop_target(ui, true, |ui| {
                     let color_id = Id::new("side-color").with(idx);
                     let color_str = self.display_color(color);
-                    ui.vertical(|mut ui| {
+                    ui.vertical(|ui| {
                         let fst = ui.horizontal(|ui| {
                             ui.monospace(&color_str);
                             if ui
@@ -776,7 +776,7 @@ impl App {
 
                         let w = fst.response.rect.width();
                         let size = vec2(w, w / 2.);
-                        drag_source(&mut ui, color_id, |ui| {
+                        drag_source(ui, color_id, |ui| {
                             tex_color(
                                 ui,
                                 tex_allocator,
@@ -916,9 +916,9 @@ impl App {
                 if ui.ctx().input().key_pressed(egui::Key::S) {
                     self.saved_colors.add(color);
                 }
-                ui.horizontal(|mut ui| {
+                ui.horizontal(|ui| {
                     ui.label("Color at cursor: ");
-                    self.color_box_label_side(&color, vec2(25., 25.), &mut ui, tex_allocator);
+                    self.color_box_label_side(&color, vec2(25., 25.), ui, tex_allocator);
                     #[cfg(target_os = "linux")]
                     self.handle_zoom_picker(ui, picker);
                     #[cfg(windows)]
