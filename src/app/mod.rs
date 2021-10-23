@@ -77,6 +77,7 @@ pub struct App {
     pub cursor_icon: CursorIcon,
 
     pub show_side_panel: bool,
+    pub side_panel_box_width: f32,
 
     pub settings_window: SettingsWindow,
     pub export_window: ExportWindow,
@@ -208,6 +209,7 @@ impl Default for App {
             cursor_icon: CursorIcon::default(),
 
             show_side_panel: false,
+            side_panel_box_width: 0.,
 
             settings_window: SettingsWindow::default(),
             export_window: ExportWindow::default(),
@@ -566,6 +568,8 @@ impl App {
 
         egui::SidePanel::right("colors")
             .frame(frame)
+            .resizable(false)
+            .max_width(self.side_panel_box_width * 1.2)
             .show(ctx, |ui| {
                 ScrollArea::auto_sized().show(ui, |ui| {
                     self.side_ui(ui, tex_allocator);
@@ -702,7 +706,7 @@ impl App {
 
     fn side_ui(&mut self, ui: &mut Ui, tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>) {
         ui.vertical(|ui| {
-            ui.horizontal(|ui| {
+            let resp = ui.horizontal(|ui| {
                 let heading = Label::new("Saved colors")
                     .text_style(TextStyle::Heading)
                     .strong();
@@ -733,61 +737,78 @@ impl App {
                     let _ = save_to_clipboard(self.saved_colors.as_hex_list());
                 }
             });
+            let sidebar_w = resp.response.rect.width();
 
             let mut src_row = None;
             let mut dst_row = None;
 
-            for (idx, (_, color)) in self.saved_colors.as_ref().to_vec().iter().enumerate() {
+            let saved_colors = self.saved_colors.as_ref().to_vec();
+            let display_strings: Vec<_> = saved_colors
+                .iter()
+                .map(|(_, c)| self.display_color(c))
+                .collect();
+            let max_len = display_strings
+                .iter()
+                .map(|s| s.len())
+                .max()
+                .unwrap_or_default();
+            let box_width = (max_len * 11).max((sidebar_w * 0.8) as usize).min(220) as f32;
+
+            for (idx, (_, color)) in saved_colors.iter().enumerate() {
                 let resp = drop_target(ui, true, |ui| {
                     let color_id = Id::new("side-color").with(idx);
-                    let color_str = self.display_color(color);
+                    let color_str = &display_strings[idx];
                     ui.vertical(|ui| {
-                        let fst = ui.horizontal(|ui| {
-                            ui.monospace(&color_str);
-                            if ui
-                                .button(DELETE_ICON)
-                                .on_hover_text("Delete this color")
-                                .on_hover_cursor(CursorIcon::PointingHand)
-                                .clicked()
-                            {
-                                self.saved_colors.remove(color);
-                            }
-                            if ui
-                                .button(COPY_ICON)
-                                .on_hover_text("Copy color")
-                                .on_hover_cursor(CursorIcon::Alias)
-                                .clicked()
-                            {
-                                let _ = save_to_clipboard(
-                                    self.clipboard_color(&self.picker.current_color),
+                        let box_response = ui.horizontal(|ui| {
+                            ui.vertical(|ui| {
+                                if ui
+                                    .button(PLAY_ICON)
+                                    .on_hover_text("Use this color")
+                                    .on_hover_cursor(CursorIcon::PointingHand)
+                                    .clicked()
+                                {
+                                    self.picker.set_cur_color(*color);
+                                }
+                                if ui
+                                    .button(COPY_ICON)
+                                    .on_hover_text("Copy color")
+                                    .on_hover_cursor(CursorIcon::Alias)
+                                    .clicked()
+                                {
+                                    let _ = save_to_clipboard(
+                                        self.clipboard_color(&self.picker.current_color),
+                                    );
+                                }
+                                if ui
+                                    .button(DELETE_ICON)
+                                    .on_hover_text("Delete this color")
+                                    .on_hover_cursor(CursorIcon::PointingHand)
+                                    .clicked()
+                                {
+                                    self.saved_colors.remove(color);
+                                }
+                            });
+                            ui.vertical(|ui| {
+                                ui.monospace(color_str);
+                                let help = format!(
+                                    "{}\n\nDrag and drop to change the order of colors",
+                                    color_str
                                 );
-                            }
-                            if ui
-                                .button(PLAY_ICON)
-                                .on_hover_text("Use this color")
-                                .on_hover_cursor(CursorIcon::PointingHand)
-                                .clicked()
-                            {
-                                self.picker.set_cur_color(*color);
-                            }
-                        });
-                        let help = format!(
-                            "{}\n\nDrag and drop to change the order of colors",
-                            color_str
-                        );
 
-                        let w = fst.response.rect.width();
-                        let size = vec2(w, w / 2.);
-                        drag_source(ui, color_id, |ui| {
-                            tex_color(
-                                ui,
-                                tex_allocator,
-                                &mut self.texture_manager,
-                                color.color32(),
-                                size,
-                                Some(&help),
-                            );
+                                let size = vec2(box_width, box_width / 2.);
+                                drag_source(ui, color_id, |ui| {
+                                    tex_color(
+                                        ui,
+                                        tex_allocator,
+                                        &mut self.texture_manager,
+                                        color.color32(),
+                                        size,
+                                        Some(&help),
+                                    );
+                                });
+                            });
                         });
+                        self.side_panel_box_width = box_response.response.rect.width();
                     });
                     if ui.memory().is_being_dragged(color_id) {
                         src_row = Some(idx);
