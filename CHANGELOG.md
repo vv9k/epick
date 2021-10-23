@@ -19,6 +19,7 @@
 - Detect dark mode OS preference when available and set the correct visuals
 - Store theme preference in persistent configuration
 - Add ability to save custom color display formats
+- Add a checkbox to disable color labels in harmonies view
 
 # 0.5.1
 - Fix switching between working spaces and illuminants

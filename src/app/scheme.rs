@@ -2,7 +2,7 @@ use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::app::{App, ColorHarmony};
 
 use eframe::egui::TextStyle;
-use egui::{vec2, Slider, Ui};
+use egui::{vec2, Grid, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
 
 impl App {
@@ -118,19 +118,26 @@ impl App {
             .default_open(true)
             .show(ui, |ui| {
                 let size = vec2(self.picker.scheme_color_size, self.picker.scheme_color_size);
+                const BORDER_OFFSET: f32 = 8.;
                 let double_size = vec2(
-                    (self.picker.scheme_color_size + ui.spacing().item_spacing.x) * 2.,
+                    self.picker.scheme_color_size * 2. + BORDER_OFFSET,
                     self.picker.scheme_color_size,
                 );
 
                 macro_rules! cb {
-                    ($color:ident, $size:expr, $ui:ident) => {
-                        $ui.scope(|mut ui| {
-                            self.color_box_label_under(&$color, $size, &mut ui, tex_allocator);
+                    ($color:ident, $size:expr, $ui:ident, $display_labels:ident) => {
+                        $ui.scope(|ui| {
+                            if $display_labels {
+                                self.color_box_label_under(&$color, $size, ui, tex_allocator);
+                            } else {
+                                ui.vertical(|ui| {
+                                    self.color_box_no_label(&$color, $size, ui, tex_allocator);
+                                });
+                            }
                         });
                     };
-                    ($color:ident, $ui:ident) => {
-                        cb!($color, size, $ui)
+                    ($color:ident, $ui:ident, $display_labels:ident) => {
+                        cb!($color, size, $ui, $display_labels)
                     };
                 }
 
@@ -174,6 +181,10 @@ impl App {
                             ColorHarmony::Monochromatic.as_ref(),
                         );
                     });
+                ui.checkbox(
+                    &mut self.picker.display_harmony_color_label,
+                    "Display color labels",
+                );
                 ui.add(
                     Slider::new(
                         &mut self.picker.scheme_color_size,
@@ -182,96 +193,103 @@ impl App {
                     .clamp_to_range(true)
                     .text("color size"),
                 );
+                let display = self.picker.display_harmony_color_label;
                 match self.picker.color_harmony {
                     ColorHarmony::Complementary => {
                         let compl = color.complementary();
-                        ui.horizontal(|ui| {
-                            cb!(color, ui);
-                            cb!(compl, ui);
+                        Grid::new("complementary").spacing((0., 0.)).show(ui, |ui| {
+                            cb!(color, ui, display);
+                            cb!(compl, ui, display);
+                            ui.end_row();
                         });
                     }
                     ColorHarmony::Triadic => {
                         let tri = color.triadic();
-                        ui.vertical(|ui| {
+                        Grid::new("triadic").spacing((0., 0.)).show(ui, |ui| {
                             let c1 = tri.0;
                             let c2 = tri.1;
-                            cb!(color, double_size, ui);
-                            ui.horizontal(|ui| {
-                                cb!(c1, ui);
-                                cb!(c2, ui);
+                            cb!(color, double_size, ui, display);
+                            ui.end_row();
+                            ui.scope(|ui| {
+                                ui.spacing_mut().item_spacing = (0., 0.).into();
+                                cb!(c1, ui, display);
+                                cb!(c2, ui, display);
                             });
+                            ui.end_row();
                         });
                     }
                     ColorHarmony::Tetradic => {
                         let tetr = color.tetradic();
-                        ui.vertical(|ui| {
+                        Grid::new("tetradic").spacing((0., 0.)).show(ui, |ui| {
                             let c1 = &tetr.0;
                             let c2 = &tetr.1;
                             let c3 = &tetr.2;
-                            ui.horizontal(|ui| {
-                                cb!(color, ui);
-                                cb!(c1, ui);
-                            });
-                            ui.horizontal(|ui| {
-                                cb!(c2, ui);
-                                cb!(c3, ui);
-                            });
+                            cb!(color, ui, display);
+                            cb!(c1, ui, display);
+                            ui.end_row();
+                            cb!(c2, ui, display);
+                            cb!(c3, ui, display);
+                            ui.end_row();
                         });
                     }
                     ColorHarmony::Analogous => {
                         let an = color.analogous();
-                        ui.vertical(|ui| {
+                        Grid::new("analogous").spacing((0., 0.)).show(ui, |ui| {
                             let c1 = an.0;
                             let c2 = an.1;
-                            cb!(color, double_size, ui);
-                            ui.horizontal(|ui| {
-                                cb!(c1, ui);
-                                cb!(c2, ui);
+                            cb!(color, double_size, ui, display);
+                            ui.end_row();
+                            ui.scope(|ui| {
+                                ui.spacing_mut().item_spacing = (0., 0.).into();
+                                cb!(c1, ui, display);
+                                cb!(c2, ui, display);
                             });
+                            ui.end_row();
                         });
                     }
                     ColorHarmony::SplitComplementary => {
                         let sc = color.split_complementary();
-                        ui.vertical(|ui| {
-                            let c1 = sc.0;
-                            let c2 = sc.1;
-                            cb!(color, double_size, ui);
-                            ui.horizontal(|ui| {
-                                cb!(c1, ui);
-                                cb!(c2, ui);
+                        Grid::new("split-complementary")
+                            .spacing((0., 0.))
+                            .show(ui, |ui| {
+                                let c1 = sc.0;
+                                let c2 = sc.1;
+                                cb!(color, double_size, ui, display);
+                                ui.end_row();
+                                ui.scope(|ui| {
+                                    ui.spacing_mut().item_spacing = (0., 0.).into();
+                                    cb!(c1, ui, display);
+                                    cb!(c2, ui, display);
+                                });
+                                ui.end_row();
                             });
-                        });
                     }
                     ColorHarmony::Square => {
                         let s = color.square();
-                        ui.vertical(|ui| {
+                        Grid::new("square").spacing((0., 0.)).show(ui, |ui| {
                             let c1 = s.0;
                             let c2 = s.1;
                             let c3 = s.2;
-                            ui.horizontal(|ui| {
-                                cb!(color, ui);
-                                cb!(c1, ui);
-                            });
-                            ui.horizontal(|ui| {
-                                cb!(c2, ui);
-                                cb!(c3, ui);
-                            });
+                            cb!(color, ui, display);
+                            cb!(c1, ui, display);
+                            ui.end_row();
+                            cb!(c2, ui, display);
+                            cb!(c3, ui, display);
+                            ui.end_row();
                         });
                     }
                     ColorHarmony::Monochromatic => {
                         let mono = color.monochromatic();
-                        ui.vertical(|ui| {
+                        Grid::new("monochromatic").spacing((0., 0.)).show(ui, |ui| {
                             let c1 = mono.0;
                             let c2 = mono.1;
                             let c3 = mono.2;
-                            ui.horizontal(|ui| {
-                                cb!(color, ui);
-                                cb!(c1, ui);
-                            });
-                            ui.horizontal(|ui| {
-                                cb!(c2, ui);
-                                cb!(c3, ui);
-                            });
+                            cb!(color, ui, display);
+                            cb!(c1, ui, display);
+                            ui.end_row();
+                            cb!(c2, ui, display);
+                            cb!(c3, ui, display);
+                            ui.end_row();
                         });
                     }
                 }

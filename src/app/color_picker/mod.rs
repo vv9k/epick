@@ -38,6 +38,7 @@ pub struct ColorPicker {
     pub color_harmony: ColorHarmony,
     pub new_workspace: Option<RgbWorkingSpace>,
     pub new_illuminant: Option<Illuminant>,
+    pub display_harmony_color_label: bool,
 }
 
 impl Default for ColorPicker {
@@ -51,6 +52,7 @@ impl Default for ColorPicker {
             color_harmony: ColorHarmony::default(),
             new_workspace: None,
             new_illuminant: None,
+            display_harmony_color_label: false,
         }
     }
 }
