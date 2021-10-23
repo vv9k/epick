@@ -18,6 +18,7 @@
   A simple formatting language has been introduced that has a syntax simillar to Rust's format macros.
 - Detect dark mode OS preference when available and set the correct visuals
 - Store theme preference in persistent configuration
+- Add ability to save custom color display formats
 
 # 0.5.1
 - Fix switching between working spaces and illuminants

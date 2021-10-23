@@ -5,6 +5,7 @@ use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorki
 use egui::{Color32, ComboBox, CursorIcon, Ui, Window};
 use std::fmt::Display;
 
+use crate::app::{ADD_ICON, DELETE_ICON};
 #[cfg(not(target_arch = "wasm32"))]
 use std::fs;
 
@@ -14,6 +15,8 @@ pub struct SettingsWindow {
     pub error: Option<String>,
     pub message: Option<String>,
     pub settings: Settings,
+    selected_display_fmt: String,
+    selected_clipboard_fmt: String,
 }
 
 impl SettingsWindow {
@@ -319,10 +322,85 @@ impl SettingsWindow {
                 );
             });
         if let DisplayFmtEnum::Custom = self.settings.color_display_format {
-            ui.label("Custom display format:");
-            ui.text_edit_singleline(&mut self.settings.custom_display_fmt_str);
-            ui.label("Custom clipboard format:");
-            ui.text_edit_singleline(&mut self.settings.custom_clipboard_fmt_str);
+            macro_rules! display_fmt {
+                ($label:literal, $id:literal, $selected:ident, $editable:ident) => {
+                    ui.label($label);
+                    if !self.settings.saved_color_formats.is_empty() {
+                        ui.horizontal(|ui| {
+                            ComboBox::from_id_source($id)
+                                .selected_text(&self.$selected)
+                                .show_ui(ui, |ui| {
+                                    for fmt in &self.settings.saved_color_formats {
+                                        if ui
+                                            .selectable_label(&self.$selected == fmt, fmt)
+                                            .clicked()
+                                        {
+                                            self.$selected = fmt.clone();
+                                            self.settings.$editable = fmt.clone();
+                                        }
+                                    }
+                                });
+                            if ui
+                                .button(DELETE_ICON)
+                                .on_hover_text("Delete selected format string")
+                                .on_hover_cursor(CursorIcon::Default)
+                                .clicked()
+                            {
+                                let pos = self
+                                    .settings
+                                    .saved_color_formats
+                                    .iter()
+                                    .position(|fmt| fmt == &self.$selected);
+                                if let Some(pos) = pos {
+                                    self.settings.saved_color_formats.remove(pos);
+                                    let fmt = if pos > 0 {
+                                        Some(self.settings.saved_color_formats[pos - 1].clone())
+                                    } else if let Some(fmt) =
+                                        self.settings.saved_color_formats.first()
+                                    {
+                                        Some(fmt.clone())
+                                    } else {
+                                        None
+                                    };
+                                    if let Some(fmt) = fmt {
+                                        self.$selected = fmt.clone();
+                                        self.settings.$editable = fmt;
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    ui.horizontal(|ui| {
+                        ui.text_edit_singleline(&mut self.settings.$editable);
+                        if ui
+                            .button(ADD_ICON)
+                            .on_hover_text("Save current format string")
+                            .on_hover_cursor(CursorIcon::Copy)
+                            .clicked()
+                        {
+                            self.settings
+                                .saved_color_formats
+                                .push(self.settings.$editable.clone());
+                        }
+                    });
+                };
+            }
+
+            ui.add_space(7.);
+            display_fmt!(
+                "Custom display format",
+                "display saved formats",
+                selected_display_fmt,
+                custom_display_fmt_str
+            );
+            ui.add_space(7.);
+            display_fmt!(
+                "Custom clipboard format",
+                "clipboard saved formats",
+                selected_clipboard_fmt,
+                custom_clipboard_fmt_str
+            );
+            ui.add_space(14.);
         }
     }
 }

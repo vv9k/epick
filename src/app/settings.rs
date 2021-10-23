@@ -75,6 +75,9 @@ pub struct Settings {
     #[serde(skip_serializing_if = "String::is_empty")]
     pub custom_clipboard_fmt_str: String,
     #[serde(default)]
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub saved_color_formats: Vec<String>,
+    #[serde(default)]
     pub color_spaces: ColorSpaceSettings,
     #[serde(default)]
     pub rgb_working_space: RgbWorkingSpace,
@@ -100,6 +103,7 @@ impl Default for Settings {
             color_display_format: DisplayFmtEnum::default(),
             custom_display_fmt_str: String::new(),
             custom_clipboard_fmt_str: String::new(),
+            saved_color_formats: vec![],
             color_spaces: ColorSpaceSettings::default(),
             rgb_working_space: ws,
             chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
