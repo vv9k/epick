@@ -147,7 +147,7 @@ impl epi::App for App {
     fn setup(
         &mut self,
         ctx: &egui::CtxRef,
-        _: &mut epi::Frame<'_>,
+        frame: &mut epi::Frame<'_>,
         storage: Option<&dyn epi::Storage>,
     ) {
         self.load_settings(storage);
@@ -172,7 +172,14 @@ impl epi::App for App {
             (egui::FontFamily::Monospace, 16.),
         );
         ctx.set_fonts(fonts);
-        ctx.set_visuals(dark_visuals());
+
+        let prefer_dark = frame.info().prefer_dark_mode.unwrap_or(true);
+
+        if prefer_dark {
+            ctx.set_visuals(self.dark_theme.clone());
+        } else {
+            ctx.set_visuals(self.light_theme.clone())
+        }
     }
 
     fn name(&self) -> &str {
