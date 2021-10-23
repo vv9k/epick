@@ -30,6 +30,7 @@ use std::rc::Rc;
 #[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;
 
+use crate::app::ui::SPACE;
 #[cfg(windows)]
 use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 use epi::Storage;
@@ -704,7 +705,7 @@ impl App {
                     .text_style(TextStyle::Heading)
                     .strong();
                 ui.add(heading);
-                ui.add_space(7.);
+                ui.add_space(SPACE);
                 if ui
                     .button(CLEAR_ICON)
                     .on_hover_text("Clear colors")
@@ -860,7 +861,7 @@ impl App {
 
         self.handle_display_picker(ui, tex_allocator);
 
-        ui.add_space(7.);
+        ui.add_space(SPACE);
         ScrollArea::auto_sized()
             .id_source("picker scroll")
             .show(ui, |ui| {

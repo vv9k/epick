@@ -11,6 +11,10 @@ use egui::{
     CursorIcon, Id, InnerResponse, LayerId, Order, Rect, Sense, Shape, Stroke, Ui, Vec2, Visuals,
 };
 
+pub const SPACE: f32 = 7.;
+pub const DOUBLE_SPACE: f32 = SPACE * 2.;
+pub const HALF_SPACE: f32 = SPACE / 2.;
+
 pub mod colors {
     use egui::Color32;
     use lazy_static::lazy_static;

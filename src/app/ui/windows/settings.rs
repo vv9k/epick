@@ -5,6 +5,7 @@ use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorki
 use egui::{Color32, ComboBox, CursorIcon, Ui, Window};
 use std::fmt::Display;
 
+use crate::app::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
 use crate::app::{ADD_ICON, DELETE_ICON};
 #[cfg(not(target_arch = "wasm32"))]
 use std::fs;
@@ -54,43 +55,49 @@ impl SettingsWindow {
                     }
 
                     self.color_display_format(ui);
+                    ui.add_space(HALF_SPACE);
                     self.rgb_working_space(ui);
+                    ui.add_space(HALF_SPACE);
                     self.illuminant(ui);
+                    ui.add_space(HALF_SPACE);
                     self.chromatic_adaptation_method(ui);
+                    ui.add_space(HALF_SPACE);
                     self.color_harmony(ui);
-                    self.color_spaces(ui);
-
-                    #[cfg(not(target_arch = "wasm32"))]
-                    if ui
-                        .button("Save settings")
-                        .on_hover_cursor(CursorIcon::PointingHand)
-                        .clicked()
-                    {
-                        if let Some(dir) = Settings::dir("epick") {
-                            if !dir.exists() {
-                                if let Err(e) = fs::create_dir_all(&dir) {
-                                    self.set_error(e);
-                                }
-                            }
-                            let path = dir.join("config.yaml");
-                            if let Err(e) = self.settings.save(&path) {
-                                self.set_error(e);
-                            } else {
-                                self.set_message(format!(
-                                    "Successfully saved settings to {}",
-                                    path.display()
-                                ));
-                            }
-                        }
-                    }
-
+                    ui.add_space(HALF_SPACE);
                     ui.checkbox(&mut self.settings.cache_colors, "Cache colors");
+                    ui.add_space(DOUBLE_SPACE);
+                    self.color_spaces(ui);
+                    ui.add_space(SPACE);
+                    self.save_settings_btn(ui);
                 });
 
             if !show {
                 self.show = false;
                 self.clear_error();
                 self.clear_message();
+            }
+        }
+    }
+
+    fn save_settings_btn(&mut self, ui: &mut Ui) {
+        #[cfg(not(target_arch = "wasm32"))]
+        if ui
+            .button("Save settings")
+            .on_hover_cursor(CursorIcon::PointingHand)
+            .clicked()
+        {
+            if let Some(dir) = Settings::dir("epick") {
+                if !dir.exists() {
+                    if let Err(e) = fs::create_dir_all(&dir) {
+                        self.set_error(e);
+                    }
+                }
+                let path = dir.join("config.yaml");
+                if let Err(e) = self.settings.save(&path) {
+                    self.set_error(e);
+                } else {
+                    self.set_message(format!("Successfully saved settings to {}", path.display()));
+                }
             }
         }
     }
@@ -145,7 +152,7 @@ impl SettingsWindow {
             ui.checkbox(&mut self.settings.color_spaces.hsv, "HSV");
             ui.checkbox(&mut self.settings.color_spaces.hsl, "HSL");
         });
-
+        ui.add_space(SPACE);
         ui.label("CIE Color spaces:");
         ui.horizontal(|ui| {
             ui.checkbox(&mut self.settings.color_spaces.luv, "Luv");
@@ -382,21 +389,21 @@ impl SettingsWindow {
                 };
             }
 
-            ui.add_space(7.);
+            ui.add_space(SPACE);
             display_fmt!(
                 "Custom display format",
                 "display saved formats",
                 selected_display_fmt,
                 custom_display_fmt_str
             );
-            ui.add_space(7.);
+            ui.add_space(SPACE);
             display_fmt!(
                 "Custom clipboard format",
                 "clipboard saved formats",
                 selected_clipboard_fmt,
                 custom_clipboard_fmt_str
             );
-            ui.add_space(14.);
+            ui.add_space(DOUBLE_SPACE);
         }
     }
 }

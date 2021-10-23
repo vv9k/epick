@@ -1,6 +1,6 @@
 mod sliders;
 
-use crate::app::ui::{slider_1d, slider_2d};
+use crate::app::ui::{slider_1d, slider_2d, SPACE};
 use crate::color::{
     CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, Rgb,
     RgbWorkingSpace, Xyz, U8_MAX, U8_MIN,
@@ -15,13 +15,13 @@ use std::mem;
 
 macro_rules! slider {
     ($it:ident, $ui:ident, $field:ident, $label:literal, $range:expr, $($tt:tt)+) => {
-        $ui.add_space(7.);
+        $ui.add_space(SPACE);
         $ui.horizontal(|mut ui| {
             let resp = slider_1d::color(&mut ui, &mut $it.sliders.$field, $range, $($tt)+).on_hover_text($label);
             if resp.changed() {
                 $it.check_for_change();
             }
-            ui.add_space(7.);
+            ui.add_space(SPACE);
             ui.label(format!("{}: ", $label));
             ui.add(DragValue::new(&mut $it.sliders.$field).clamp_range($range));
         });
@@ -360,7 +360,7 @@ impl ColorPicker {
                     v /= 100.;
                     Hsv::new(opaque.h(), opaque.s(), v).into()
                 });
-                ui.add_space(7.);
+                ui.add_space(SPACE);
                 slider_2d::color(
                     ui,
                     &mut self.sliders.sat,
