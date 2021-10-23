@@ -106,10 +106,12 @@ impl epi::App for App {
         self.check_settings_change();
 
         self.top_panel(ctx);
+
+        self.central_panel(ctx, tex_allocator);
+
         if self.show_side_panel {
             self.side_panel(ctx, tex_allocator);
         }
-        self.central_panel(ctx, tex_allocator);
 
         self.display_windows(ctx, tex_allocator);
 
