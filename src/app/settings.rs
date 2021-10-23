@@ -88,6 +88,9 @@ pub struct Settings {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default_harmony")]
     pub color_harmony: ColorHarmony,
+    #[serde(default = "enabled")]
+    #[serde(skip_serializing_if = "is_true")]
+    pub is_dark_mode: bool,
 }
 
 impl Default for Settings {
@@ -103,6 +106,7 @@ impl Default for Settings {
             illuminant: ws.reference_illuminant(),
             cache_colors: true,
             color_harmony: ColorHarmony::default(),
+            is_dark_mode: true,
         }
     }
 }

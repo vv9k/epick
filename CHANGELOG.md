@@ -17,6 +17,7 @@
 - Add custom color format support, you can now fully customise the way the colors next to color boxes are displayed.
   A simple formatting language has been introduced that has a syntax simillar to Rust's format macros.
 - Detect dark mode OS preference when available and set the correct visuals
+- Store theme preference in persistent configuration
 
 # 0.5.1
 - Fix switching between working spaces and illuminants

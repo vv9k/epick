@@ -176,9 +176,9 @@ impl epi::App for App {
         let prefer_dark = frame.info().prefer_dark_mode.unwrap_or(true);
 
         if prefer_dark {
-            ctx.set_visuals(self.dark_theme.clone());
+            self.set_dark_theme(ctx);
         } else {
-            ctx.set_visuals(self.light_theme.clone())
+            self.set_light_theme(ctx);
         }
     }
 
@@ -228,6 +228,20 @@ impl App {
 
     fn clear_error(&mut self) {
         self.error_message = None;
+    }
+
+    fn set_dark_theme(&mut self, ctx: &egui::CtxRef) {
+        self.settings_window.settings.is_dark_mode = true;
+        ctx.set_visuals(self.dark_theme.clone());
+    }
+
+    fn set_light_theme(&mut self, ctx: &egui::CtxRef) {
+        self.settings_window.settings.is_dark_mode = false;
+        ctx.set_visuals(self.light_theme.clone());
+    }
+
+    fn is_dark_mode(&self) -> bool {
+        self.settings_window.settings.is_dark_mode
     }
 
     fn load_colors(&mut self, _storage: Option<&dyn Storage>) {
@@ -664,23 +678,21 @@ impl App {
     }
 
     fn dark_light_switch(&mut self, ui: &mut Ui) {
-        let is_dark = ui.style().visuals.dark_mode;
-        let btn = if is_dark {
+        let btn = if self.is_dark_mode() {
             LIGHT_MODE_ICON
         } else {
             DARK_MODE_ICON
         };
-
         if ui
             .button(btn)
             .on_hover_text("Switch ui color theme")
             .on_hover_cursor(CursorIcon::PointingHand)
             .clicked()
         {
-            if is_dark {
-                ui.ctx().set_visuals(self.light_theme.clone());
+            if self.is_dark_mode() {
+                self.set_light_theme(ui.ctx());
             } else {
-                ui.ctx().set_visuals(self.dark_theme.clone());
+                self.set_dark_theme(ui.ctx());
             }
         }
     }
