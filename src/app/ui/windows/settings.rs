@@ -355,12 +355,8 @@ impl SettingsWindow {
                                     self.settings.saved_color_formats.remove(pos);
                                     let fmt = if pos > 0 {
                                         Some(self.settings.saved_color_formats[pos - 1].clone())
-                                    } else if let Some(fmt) =
-                                        self.settings.saved_color_formats.first()
-                                    {
-                                        Some(fmt.clone())
                                     } else {
-                                        None
+                                        self.settings.saved_color_formats.first().cloned()
                                     };
                                     if let Some(fmt) = fmt {
                                         self.$selected = fmt.clone();
