@@ -147,3 +147,37 @@ impl AsRef<str> for PaletteFormat {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::app::saved_colors::SavedColors;
+    use crate::color::Rgb;
+
+    #[test]
+    fn export_color_palette() {
+        let mut colors = SavedColors::default();
+        colors.add(Rgb::new_scaled(0, 0, 0).into());
+        colors.add(Rgb::new_scaled(255, 0, 0).into());
+        colors.add(Rgb::new_scaled(0, 255, 0).into());
+        colors.add(Rgb::new_scaled(0, 0, 255).into());
+
+        let want = r#"#000000
+#ff0000
+#00ff00
+#0000ff
+"#;
+        assert_eq!(colors.as_hex_list(), want);
+
+        let want = r#"GIMP Palette
+Name: colors.gpl
+Columns: 1
+#
+0	0	0	color 0
+255	0	0	color 1
+0	255	0	color 2
+0	0	255	color 3
+"#;
+
+        assert_eq!(colors.as_gimp_palette("colors"), want);
+    }
+}
