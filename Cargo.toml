@@ -8,10 +8,10 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-eframe = { version = "0.14", features = ["persistence"] }
-egui = "0.14"
-epi = "0.14"
-epaint = "0.14"
+eframe = { version = "0.15", features = ["persistence"] }
+egui = "0.15"
+epi = "0.15"
+epaint = "0.15"
 clipboard = "0.5"
 lazy_static = "1"
 anyhow = "1"

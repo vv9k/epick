@@ -4,6 +4,7 @@ use crate::color::contrast_color;
 use eframe::egui::epaint::Mesh;
 use eframe::egui::{lerp, remap_clamp, Sense, Shape, Stroke, Vec2};
 use egui::{pos2, Color32, CursorIcon, Response, Ui};
+use epaint::CircleShape;
 use std::ops::RangeInclusive;
 
 pub fn color(
@@ -56,12 +57,12 @@ pub fn color(
     let picked_color = color_at(*x_value, *y_value);
 
     // Show where the slider is at:
-    ui.painter().add(Shape::Circle {
+    ui.painter().add(Shape::Circle(CircleShape {
         center: pos2(x, y),
         radius: 7.,
         fill: picked_color,
         stroke: Stroke::new(visuals.fg_stroke.width, contrast_color(picked_color)),
-    });
+    }));
 
     response = response.on_hover_cursor(CursorIcon::Move);
 

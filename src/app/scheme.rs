@@ -17,7 +17,7 @@ impl App {
             Window::new("Hues")
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .collapsible(false)
-                .scroll(true)
+                .vscroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
                     self.hues_window.sliders(ui);
@@ -52,7 +52,7 @@ impl App {
             Window::new("Tints")
                 .collapsible(false)
                 .default_pos(pos)
-                .scroll(true)
+                .vscroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
                     self.tints_window.sliders(ui);
@@ -85,7 +85,7 @@ impl App {
             Window::new("Shades")
                 .collapsible(false)
                 .default_pos((offset, WINDOW_Y_OFFSET))
-                .scroll(true)
+                .vscroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
                     self.shades_window.sliders(ui);

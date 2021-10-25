@@ -21,7 +21,8 @@ use screen_size::ScreenSize;
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
 use egui::{
-    color::Color32, vec2, Button, CollapsingHeader, CursorIcon, Label, Layout, Rgba, TextStyle, Ui,
+    color::Color32, vec2, Button, CollapsingHeader, CursorIcon, Label, Layout, Response, Rgba,
+    TextStyle, Ui,
 };
 use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
@@ -571,7 +572,7 @@ impl App {
             .resizable(false)
             .max_width(self.side_panel_box_width * 1.2)
             .show(ctx, |ui| {
-                ScrollArea::auto_sized().show(ui, |ui| {
+                ScrollArea::vertical().show(ui, |ui| {
                     self.side_ui(ui, tex_allocator);
                 })
             });
@@ -885,7 +886,7 @@ impl App {
         self.handle_display_picker(ui, tex_allocator);
 
         ui.add_space(SPACE);
-        ScrollArea::auto_sized()
+        ScrollArea::vertical()
             .id_source("picker scroll")
             .show(ui, |ui| {
                 self.harmonies(ui, tex_allocator);

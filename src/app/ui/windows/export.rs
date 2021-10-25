@@ -67,7 +67,7 @@ impl ExportWindow {
                             if ui
                                 .add(
                                     TextEdit::singleline(&mut self.path)
-                                        .enabled(self.export_path_editable),
+                                        .interactive(self.export_path_editable),
                                 )
                                 .clicked()
                                 && !self.export_path_editable

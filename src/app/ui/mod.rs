@@ -7,6 +7,7 @@ use crate::color::{Color, DisplayFormat, Illuminant, RgbWorkingSpace};
 use egui::{
     color,
     color::Color32,
+    paint::RectShape,
     style::{Selection, Widgets},
     CursorIcon, Id, InnerResponse, LayerId, Order, Rect, Sense, Shape, Stroke, Ui, Vec2, Visuals,
 };
@@ -101,12 +102,12 @@ pub fn drop_target<R>(
 
     ui.painter().set(
         where_to_put_background,
-        Shape::Rect {
+        Shape::Rect(RectShape {
             corner_radius: style.corner_radius,
             fill,
             stroke,
             rect,
-        },
+        }),
     );
 
     InnerResponse::new(ret, response)
