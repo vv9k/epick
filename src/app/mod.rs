@@ -21,8 +21,7 @@ use screen_size::ScreenSize;
 use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
 
 use egui::{
-    color::Color32, vec2, Button, CollapsingHeader, CursorIcon, Label, Layout, Response, Rgba,
-    TextStyle, Ui,
+    color::Color32, vec2, Button, CollapsingHeader, CursorIcon, Label, Layout, Rgba, TextStyle, Ui,
 };
 use egui::{Id, ScrollArea, Vec2, Visuals};
 use std::borrow::Cow;
