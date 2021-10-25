@@ -72,7 +72,6 @@ impl SavedColors {
 
     pub fn as_hex_list(&self) -> String {
         self.0.iter().fold(String::new(), |mut s, (hex, _)| {
-            s.push('#');
             s.push_str(hex.as_str());
             s.push('\n');
             s
@@ -146,5 +145,39 @@ impl AsRef<str> for PaletteFormat {
             PaletteFormat::Gimp => "GIMP (gpl)",
             PaletteFormat::Text => "Hex list (txt)",
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::app::saved_colors::SavedColors;
+    use crate::color::Rgb;
+
+    #[test]
+    fn export_color_palette() {
+        let mut colors = SavedColors::default();
+        colors.add(Rgb::new_scaled(0, 0, 0).into());
+        colors.add(Rgb::new_scaled(255, 0, 0).into());
+        colors.add(Rgb::new_scaled(0, 255, 0).into());
+        colors.add(Rgb::new_scaled(0, 0, 255).into());
+
+        let want = r#"#000000
+#ff0000
+#00ff00
+#0000ff
+"#;
+        assert_eq!(colors.as_hex_list(), want);
+
+        let want = r#"GIMP Palette
+Name: colors.gpl
+Columns: 1
+#
+0	0	0	color 0
+255	0	0	color 1
+0	255	0	color 2
+0	0	255	color 3
+"#;
+
+        assert_eq!(colors.as_gimp_palette("colors"), want);
     }
 }
