@@ -72,7 +72,6 @@ impl SavedColors {
 
     pub fn as_hex_list(&self) -> String {
         self.0.iter().fold(String::new(), |mut s, (hex, _)| {
-            s.push('#');
             s.push_str(hex.as_str());
             s.push('\n');
             s
