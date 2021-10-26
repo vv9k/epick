@@ -1,3 +1,4 @@
+pub mod layout;
 pub mod slider_1d;
 pub mod slider_2d;
 pub mod windows;
