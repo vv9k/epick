@@ -15,7 +15,7 @@ pub enum HarmonyLayout {
     // ||||||||
     // --------
     Line,
-    // Gradient #TODO
+    Gradient,
 }
 
 impl Default for HarmonyLayout {
@@ -30,6 +30,7 @@ impl AsRef<str> for HarmonyLayout {
             Self::Square => "square",
             Self::Stacked => "stacked",
             Self::Line => "line",
+            Self::Gradient => "gradient",
         }
     }
 }

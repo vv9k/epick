@@ -1,8 +1,9 @@
 use crate::app::ui::layout::HarmonyLayout;
 use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
-use crate::app::{App, ColorHarmony};
-
 use crate::app::ui::DOUBLE_SPACE;
+use crate::app::{App, ColorHarmony};
+use crate::color::Gradient;
+
 use eframe::egui::TextStyle;
 use egui::{vec2, Grid, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
@@ -129,6 +130,11 @@ impl App {
                     HarmonyLayout::Stacked,
                     HarmonyLayout::Stacked.as_ref(),
                 );
+                ui.selectable_value(
+                    &mut self.settings_window.settings.harmony_layout,
+                    HarmonyLayout::Gradient,
+                    HarmonyLayout::Gradient.as_ref(),
+                );
             });
     }
 
@@ -143,6 +149,10 @@ impl App {
             .show(ui, |ui| {
                 let size = vec2(self.picker.scheme_color_size, self.picker.scheme_color_size);
                 const BORDER_OFFSET: f32 = 8.;
+                let gradient_size = vec2(
+                    self.picker.scheme_color_size * 4. + BORDER_OFFSET,
+                    self.picker.scheme_color_size * 2. + BORDER_OFFSET,
+                );
                 let dbl_width = vec2(
                     self.picker.scheme_color_size * 2. + BORDER_OFFSET,
                     self.picker.scheme_color_size,
@@ -271,6 +281,12 @@ impl App {
                                 cb!($c2, dbl_height_third_width, ui, display_labels);
                                 cb!($c3, dbl_height_third_width, ui, display_labels);
                             }
+                            HarmonyLayout::Gradient => {
+                                ui.vertical(|ui| {
+                                    let gradient = Gradient::from_colors([$c1, $c2, $c3]);
+                                    self.gradient_box(&gradient, gradient_size, ui, tex_allocator);
+                                });
+                            }
                         }
                     };
                     ($ui:ident, $c1:ident, $c2: ident, $c3:ident, $c4:ident, $display:ident, $stacked_size:ident, $line_size:ident)  => {
@@ -309,6 +325,12 @@ impl App {
                                 cb!($c3, line_size, ui, display_labels);
                                 cb!($c4, line_size, ui, display_labels);
                             }
+                            HarmonyLayout::Gradient => {
+                                ui.vertical(|ui| {
+                                    let gradient = Gradient::from_colors([$c1, $c2, $c3, $c4]);
+                                    self.gradient_box(&gradient, gradient_size, ui, tex_allocator);
+                                });
+                            }
                         }
                     }
                 }
@@ -331,6 +353,12 @@ impl App {
                                     cb!(color, dbl_height, ui, display_label);
                                     cb!(compl, dbl_height, ui, display_label);
                                 }
+                                HarmonyLayout::Gradient => {
+                                    let gradient = Gradient::from_colors([color, compl]);
+                                    ui.vertical(|ui| {
+                                        self.gradient_box(&gradient, gradient_size, ui, tex_allocator);
+                                    });
+                                }
                             }
                             ui.end_row();
                         });
@@ -346,9 +374,9 @@ impl App {
                     ColorHarmony::Tetradic => {
                         let tetr = color.tetradic();
                         Grid::new("tetradic").spacing((0., 0.)).show(ui, |ui| {
-                            let c1 = &tetr.0;
-                            let c2 = &tetr.1;
-                            let c3 = &tetr.2;
+                            let c1 = tetr.0;
+                            let c2 = tetr.1;
+                            let c3 = tetr.2;
                             colors_in_layout!(ui, color, c1, c2, c3, display_label, half_height, half_width);
                         });
                     }

@@ -11,7 +11,7 @@ use crate::app::settings::{DisplayFmtEnum, Settings};
 use crate::app::ui::windows::{
     ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow,
 };
-use crate::color::{Color, ColorHarmony, DisplayFormat};
+use crate::color::{Color, ColorHarmony, DisplayFormat, Gradient};
 use crate::display_picker::{self, DisplayPickerExt};
 use crate::save_to_clipboard;
 use color_picker::ColorPicker;
@@ -30,6 +30,7 @@ use std::rc::Rc;
 #[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;
 
+use crate::app::render::tex_gradient;
 use crate::app::ui::SPACE;
 #[cfg(windows)]
 use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
@@ -532,6 +533,23 @@ impl App {
                 let _ = save_to_clipboard(color_str);
             }
         }
+    }
+
+    fn gradient_box(
+        &mut self,
+        gradient: &Gradient,
+        size: Vec2,
+        ui: &mut Ui,
+        texture_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+    ) {
+        let _ = tex_gradient(
+            ui,
+            texture_allocator,
+            &mut self.texture_manager,
+            gradient,
+            size,
+            None,
+        );
     }
 
     fn top_panel(&mut self, ctx: &egui::CtxRef) {
