@@ -235,7 +235,7 @@ impl DigitFormat {
     }
 
     #[inline]
-    fn format_num(&self, mut num: u32, text: &mut String, stack: &mut LinkedList<u32>) {
+    fn populate_stack(&self, mut num: u32, stack: &mut LinkedList<u32>) {
         if num == 0 {
             stack.push_front(num);
         } else {
@@ -244,6 +244,11 @@ impl DigitFormat {
                 num /= self.radix();
             }
         }
+    }
+
+    #[inline]
+    fn format_num(&self, num: u32, text: &mut String, stack: &mut LinkedList<u32>) {
+        self.populate_stack(num, stack);
 
         while let Some(num) = stack.pop_front() {
             if let Some(ch) = self.format_digit(num) {
@@ -255,19 +260,12 @@ impl DigitFormat {
     #[inline]
     fn format_num_count(
         &self,
-        mut num: u32,
+        num: u32,
         text: &mut String,
         stack: &mut LinkedList<u32>,
         digit_count: u8,
     ) {
-        if num == 0 {
-            stack.push_front(num);
-        } else {
-            while num > 0 {
-                stack.push_front(num % self.radix());
-                num /= self.radix();
-            }
-        }
+        self.populate_stack(num, stack);
 
         let mut i = 0;
         while let Some(num) = stack.pop_front() {
