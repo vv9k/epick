@@ -33,10 +33,10 @@ use std::rc::Rc;
 #[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;
 
+#[cfg(windows)]
+use crate::app::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 use crate::app::render::tex_gradient;
 use crate::app::ui::SPACE;
-#[cfg(windows)]
-use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 use epi::Storage;
 
 pub static ADD_ICON: &str = "\u{2795}";
