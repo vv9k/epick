@@ -298,6 +298,7 @@ impl ColorPicker {
     pub fn rgb_sliders(&mut self, ui: &mut Ui) {
         let opaque = self.current_color.rgb();
         CollapsingHeader::new("RGB")
+            .default_open(false)
             .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, r, "red", U8_MIN..=U8_MAX, |mut r| {
@@ -318,6 +319,7 @@ impl ColorPicker {
     pub fn cmyk_sliders(&mut self, ui: &mut Ui) {
         let opaque = self.current_color.cmyk();
         CollapsingHeader::new("CMYK")
+            .default_open(false)
             .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, c, "cyan", 0. ..=100., |mut c| {
@@ -342,6 +344,7 @@ impl ColorPicker {
     pub fn hsv_sliders(&mut self, ui: &mut Ui) {
         let opaque = self.current_color.hsv();
         CollapsingHeader::new("HSV")
+            .default_open(false)
             .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, hue, "hue", 0. ..=360., |mut h| {
@@ -375,6 +378,7 @@ impl ColorPicker {
     pub fn hsl_sliders(&mut self, ui: &mut Ui) {
         let opaque = self.current_color.hsl();
         CollapsingHeader::new("HSL")
+            .default_open(false)
             .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, hsl_h, "hue", 0. ..=360., |mut h| {
@@ -396,6 +400,7 @@ impl ColorPicker {
         let ws = self.sliders.rgb_working_space;
         let opaque = self.current_color.luv(ws);
         CollapsingHeader::new("Luv")
+            .default_open(false)
             .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, luv_l, "light", 0. ..=100., |l| {
@@ -420,6 +425,7 @@ impl ColorPicker {
         let ws = self.sliders.rgb_working_space;
         let opaque = self.current_color.lch_uv(ws);
         CollapsingHeader::new("LCH(uv)")
+            .default_open(false)
             .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, lch_uv_l, "light", 0. ..=100., |l| {
@@ -448,6 +454,7 @@ impl ColorPicker {
                 .lab(ws, ref_white, self.sliders.chromatic_adaptation_method);
 
         CollapsingHeader::new("Lab")
+            .default_open(false)
             .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, lab_l, "light", 0. ..=100., |l| {
@@ -480,6 +487,7 @@ impl ColorPicker {
             self.sliders.chromatic_adaptation_method,
         );
         CollapsingHeader::new("LCH(ab)")
+            .default_open(false)
             .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, lch_ab_l, "light", 0. ..=100., |l| {

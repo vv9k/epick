@@ -23,6 +23,7 @@
 - Fix double `#` when copying a list of hex colors
 - Add different harmony layouts like `square`, `line` or `stacked`
 - Add gradient view of harmony
+- Hide all sliders when opening the app
 
 # 0.5.1
 - Fix switching between working spaces and illuminants
