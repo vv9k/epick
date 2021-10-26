@@ -388,16 +388,16 @@ impl Color {
 
     pub fn hues(&self, total: u8, step: f32) -> Vec<Color> {
         let mut colors = Vec::new();
-        let hsva = Hsva::from(*self);
+        let hsv = self.hsv();
         for i in (0..=total).rev() {
-            let mut _h = hsva;
-            _h.h -= step * i as f32;
+            let mut _h = hsv;
+            _h.offset_hue(-1. * step * i as f32);
             colors.push(_h.into());
         }
 
         for i in 1..=total {
-            let mut _h = hsva;
-            _h.h += step * i as f32;
+            let mut _h = hsv;
+            _h.offset_hue(1. * step * i as f32);
             colors.push(_h.into());
         }
 
