@@ -1,6 +1,5 @@
 mod app;
 mod color;
-mod display_picker;
 mod math;
 
 pub use app::App as Epick;

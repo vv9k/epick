@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 mod color_picker;
+mod display_picker;
 mod render;
 mod saved_colors;
 mod scheme;
@@ -7,18 +8,20 @@ mod screen_size;
 mod settings;
 mod ui;
 
-use crate::app::settings::{DisplayFmtEnum, Settings};
-use crate::app::ui::windows::{
-    ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow,
-};
 use crate::color::{Color, ColorHarmony, DisplayFormat, Gradient};
-use crate::display_picker::{self, DisplayPickerExt};
 use crate::save_to_clipboard;
 use color_picker::ColorPicker;
+use display_picker::DisplayPickerExt;
 use render::{tex_color, TextureManager};
 use saved_colors::SavedColors;
 use screen_size::ScreenSize;
-use ui::{color_tooltip, colors::*, dark_visuals, drag_source, drop_target, light_visuals};
+use settings::{DisplayFmtEnum, Settings};
+use ui::{
+    color_tooltip,
+    colors::*,
+    dark_visuals, drag_source, drop_target, light_visuals,
+    windows::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow},
+};
 
 use egui::{
     color::Color32, vec2, Button, CollapsingHeader, CursorIcon, Label, Layout, Rgba, TextStyle, Ui,
@@ -985,7 +988,7 @@ impl App {
                 ZOOM_WIN_WIDTH,
                 ZOOM_WIN_HEIGHT,
                 picker.screen_num(),
-                crate::display_picker::x11::WindowType::Dialog,
+                display_picker::x11::WindowType::Dialog,
             ) {
                 self.picker_window = Some(window);
             }
@@ -1013,7 +1016,7 @@ impl App {
                 ZOOM_IMAGE_WIDTH,
                 ZOOM_IMAGE_HEIGHT,
             ) {
-                let img = crate::display_picker::x11::resize_image(&img, ZOOM_SCALE);
+                let img = display_picker::x11::resize_image(&img, ZOOM_SCALE);
                 if let Err(e) = img.put(picker.conn(), window, gc, 0, 0) {
                     self.set_error(e);
                     return;
