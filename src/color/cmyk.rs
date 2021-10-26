@@ -121,6 +121,7 @@ impl From<Color> for Cmyk {
             Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
             Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
             Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
+            Color::Color32(c) => Rgb::from(c).into(),
         }
     }
 }

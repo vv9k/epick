@@ -230,6 +230,7 @@ impl From<Color> for Rgb {
             Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws),
             Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws),
             Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws),
+            Color::Color32(c) => c.into(),
         }
     }
 }

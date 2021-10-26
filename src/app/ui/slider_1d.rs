@@ -1,4 +1,4 @@
-use crate::color::contrast_color;
+use crate::color::Color;
 use eframe::egui::epaint::Mesh;
 use eframe::egui::{lerp, remap_clamp, Shape, Stroke};
 use egui::{pos2, vec2, Color32, CursorIcon, Response, Sense, Ui};
@@ -57,7 +57,7 @@ pub fn color(
 
     {
         let x = *value;
-        let picked_color = color_at(x);
+        let picked_color = Color::Color32(color_at(x));
         let x = if range_start.is_sign_negative() {
             x + range_start.neg()
         } else {
@@ -74,7 +74,7 @@ pub fn color(
                 pos2(x, rect.center().y),
             ],
             picked_color,
-            Stroke::new(visuals.fg_stroke.width, contrast_color(picked_color)),
+            Stroke::new(visuals.fg_stroke.width, picked_color.contrast()),
         ));
     }
 

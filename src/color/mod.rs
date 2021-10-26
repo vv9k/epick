@@ -71,14 +71,6 @@ pub fn parse_hex(color: &str) -> Option<(u8, u8, u8)> {
     ))
 }
 
-pub fn contrast_color(color: impl Into<Rgba>) -> Color32 {
-    if color.into().intensity() < 0.5 {
-        Color32::WHITE
-    } else {
-        Color32::BLACK
-    }
-}
-
 //################################################################################
 
 #[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize)]
@@ -163,6 +155,7 @@ pub enum Color {
     LchUV(LchUV, RgbWorkingSpace),
     Lab(Lab, RgbWorkingSpace, Illuminant),
     LchAB(LchAB, RgbWorkingSpace, Illuminant),
+    Color32(Color32),
 }
 
 impl Color {
@@ -172,6 +165,19 @@ impl Color {
 
     pub fn white() -> Self {
         Self::Rgb(Rgb::new(1., 1., 1.))
+    }
+
+    pub fn intensity(&self) -> f32 {
+        let rgb = self.rgb();
+        0.215 * rgb.r() + 0.7 * rgb.g() + 0.085 * rgb.b()
+    }
+
+    pub fn contrast(&self) -> Color {
+        if self.intensity() > 0.5 {
+            Self::black()
+        } else {
+            Self::white()
+        }
     }
 
     pub fn as_hex(&self) -> String {
@@ -233,7 +239,7 @@ impl Color {
     }
 
     pub fn from_hex(hex: &str) -> Option<Self> {
-        parse_hex(hex).map(|(r, g, b)| Rgb::from(Color32::from_rgb(r, g, b)).into())
+        parse_hex(hex).map(|(r, g, b)| Rgb::new_scaled(r, g, b).into())
     }
 
     pub fn as_hue_offset(&self, offset: f32) -> Color {
@@ -263,7 +269,7 @@ impl Color {
     }
 
     pub fn color32(&self) -> Color32 {
-        Color32::from(*self)
+        self.into()
     }
 
     pub fn hsva(&self) -> Hsva {
@@ -279,7 +285,7 @@ impl Color {
     }
 
     pub fn hsl(&self) -> Hsl {
-        (*self).into()
+        self.into()
     }
 
     pub fn hsv(&self) -> Hsv {
@@ -331,7 +337,6 @@ impl Color {
     }
 
     pub fn shades(&self, total: u8) -> Vec<Color> {
-        let base = self.color32();
         if total == 0 {
             return vec![*self];
         }
@@ -339,9 +344,11 @@ impl Color {
         if step_total == 0. {
             step_total = 1.;
         }
-        let mut base_r = base.r();
-        let mut base_g = base.g();
-        let mut base_b = base.b();
+
+        let rgb = self.rgb();
+        let mut base_r = rgb.r_scaled() as u8;
+        let mut base_g = rgb.g_scaled() as u8;
+        let mut base_b = rgb.b_scaled() as u8;
         let step_r = (base_r as f32 / step_total).ceil() as u8;
         let step_g = (base_g as f32 / step_total).ceil() as u8;
         let step_b = (base_b as f32 / step_total).ceil() as u8;
@@ -353,13 +360,12 @@ impl Color {
                 base_r = base_r.saturating_sub(step_r);
                 base_g = base_g.saturating_sub(step_g);
                 base_b = base_b.saturating_sub(step_b);
-                Color::Rgb(c.into())
+                c.into()
             })
             .collect()
     }
 
     pub fn tints(&self, total: u8) -> Vec<Color> {
-        let base = self.color32();
         if total == 0 {
             return vec![*self];
         }
@@ -367,12 +373,13 @@ impl Color {
         if step_total == 0. {
             step_total = 1.;
         }
-        let mut base_r = base.r();
-        let mut base_g = base.g();
-        let mut base_b = base.b();
-        let step_r = ((u8::MAX - base_r) as f32 / step_total).ceil() as u8;
-        let step_g = ((u8::MAX - base_g) as f32 / step_total).ceil() as u8;
-        let step_b = ((u8::MAX - base_b) as f32 / step_total).ceil() as u8;
+        let rgb = self.rgb();
+        let mut base_r = rgb.r_scaled() as u8;
+        let mut base_g = rgb.g_scaled() as u8;
+        let mut base_b = rgb.b_scaled() as u8;
+        let step_r = ((U8_MAX - base_r as f32) / step_total).ceil() as u8;
+        let step_g = ((U8_MAX - base_g as f32) / step_total).ceil() as u8;
+        let step_b = ((U8_MAX - base_b as f32) / step_total).ceil() as u8;
 
         (0..total)
             .into_iter()
@@ -381,7 +388,7 @@ impl Color {
                 base_r = base_r.saturating_add(step_r);
                 base_g = base_g.saturating_add(step_g);
                 base_b = base_b.saturating_add(step_b);
-                Color::Rgb(c.into())
+                c.into()
             })
             .collect()
     }
@@ -405,11 +412,13 @@ impl Color {
     }
 
     pub fn complementary(&self) -> Color {
-        let color = self.color32();
-        if color == Color32::BLACK {
-            return Color32::WHITE.into();
-        } else if color == Color32::WHITE {
-            return Color32::BLACK.into();
+        let white = Self::white();
+        let black = Self::black();
+
+        if self == &black {
+            return white;
+        } else if self == &white {
+            return black;
         }
 
         self.as_hue_offset(6. / 12.)
@@ -485,6 +494,7 @@ impl From<Color> for Color32 {
             Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
             Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
             Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
+            Color::Color32(c) => Rgb::from(c).into(),
         }
     }
 }
@@ -508,6 +518,7 @@ macro_rules! convert_color {
             Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
             Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
             Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
+            Color::Color32(c) => Rgb::from(c).into(),
         }
     };
 }
