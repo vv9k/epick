@@ -21,6 +21,7 @@
 - Add ability to save custom color display formats
 - Add a checkbox to disable color labels in harmonies view
 - Fix double `#` when copying a list of hex colors
+- Add different harmony layouts like `square`, `line` or `stacked`
 
 # 0.5.1
 - Fix switching between working spaces and illuminants

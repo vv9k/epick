@@ -1,6 +1,8 @@
+use crate::app::ui::layout::HarmonyLayout;
 use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::app::{App, ColorHarmony};
 
+use crate::app::ui::DOUBLE_SPACE;
 use eframe::egui::TextStyle;
 use egui::{vec2, Grid, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
@@ -108,6 +110,28 @@ impl App {
         }
     }
 
+    fn harmony_layout_combobox(&mut self, ui: &mut Ui) {
+        ComboBox::from_label("Harmony layout")
+            .selected_text(self.settings_window.settings.harmony_layout.as_ref())
+            .show_ui(ui, |ui| {
+                ui.selectable_value(
+                    &mut self.settings_window.settings.harmony_layout,
+                    HarmonyLayout::Square,
+                    HarmonyLayout::Square.as_ref(),
+                );
+                ui.selectable_value(
+                    &mut self.settings_window.settings.harmony_layout,
+                    HarmonyLayout::Line,
+                    HarmonyLayout::Line.as_ref(),
+                );
+                ui.selectable_value(
+                    &mut self.settings_window.settings.harmony_layout,
+                    HarmonyLayout::Stacked,
+                    HarmonyLayout::Stacked.as_ref(),
+                );
+            });
+    }
+
     pub fn harmonies(
         &mut self,
         ui: &mut Ui,
@@ -119,9 +143,31 @@ impl App {
             .show(ui, |ui| {
                 let size = vec2(self.picker.scheme_color_size, self.picker.scheme_color_size);
                 const BORDER_OFFSET: f32 = 8.;
-                let double_size = vec2(
+                let dbl_width = vec2(
                     self.picker.scheme_color_size * 2. + BORDER_OFFSET,
                     self.picker.scheme_color_size,
+                );
+                let dbl_height = vec2(
+                    self.picker.scheme_color_size,
+                    self.picker.scheme_color_size * 2. + BORDER_OFFSET,
+                );
+
+                let dbl_width_third_height = vec2(
+                    self.picker.scheme_color_size * 2. + BORDER_OFFSET,
+                    self.picker.scheme_color_size * 2. / 3.,
+                );
+                let dbl_height_third_width = vec2(
+                    self.picker.scheme_color_size * 2. / 3.,
+                    self.picker.scheme_color_size * 2. + BORDER_OFFSET,
+                );
+
+                let half_height = vec2(
+                    self.picker.scheme_color_size + BORDER_OFFSET,
+                    self.picker.scheme_color_size * 1. / 2.,
+                );
+                let half_width = vec2(
+                    self.picker.scheme_color_size * 1. / 2.,
+                    self.picker.scheme_color_size + BORDER_OFFSET,
                 );
 
                 macro_rules! cb {
@@ -142,7 +188,7 @@ impl App {
                 }
 
                 let color = self.picker.current_color;
-                ComboBox::from_label("Choose a type")
+                ComboBox::from_label("Choose a harmony")
                     .selected_text(self.picker.color_harmony.as_ref())
                     .show_ui(ui, |ui| {
                         ui.selectable_value(
@@ -181,10 +227,7 @@ impl App {
                             ColorHarmony::Monochromatic.as_ref(),
                         );
                     });
-                ui.checkbox(
-                    &mut self.picker.display_harmony_color_label,
-                    "Display color labels",
-                );
+                self.harmony_layout_combobox(ui);
                 ui.add(
                     Slider::new(
                         &mut self.picker.scheme_color_size,
@@ -193,13 +236,102 @@ impl App {
                     .clamp_to_range(true)
                     .text("color size"),
                 );
-                let display = self.picker.display_harmony_color_label;
+                ui.checkbox(
+                    &mut self.picker.display_harmony_color_label,
+                    "Display color labels",
+                );
+                ui.add_space(DOUBLE_SPACE);
+                macro_rules! colors_in_layout {
+                    ($ui:ident, $c1:ident, $c2: ident, $c3:ident, $display:ident, $s1:ident, $s2:ident)  => {
+                        let ui = $ui;
+                        let display_labels = $display;
+                        let dbl_width_third_height = $s1;
+                        let dbl_height_third_width = $s2;
+                        match self.settings_window.settings.harmony_layout {
+                            HarmonyLayout::Square => {
+                                cb!($c1, dbl_width, ui, display_labels);
+                                ui.end_row();
+                                ui.scope(|ui| {
+                                    ui.spacing_mut().item_spacing = (0., 0.).into();
+                                    cb!($c2, ui, display_labels);
+                                    cb!($c3, ui, display_labels);
+
+                                });
+
+                            }
+                            HarmonyLayout::Stacked => {
+                                cb!($c1, dbl_width_third_height, ui, display_labels);
+                                ui.end_row();
+                                cb!($c2, dbl_width_third_height, ui, display_labels);
+                                ui.end_row();
+                                cb!($c3, dbl_width_third_height, ui, display_labels);
+                            }
+                            HarmonyLayout::Line => {
+                                cb!($c1, dbl_height_third_width, ui, display_labels);
+                                cb!($c2, dbl_height_third_width, ui, display_labels);
+                                cb!($c3, dbl_height_third_width, ui, display_labels);
+                            }
+                        }
+                    };
+                    ($ui:ident, $c1:ident, $c2: ident, $c3:ident, $c4:ident, $display:ident, $stacked_size:ident, $line_size:ident)  => {
+                        let ui = $ui;
+                        let display_labels = $display;
+                        let stacked_size = $stacked_size;
+                        let line_size = $line_size;
+                        match self.settings_window.settings.harmony_layout {
+                            HarmonyLayout::Square => {
+                                ui.scope(|ui| {
+                                    ui.spacing_mut().item_spacing = (0., 0.).into();
+                                    cb!($c1, ui, display_labels);
+                                    cb!($c2, ui, display_labels);
+
+                                });
+                                ui.end_row();
+                                ui.scope(|ui| {
+                                    ui.spacing_mut().item_spacing = (0., 0.).into();
+                                    cb!($c3, ui, display_labels);
+                                    cb!($c4, ui, display_labels);
+                                });
+
+                            }
+                            HarmonyLayout::Stacked => {
+                                cb!($c1, stacked_size, ui, display_labels);
+                                ui.end_row();
+                                cb!($c2, stacked_size, ui, display_labels);
+                                ui.end_row();
+                                cb!($c3, stacked_size, ui, display_labels);
+                                ui.end_row();
+                                cb!($c4, stacked_size, ui, display_labels);
+                            }
+                            HarmonyLayout::Line => {
+                                cb!($c1, line_size, ui, display_labels);
+                                cb!($c2, line_size, ui, display_labels);
+                                cb!($c3, line_size, ui, display_labels);
+                                cb!($c4, line_size, ui, display_labels);
+                            }
+                        }
+                    }
+                }
+                let display_label = self.picker.display_harmony_color_label;
                 match self.picker.color_harmony {
                     ColorHarmony::Complementary => {
                         let compl = color.complementary();
                         Grid::new("complementary").spacing((0., 0.)).show(ui, |ui| {
-                            cb!(color, ui, display);
-                            cb!(compl, ui, display);
+                            match self.settings_window.settings.harmony_layout {
+                                HarmonyLayout::Square => {
+                                    cb!(color, ui,  display_label);
+                                    cb!(compl, ui, display_label);
+                                }
+                                HarmonyLayout::Stacked => {
+                                    cb!(color, dbl_width, ui, display_label);
+                                    ui.end_row();
+                                    cb!(compl, dbl_width, ui, display_label);
+                                }
+                                HarmonyLayout::Line => {
+                                    cb!(color, dbl_height, ui, display_label);
+                                    cb!(compl, dbl_height, ui, display_label);
+                                }
+                            }
                             ui.end_row();
                         });
                     }
@@ -208,14 +340,7 @@ impl App {
                         Grid::new("triadic").spacing((0., 0.)).show(ui, |ui| {
                             let c1 = tri.0;
                             let c2 = tri.1;
-                            cb!(color, double_size, ui, display);
-                            ui.end_row();
-                            ui.scope(|ui| {
-                                ui.spacing_mut().item_spacing = (0., 0.).into();
-                                cb!(c1, ui, display);
-                                cb!(c2, ui, display);
-                            });
-                            ui.end_row();
+                            colors_in_layout!(ui, color, c1, c2, display_label, dbl_width_third_height, dbl_height_third_width);
                         });
                     }
                     ColorHarmony::Tetradic => {
@@ -224,12 +349,7 @@ impl App {
                             let c1 = &tetr.0;
                             let c2 = &tetr.1;
                             let c3 = &tetr.2;
-                            cb!(color, ui, display);
-                            cb!(c1, ui, display);
-                            ui.end_row();
-                            cb!(c2, ui, display);
-                            cb!(c3, ui, display);
-                            ui.end_row();
+                            colors_in_layout!(ui, color, c1, c2, c3, display_label, half_height, half_width);
                         });
                     }
                     ColorHarmony::Analogous => {
@@ -237,14 +357,7 @@ impl App {
                         Grid::new("analogous").spacing((0., 0.)).show(ui, |ui| {
                             let c1 = an.0;
                             let c2 = an.1;
-                            cb!(color, double_size, ui, display);
-                            ui.end_row();
-                            ui.scope(|ui| {
-                                ui.spacing_mut().item_spacing = (0., 0.).into();
-                                cb!(c1, ui, display);
-                                cb!(c2, ui, display);
-                            });
-                            ui.end_row();
+                            colors_in_layout!(ui, color, c1, c2, display_label, dbl_width_third_height, dbl_height_third_width);
                         });
                     }
                     ColorHarmony::SplitComplementary => {
@@ -254,14 +367,7 @@ impl App {
                             .show(ui, |ui| {
                                 let c1 = sc.0;
                                 let c2 = sc.1;
-                                cb!(color, double_size, ui, display);
-                                ui.end_row();
-                                ui.scope(|ui| {
-                                    ui.spacing_mut().item_spacing = (0., 0.).into();
-                                    cb!(c1, ui, display);
-                                    cb!(c2, ui, display);
-                                });
-                                ui.end_row();
+                                colors_in_layout!(ui, color, c1, c2, display_label, dbl_width_third_height, dbl_height_third_width);
                             });
                     }
                     ColorHarmony::Square => {
@@ -270,12 +376,7 @@ impl App {
                             let c1 = s.0;
                             let c2 = s.1;
                             let c3 = s.2;
-                            cb!(color, ui, display);
-                            cb!(c1, ui, display);
-                            ui.end_row();
-                            cb!(c2, ui, display);
-                            cb!(c3, ui, display);
-                            ui.end_row();
+                            colors_in_layout!(ui, color, c1, c2, c3, display_label, half_height, half_width);
                         });
                     }
                     ColorHarmony::Monochromatic => {
@@ -284,12 +385,7 @@ impl App {
                             let c1 = mono.0;
                             let c2 = mono.1;
                             let c3 = mono.2;
-                            cb!(color, ui, display);
-                            cb!(c1, ui, display);
-                            ui.end_row();
-                            cb!(c2, ui, display);
-                            cb!(c3, ui, display);
-                            ui.end_row();
+                            colors_in_layout!(ui, color, c1, c2, c3, display_label, half_height, half_width);
                         });
                     }
                 }

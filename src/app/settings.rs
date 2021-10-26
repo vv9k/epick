@@ -1,5 +1,6 @@
 use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
 
+use crate::app::ui::layout::HarmonyLayout;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -15,6 +16,10 @@ fn is_false(it: &bool) -> bool {
 
 fn is_true(it: &bool) -> bool {
     *it
+}
+
+fn is_default_harmony_layout(it: &HarmonyLayout) -> bool {
+    *it == HarmonyLayout::default()
 }
 
 fn is_default_harmony(it: &ColorHarmony) -> bool {
@@ -94,6 +99,9 @@ pub struct Settings {
     #[serde(default = "enabled")]
     #[serde(skip_serializing_if = "is_true")]
     pub is_dark_mode: bool,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_default_harmony_layout")]
+    pub harmony_layout: HarmonyLayout,
 }
 
 impl Default for Settings {
@@ -111,6 +119,7 @@ impl Default for Settings {
             cache_colors: true,
             color_harmony: ColorHarmony::default(),
             is_dark_mode: true,
+            harmony_layout: HarmonyLayout::default(),
         }
     }
 }
