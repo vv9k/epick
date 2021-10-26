@@ -104,40 +104,40 @@ impl SettingsWindow {
 
     fn color_harmony(&mut self, ui: &mut Ui) {
         ComboBox::from_label("Color harmony")
-            .selected_text(self.settings.color_harmony.as_ref())
+            .selected_text(self.settings.harmony.as_ref())
             .show_ui(ui, |ui| {
                 ui.selectable_value(
-                    &mut self.settings.color_harmony,
+                    &mut self.settings.harmony,
                     ColorHarmony::Complementary,
                     ColorHarmony::Complementary.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.color_harmony,
+                    &mut self.settings.harmony,
                     ColorHarmony::Triadic,
                     ColorHarmony::Triadic.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.color_harmony,
+                    &mut self.settings.harmony,
                     ColorHarmony::Tetradic,
                     ColorHarmony::Tetradic.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.color_harmony,
+                    &mut self.settings.harmony,
                     ColorHarmony::Analogous,
                     ColorHarmony::Analogous.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.color_harmony,
+                    &mut self.settings.harmony,
                     ColorHarmony::SplitComplementary,
                     ColorHarmony::SplitComplementary.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.color_harmony,
+                    &mut self.settings.harmony,
                     ColorHarmony::Square,
                     ColorHarmony::Square.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.color_harmony,
+                    &mut self.settings.harmony,
                     ColorHarmony::Monochromatic,
                     ColorHarmony::Monochromatic.as_ref(),
                 );

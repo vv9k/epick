@@ -26,6 +26,16 @@ fn is_default_harmony(it: &ColorHarmony) -> bool {
     *it == ColorHarmony::default()
 }
 
+fn is_default_color_size(it: &f32) -> bool {
+    *it == DEFAULT_COLOR_SIZE
+}
+
+const DEFAULT_COLOR_SIZE: f32 = 100.;
+
+fn default_color_size() -> f32 {
+    DEFAULT_COLOR_SIZE
+}
+
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct ColorSpaceSettings {
     #[serde(default = "enabled")]
@@ -95,13 +105,19 @@ pub struct Settings {
     pub cache_colors: bool,
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default_harmony")]
-    pub color_harmony: ColorHarmony,
+    pub harmony: ColorHarmony,
     #[serde(default = "enabled")]
     #[serde(skip_serializing_if = "is_true")]
     pub is_dark_mode: bool,
     #[serde(default)]
     #[serde(skip_serializing_if = "is_default_harmony_layout")]
     pub harmony_layout: HarmonyLayout,
+    #[serde(default = "default_color_size")]
+    #[serde(skip_serializing_if = "is_default_color_size")]
+    pub harmony_color_size: f32,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
+    pub harmony_display_color_label: bool,
 }
 
 impl Default for Settings {
@@ -117,9 +133,11 @@ impl Default for Settings {
             chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
             illuminant: ws.reference_illuminant(),
             cache_colors: true,
-            color_harmony: ColorHarmony::default(),
             is_dark_mode: true,
+            harmony: ColorHarmony::default(),
             harmony_layout: HarmonyLayout::default(),
+            harmony_color_size: DEFAULT_COLOR_SIZE,
+            harmony_display_color_label: false,
         }
     }
 }
@@ -199,8 +217,10 @@ impl AsRef<str> for DisplayFmtEnum {
 
 #[cfg(test)]
 mod tests {
-    use crate::app::settings::{DisplayFmtEnum, Settings};
+    use crate::app::settings::{DisplayFmtEnum, Settings, DEFAULT_COLOR_SIZE};
+    use crate::app::ui::layout::HarmonyLayout;
     use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
+    use crate::math::eq_f32;
     use std::fs;
 
     #[test]
@@ -216,6 +236,7 @@ color_spaces:
 rgb_working_space: Adobe
 chromatic_adaptation_method: VonKries
 illuminant: D50
+harmony_layout: gradient
 "#;
         let path = tmp.path().join("settings.yaml");
         fs::write(&path, settings_str).unwrap();
@@ -229,7 +250,6 @@ illuminant: D50
             settings.chromatic_adaptation_method,
             ChromaticAdaptationMethod::VonKries
         );
-        assert_eq!(settings.color_harmony, ColorHarmony::default());
 
         assert!(settings.color_spaces.rgb);
         assert!(settings.color_spaces.cmyk);
@@ -240,6 +260,11 @@ illuminant: D50
         assert!(!settings.color_spaces.lch_uv);
         assert!(!settings.color_spaces.lch_ab);
         assert!(settings.cache_colors);
+
+        assert_eq!(settings.harmony, ColorHarmony::default());
+        assert_eq!(settings.harmony_layout, HarmonyLayout::Gradient);
+        assert!(eq_f32(settings.harmony_color_size, DEFAULT_COLOR_SIZE));
+        assert!(!settings.harmony_display_color_label);
 
         let path = tmp.path().join("new_settings.yaml");
         settings.save(&path).unwrap();

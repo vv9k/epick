@@ -143,41 +143,42 @@ impl App {
         ui: &mut Ui,
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
+        let color_size = self.settings_window.settings.harmony_color_size;
         CollapsingHeader::new("Harmonies")
             .text_style(TextStyle::Heading)
             .default_open(true)
             .show(ui, |ui| {
-                let size = vec2(self.picker.scheme_color_size, self.picker.scheme_color_size);
+                let size = vec2(color_size, color_size);
                 const BORDER_OFFSET: f32 = 8.;
                 let gradient_size = vec2(
-                    self.picker.scheme_color_size * 4. + BORDER_OFFSET,
-                    self.picker.scheme_color_size * 2. + BORDER_OFFSET,
+                    color_size * 4. + BORDER_OFFSET,
+                    color_size * 2. + BORDER_OFFSET,
                 );
                 let dbl_width = vec2(
-                    self.picker.scheme_color_size * 2. + BORDER_OFFSET,
-                    self.picker.scheme_color_size,
+                    color_size * 2. + BORDER_OFFSET,
+                    color_size,
                 );
                 let dbl_height = vec2(
-                    self.picker.scheme_color_size,
-                    self.picker.scheme_color_size * 2. + BORDER_OFFSET,
+                    color_size,
+                    color_size * 2. + BORDER_OFFSET,
                 );
 
                 let dbl_width_third_height = vec2(
-                    self.picker.scheme_color_size * 2. + BORDER_OFFSET,
-                    self.picker.scheme_color_size * 2. / 3.,
+                    color_size * 2. + BORDER_OFFSET,
+                    color_size * 2. / 3.,
                 );
                 let dbl_height_third_width = vec2(
-                    self.picker.scheme_color_size * 2. / 3.,
-                    self.picker.scheme_color_size * 2. + BORDER_OFFSET,
+                    color_size * 2. / 3.,
+                    color_size * 2. + BORDER_OFFSET,
                 );
 
                 let half_height = vec2(
-                    self.picker.scheme_color_size + BORDER_OFFSET,
-                    self.picker.scheme_color_size * 1. / 2.,
+                    color_size + BORDER_OFFSET,
+                    color_size * 1. / 2.,
                 );
                 let half_width = vec2(
-                    self.picker.scheme_color_size * 1. / 2.,
-                    self.picker.scheme_color_size + BORDER_OFFSET,
+                    color_size * 1. / 2.,
+                    color_size + BORDER_OFFSET,
                 );
 
                 macro_rules! cb {
@@ -198,41 +199,42 @@ impl App {
                 }
 
                 let color = self.picker.current_color;
+                let harmony = &mut self.settings_window.settings.harmony;
                 ComboBox::from_label("Choose a harmony")
-                    .selected_text(self.picker.color_harmony.as_ref())
+                    .selected_text(harmony.as_ref())
                     .show_ui(ui, |ui| {
                         ui.selectable_value(
-                            &mut self.picker.color_harmony,
+                            harmony,
                             ColorHarmony::Complementary,
                             ColorHarmony::Complementary.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.color_harmony,
+                            harmony,
                             ColorHarmony::Triadic,
                             ColorHarmony::Triadic.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.color_harmony,
+                            harmony,
                             ColorHarmony::Tetradic,
                             ColorHarmony::Tetradic.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.color_harmony,
+                            harmony,
                             ColorHarmony::Analogous,
                             ColorHarmony::Analogous.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.color_harmony,
+                            harmony,
                             ColorHarmony::SplitComplementary,
                             ColorHarmony::SplitComplementary.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.color_harmony,
+                            harmony,
                             ColorHarmony::Square,
                             ColorHarmony::Square.as_ref(),
                         );
                         ui.selectable_value(
-                            &mut self.picker.color_harmony,
+                            harmony,
                             ColorHarmony::Monochromatic,
                             ColorHarmony::Monochromatic.as_ref(),
                         );
@@ -240,14 +242,14 @@ impl App {
                 self.harmony_layout_combobox(ui);
                 ui.add(
                     Slider::new(
-                        &mut self.picker.scheme_color_size,
+                        &mut self.settings_window.settings.harmony_color_size,
                         20.0..=ui.available_width() / 4.,
                     )
                     .clamp_to_range(true)
                     .text("color size"),
                 );
                 ui.checkbox(
-                    &mut self.picker.display_harmony_color_label,
+                    &mut self.settings_window.settings.harmony_display_color_label,
                     "Display color labels",
                 );
                 ui.add_space(DOUBLE_SPACE);
@@ -334,8 +336,8 @@ impl App {
                         }
                     }
                 }
-                let display_label = self.picker.display_harmony_color_label;
-                match self.picker.color_harmony {
+                let display_label = self.settings_window.settings.harmony_display_color_label;
+                match self.settings_window.settings.harmony {
                     ColorHarmony::Complementary => {
                         let compl = color.complementary();
                         Grid::new("complementary").spacing((0., 0.)).show(ui, |ui| {

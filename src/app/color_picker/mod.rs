@@ -2,8 +2,8 @@ mod sliders;
 
 use crate::app::ui::{slider_1d, slider_2d, SPACE};
 use crate::color::{
-    CIEColor, Cmyk, Color, ColorHarmony, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, Rgb,
-    RgbWorkingSpace, Xyz, U8_MAX, U8_MIN,
+    CIEColor, Cmyk, Color, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, Rgb, RgbWorkingSpace, Xyz,
+    U8_MAX, U8_MIN,
 };
 use crate::math;
 use sliders::ColorSliders;
@@ -34,11 +34,8 @@ pub struct ColorPicker {
     pub hex_color: String,
     pub sliders: ColorSliders,
     pub saved_sliders: Option<ColorSliders>,
-    pub scheme_color_size: f32,
-    pub color_harmony: ColorHarmony,
     pub new_workspace: Option<RgbWorkingSpace>,
     pub new_illuminant: Option<Illuminant>,
-    pub display_harmony_color_label: bool,
 }
 
 impl Default for ColorPicker {
@@ -48,11 +45,8 @@ impl Default for ColorPicker {
             hex_color: "".to_string(),
             sliders: ColorSliders::default(),
             saved_sliders: None,
-            scheme_color_size: 100.,
-            color_harmony: ColorHarmony::default(),
             new_workspace: None,
             new_illuminant: None,
-            display_harmony_color_label: false,
         }
     }
 }
