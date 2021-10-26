@@ -1,3 +1,4 @@
+mod chromatic_adaptation;
 mod cmyk;
 mod format;
 mod gradient;
@@ -15,6 +16,7 @@ mod xyz;
 
 pub use gradient::Gradient;
 
+pub use chromatic_adaptation::ChromaticAdaptationMethod;
 pub use cmyk::Cmyk;
 pub use hsl::Hsl;
 pub use hsv::Hsv;
@@ -24,7 +26,7 @@ pub use lch_ab::LchAB;
 pub use lch_uv::LchUV;
 pub use luv::Luv;
 pub use rgb::Rgb;
-pub use working_space::{ChromaticAdaptationMethod, RgbWorkingSpace};
+pub use working_space::RgbWorkingSpace;
 pub use xyy::xyY;
 pub use xyz::Xyz;
 
