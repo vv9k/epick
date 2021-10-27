@@ -1,5 +1,5 @@
 use crate::app::saved_colors::{PaletteFormat, SavedColors};
-use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
+use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 
 use anyhow::Result;
 use egui::color::Color32;
@@ -40,10 +40,13 @@ impl ExportWindow {
         if self.show {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut show = true;
+            let is_dark_mode = ctx.style().visuals.dark_mode;
             Window::new("export")
+                .frame(windows::default_frame(is_dark_mode))
                 .open(&mut show)
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .show(ctx, |ui| {
+                    windows::apply_default_style(ui, is_dark_mode);
                     ui.vertical(|ui| {
                         ui.horizontal(|ui| {
                             ComboBox::from_label("format")

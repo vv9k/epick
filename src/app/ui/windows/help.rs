@@ -1,4 +1,4 @@
-use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
+use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use eframe::egui::TextStyle;
 use egui::{Label, Window};
 
@@ -25,11 +25,15 @@ impl HelpWindow {
         if self.is_open {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
+            let is_dark_mode = ctx.style().visuals.dark_mode;
+
             Window::new("Help")
                 .collapsible(false)
+                .frame(windows::default_frame(is_dark_mode))
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .open(&mut is_open)
                 .show(ctx, |ui| {
+                    windows::apply_default_style(ui, is_dark_mode);
                     ui.vertical(|ui| {
                         let label = Label::new("Keybindings").text_style(TextStyle::Heading);
                         ui.add(label);

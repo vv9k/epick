@@ -1,5 +1,5 @@
 use crate::app::ui::layout::HarmonyLayout;
-use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
+use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::app::ui::DOUBLE_SPACE;
 use crate::app::{App, ColorHarmony};
 use crate::color::Gradient;
@@ -17,12 +17,15 @@ impl App {
         if self.hues_window.is_open {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
+            let is_dark_mode = ctx.style().visuals.dark_mode;
             Window::new("Hues")
+                .frame(windows::default_frame(is_dark_mode))
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .collapsible(false)
                 .vscroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
+                    windows::apply_default_style(ui, is_dark_mode);
                     self.hues_window.sliders(ui);
 
                     let color = &self.picker.current_color;
@@ -52,12 +55,15 @@ impl App {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let pos = (offset, WINDOW_Y_OFFSET);
             let mut is_open = true;
+            let is_dark_mode = ctx.style().visuals.dark_mode;
             Window::new("Tints")
+                .frame(windows::default_frame(is_dark_mode))
                 .collapsible(false)
                 .default_pos(pos)
                 .vscroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
+                    windows::apply_default_style(ui, is_dark_mode);
                     self.tints_window.sliders(ui);
 
                     let color = &self.picker.current_color;
@@ -85,12 +91,15 @@ impl App {
         if self.shades_window.is_open {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
+            let is_dark_mode = ctx.style().visuals.dark_mode;
             Window::new("Shades")
+                .frame(windows::default_frame(is_dark_mode))
                 .collapsible(false)
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .vscroll(true)
                 .open(&mut is_open)
                 .show(ctx, |ui| {
+                    windows::apply_default_style(ui, is_dark_mode);
                     self.shades_window.sliders(ui);
 
                     let color = self.picker.current_color;

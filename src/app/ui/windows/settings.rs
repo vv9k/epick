@@ -1,5 +1,5 @@
 use crate::app::settings::{DisplayFmtEnum, Settings};
-use crate::app::ui::windows::{WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
+use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
 
 use egui::{Color32, ComboBox, CursorIcon, Ui, Window};
@@ -43,10 +43,13 @@ impl SettingsWindow {
         if self.show {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut show = true;
+            let is_dark_mode = ctx.style().visuals.dark_mode;
             Window::new("settings")
+                .frame(windows::default_frame(is_dark_mode))
                 .open(&mut show)
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .show(ctx, |ui| {
+                    windows::apply_default_style(ui, is_dark_mode);
                     if let Some(err) = &self.error {
                         ui.colored_label(Color32::RED, err);
                     }

@@ -27,6 +27,7 @@ use egui::{
     color::Color32, vec2, Button, CollapsingHeader, CursorIcon, Label, Layout, Rgba, TextStyle, Ui,
 };
 use egui::{Id, ScrollArea, Vec2, Visuals};
+use epi::Storage;
 use std::borrow::Cow;
 use std::rc::Rc;
 
@@ -37,7 +38,6 @@ use x11rb::protocol::xproto;
 use crate::app::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 use crate::app::render::tex_gradient;
 use crate::app::ui::SPACE;
-use epi::Storage;
 
 pub static ADD_ICON: &str = "\u{2795}";
 pub static COPY_ICON: &str = "\u{1F3F7}";
@@ -576,7 +576,7 @@ impl App {
             } else {
                 *L_BG_0
             },
-            margin: vec2(15., 10.),
+            margin: (15., 10.).into(),
             ..Default::default()
         };
 
