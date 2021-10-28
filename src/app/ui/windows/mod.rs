@@ -16,9 +16,9 @@ pub const WINDOW_Y_OFFSET: f32 = 30.;
 pub fn default_frame(is_dark_mode: bool) -> Frame {
     Frame {
         fill: if is_dark_mode {
-            *D_BG_00_TRANSPARENT
+            *D_BG_1_TRANSPARENT
         } else {
-            *L_BG_0_TRANSPARENT
+            *L_BG_3_TRANSPARENT
         },
         margin: (15., 15.).into(),
         corner_radius: 5.,
@@ -38,9 +38,9 @@ pub fn default_frame(is_dark_mode: bool) -> Frame {
 pub fn apply_default_style(ui: &mut Ui, is_dark_mode: bool) {
     let widgets = &mut ui.style_mut().visuals.widgets;
     if is_dark_mode {
-        widgets.inactive.bg_fill = *D_BG_2;
+        widgets.inactive.bg_fill = *D_BG_2_TRANSPARENT;
     } else {
-        widgets.inactive.bg_fill = *L_BG_2;
+        widgets.inactive.bg_fill = *L_BG_2_TRANSPARENT;
     }
 }
 
