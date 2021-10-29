@@ -695,7 +695,7 @@ dependencies = [
 
 [[package]]
 name = "epick"
-version = "0.6.0-beta"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "clipboard",
