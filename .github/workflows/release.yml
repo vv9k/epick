@@ -7,7 +7,8 @@ on:
     tags:
       - "**"
 jobs:
-  codestyle:
+  check:
+    name: Check
     strategy:
       matrix:
         os:
@@ -16,15 +17,11 @@ jobs:
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Set up Rust
-        uses: hecrj/setup-rust-action@v1
-        with:
-          components: rustfmt
-          rust-version: stable
-      - uses: actions/checkout@v1
-      - run: cargo fmt --all -- --check
+      - uses: actions/checkout@main
+      - uses: ./.github/actions/check
 
-  lint:
+  fmt:
+    name: Rustfmt
     strategy:
       matrix:
         os:
@@ -33,14 +30,11 @@ jobs:
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Set up Rust
-        uses: hecrj/setup-rust-action@v1
-        with:
-          components: clippy
-      - uses: actions/checkout@v1
-      - run: cargo clippy --all-targets -- -D clippy::all
+      - uses: actions/checkout@main
+      - uses: ./.github/actions/fmt
 
-  compile:
+  clippy:
+    name: Clippy
     strategy:
       matrix:
         os:
@@ -49,13 +43,12 @@ jobs:
           - macos-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Set up Rust
-        uses: hecrj/setup-rust-action@v1
-      - uses: actions/checkout@master
-      - run: cargo check --all
+      - uses: actions/checkout@main
+      - uses: ./.github/actions/clippy
 
   test:
-    needs: [codestyle, lint, compile]
+    name: Test Suite
+    needs: [check, fmt, clippy]
     strategy:
       matrix:
         os:
@@ -63,19 +56,9 @@ jobs:
           - windows-latest
           - macos-latest
     runs-on: ${{ matrix.os }}
-
     steps:
-      - name: Setup Rust
-        uses: hecrj/setup-rust-action@v1
-        with:
-          rust-version: ${{ matrix.rust }}
-      - name: Checkout
-        uses: actions/checkout@v1
-      - name: Install dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
-      - name: Test
-        run: cargo test
+      - uses: actions/checkout@main
+      - uses: ./.github/actions/test
 
   build_and_upload_artifacts:
     name: Upload Artifacts
