@@ -1,3 +1,7 @@
+<p align="center">
+    <img src="./assets/icon.svg">
+</p>
+
 # epick
 
 [![Build Status](https://github.com/vv9k/epick/workflows/epick%20CI/badge.svg)](https://github.com/vv9k/epick/actions?query=workflow%3A%22epick+CI%22)
