@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="48"
+   height="48"
+   viewBox="0 0 12.7 12.7"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="icon.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     units="px"
+     inkscape:zoom="5.6568543"
+     inkscape:cx="20.948038"
+     inkscape:cy="30.935922"
+     inkscape:window-width="1888"
+     inkscape:window-height="1008"
+     inkscape:window-x="1455"
+     inkscape:window-y="55"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer2"
+     showguides="false">
+    <sodipodi:guide
+       position="0,6.3500001"
+       orientation="0,24"
+       id="guide22373" />
+    <sodipodi:guide
+       position="6.3499999,6.3500001"
+       orientation="-24,0"
+       id="guide22375" />
+  </sodipodi:namedview>
+  <defs
+     id="defs2">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient44385">
+      <stop
+         style="stop-color:#3e9a8a;stop-opacity:1"
+         offset="0"
+         id="stop44381" />
+      <stop
+         style="stop-color:#3e729a;stop-opacity:0.86000001"
+         offset="0.08815508"
+         id="stop44807" />
+      <stop
+         style="stop-color:#403e9a;stop-opacity:0.69"
+         offset="0.2272547"
+         id="stop44873" />
+      <stop
+         style="stop-color:#783e9a;stop-opacity:0.89999998"
+         offset="0.34877369"
+         id="stop44939" />
+      <stop
+         style="stop-color:#9a3e85;stop-opacity:0.80000001"
+         offset="0.63305372"
+         id="stop45005" />
+      <stop
+         style="stop-color:#9a3e4e;stop-opacity:0.69999999"
+         offset="1"
+         id="stop44383" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient44385"
+       id="linearGradient44387"
+       x1="4.3038483"
+       y1="1.9656312"
+       x2="15.868878"
+       y2="6.1784158"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       id="rect34849"
+       width="12.7"
+       height="12.7"
+       x="0"
+       y="0"
+       style="stroke-width:0.316447;fill:#161c23;fill-opacity:1"
+       ry="3.082346" />
+  </g>
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Layer 2">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:14.5823px;line-height:1.25;font-family:sans-serif;fill:url(#linearGradient44387);fill-opacity:1;stroke:none;stroke-width:0.273419;fill-rule:evenodd"
+       x="1.6581019"
+       y="11.327096"
+       id="text3003"
+       transform="scale(0.97297891,1.0277715)"><tspan
+         sodipodi:role="line"
+         id="tspan3001"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:14.5823px;font-family:'Fira Code';-inkscape-font-specification:'Fira Code';fill:url(#linearGradient44387);stroke-width:0.273419;fill-opacity:1;fill-rule:evenodd"
+         x="1.6581019"
+         y="11.327096">E</tspan></text>
+  </g>
+</svg>
