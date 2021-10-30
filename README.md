@@ -1,33 +1,41 @@
 <p align="center">
-    <img src="./assets/icon.svg">
+    <img src="./assets/icon.png">
 </p>
 
 # epick
 
 [![Build Status](https://github.com/vv9k/epick/workflows/epick%20CI/badge.svg)](https://github.com/vv9k/epick/actions?query=workflow%3A%22epick+CI%22)
 
-Simple color picker that lets the user create harmonic palettes with ease.
+Color picker for creating harmonic color palettes that works on Linux, Windows, macOS and web.
 
 ## Get it
 
 You can checkout the web demo over [here](https://vv9k.github.io/epick/) or get a native binary from the [GitHub release page](https://github.com/vv9k/epick/releases).
 
-If you happen to use Arch Linux you can grab **epick** from AUR using your favorite package manager:
+If you happen to use Arch Linux you can grab **epick** from [AUR](https://aur.archlinux.org/packages/epick/) using your favorite package manager:
 ```bash
 $ paru -S epick
 ```
 
 ## Build
 
-Install required libraries:
+Install required libraries (only required on Linux):
 ```
 $ apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
 ```
 
-To manually build **epick** you'll need the latest Rust with `cargo`. The build command is:
+To manually build **epick** you'll need the latest Rust with `cargo`. To build the project run:
 ```
-$ cargo build --release
+$ make
 ```
+
+To start the web version locally run:
+```
+$ make start_web
+```
+This will build the WASM files and start a simple http server listening at `127.0.0.1:8080`.
+
+To build without `make` checkout the build instructions in the `Makefile`
 
 ## Demo
 
