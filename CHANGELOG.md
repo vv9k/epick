@@ -1,3 +1,6 @@
+# 
+- Fix invisible circle on 2D HSV slider
+
 # 0.6.0
 - Add support for persistent configuration. A configuration file with a YAML syntax will be loaded on startup from appropriate config directory depending on OS.
   Supported options are the same as in settings window. The settings window now contains a `save settings` button.

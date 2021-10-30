@@ -61,7 +61,7 @@ pub fn color(
         center: pos2(x, y),
         radius: 7.,
         fill: picked_color.color32(),
-        stroke: Stroke::new(visuals.fg_stroke.width, picked_color),
+        stroke: Stroke::new(visuals.fg_stroke.width, picked_color.contrast().color32()),
     }));
 
     response = response.on_hover_cursor(CursorIcon::Move);
