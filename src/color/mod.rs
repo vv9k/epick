@@ -494,38 +494,14 @@ impl From<Color> for Color32 {
             Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
             Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
             Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
-            Color::Color32(c) => Rgb::from(c).into(),
+            Color::Color32(c) => c,
         }
     }
 }
 
 impl From<Color32> for Color {
     fn from(c: Color32) -> Color {
-        Color::Rgb(c.into())
-    }
-}
-
-macro_rules! convert_color {
-    ($c:ident) => {
-        match $c {
-            Color::Rgb(c) => c.into(),
-            Color::Cmyk(c) => Rgb::from(c).into(),
-            Color::Hsv(c) => Rgb::from(c).into(),
-            Color::Hsl(c) => Rgb::from(c).into(),
-            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
-            Color::xyY(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::Luv(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
-            Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
-            Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
-            Color::Color32(c) => Rgb::from(c).into(),
-        }
-    };
-}
-
-impl From<Color> for Rgba {
-    fn from(c: Color) -> Rgba {
-        convert_color!(c)
+        Color::Color32(c)
     }
 }
 
@@ -541,15 +517,39 @@ impl From<Hsva> for Color {
     }
 }
 
+macro_rules! to_epaint_color {
+    ($c:ident) => {
+        match $c {
+            Color::Rgb(c) => c.into(),
+            Color::Cmyk(c) => Rgb::from(c).into(),
+            Color::Hsv(c) => Rgb::from(c).into(),
+            Color::Hsl(c) => Rgb::from(c).into(),
+            Color::Xyz(c, ws) => c.to_rgb(ws).into(),
+            Color::xyY(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::Luv(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::LchUV(c, ws) => Xyz::from(c).to_rgb(ws).into(),
+            Color::Lab(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
+            Color::LchAB(c, ws, illuminant) => c.to_xyz(illuminant).to_rgb(ws).into(),
+            Color::Color32(c) => c.into(),
+        }
+    };
+}
+
+impl From<Color> for Rgba {
+    fn from(c: Color) -> Rgba {
+        to_epaint_color!(c)
+    }
+}
+
 impl From<Color> for Hsva {
     fn from(c: Color) -> Hsva {
-        convert_color!(c)
+        to_epaint_color!(c)
     }
 }
 
 impl From<Color> for HsvaGamma {
     fn from(c: Color) -> HsvaGamma {
-        convert_color!(c)
+        to_epaint_color!(c)
     }
 }
 
