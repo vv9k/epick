@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=0.6.0
+Name=epick
+Comment= Color picker for creating harmonic color palettes
+GenericName=Color picker
+Exec=epick
+Icon=epick
+StartupNotify=true
+Terminal=false
+Type=Application
+Categories=Graphics;
+Keywords=color picker;color palette;
