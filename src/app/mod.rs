@@ -51,6 +51,8 @@ pub static PLAY_ICON: &str = "\u{25B6}";
 pub static DARK_MODE_ICON: &str = "\u{1F319}";
 pub static LIGHT_MODE_ICON: &str = "\u{2600}";
 pub static HELP_ICON: &str = "\u{FF1F}";
+pub static EDIT_ICON: &str = "\u{270F}";
+pub static APPLY_ICON: &str = "\u{2714}";
 
 static ADD_DESCR: &str = "Add this color to saved colors";
 static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";
@@ -420,8 +422,8 @@ impl App {
             DisplayFmtEnum::CssHsl => DisplayFormat::CssHsl {
                 degree_symbol: true,
             },
-            DisplayFmtEnum::Custom => {
-                DisplayFormat::Custom(&self.settings_window.settings.custom_display_fmt_str)
+            DisplayFmtEnum::Custom(ref name) => {
+                DisplayFormat::Custom(&self.settings_window.settings.saved_color_formats[name])
             }
         }
     }
@@ -435,15 +437,21 @@ impl App {
     }
 
     fn clipboard_color(&self, color: &Color) -> String {
-        let format = match &self.settings_window.settings.color_display_format {
+        let format = match self
+            .settings_window
+            .settings
+            .color_clipboard_format
+            .as_ref()
+            .unwrap_or(&self.settings_window.settings.color_display_format)
+        {
             DisplayFmtEnum::Hex => DisplayFormat::Hex,
             DisplayFmtEnum::HexUppercase => DisplayFormat::HexUpercase,
             DisplayFmtEnum::CssRgb => DisplayFormat::CssRgb,
             DisplayFmtEnum::CssHsl => DisplayFormat::CssHsl {
                 degree_symbol: false,
             },
-            DisplayFmtEnum::Custom => {
-                DisplayFormat::Custom(&self.settings_window.settings.custom_clipboard_fmt_str)
+            DisplayFmtEnum::Custom(name) => {
+                DisplayFormat::Custom(&self.settings_window.settings.saved_color_formats[name])
             }
         };
         color.display(
@@ -496,7 +504,7 @@ impl App {
         texture_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
         with_label: bool,
     ) {
-        let color_str = self.display_color(color);
+        let display_str = self.display_color(color);
         let format = self.display_format();
         let on_hover = color_tooltip(
             color,
@@ -514,7 +522,7 @@ impl App {
         );
         if let Some(color_box) = color_box {
             if with_label {
-                ui.monospace(&color_str);
+                ui.monospace(&display_str);
             }
 
             if color_box.clicked() {
@@ -526,7 +534,7 @@ impl App {
             }
 
             if color_box.secondary_clicked() {
-                let _ = save_to_clipboard(color_str);
+                let _ = save_to_clipboard(self.clipboard_color(color));
             }
         }
     }
@@ -853,6 +861,11 @@ impl App {
         tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
     ) {
         self.settings_window.display(ctx);
+        self.settings_window.custom_formats_window.display(
+            &mut self.settings_window.settings,
+            ctx,
+            self.picker.current_color,
+        );
         if let Err(e) = self.export_window.display(ctx, &self.saved_colors) {
             self.set_error(e);
         }

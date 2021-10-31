@@ -6,9 +6,10 @@ use egui::{Color32, ComboBox, CursorIcon, Ui, Window};
 use std::fmt::Display;
 
 use crate::app::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
-use crate::app::{ADD_ICON, DELETE_ICON};
 #[cfg(not(target_arch = "wasm32"))]
 use std::fs;
+
+use super::CustomFormatsWindow;
 
 #[derive(Debug, Default)]
 pub struct SettingsWindow {
@@ -18,6 +19,7 @@ pub struct SettingsWindow {
     pub settings: Settings,
     selected_display_fmt: String,
     selected_clipboard_fmt: String,
+    pub custom_formats_window: CustomFormatsWindow,
 }
 
 impl SettingsWindow {
@@ -57,7 +59,7 @@ impl SettingsWindow {
                         ui.colored_label(Color32::GREEN, msg);
                     }
 
-                    self.color_display_format(ui);
+                    self.color_formats(ui);
                     ui.add_space(HALF_SPACE);
                     self.rgb_working_space(ui);
                     ui.add_space(HALF_SPACE);
@@ -301,112 +303,77 @@ impl SettingsWindow {
             });
     }
 
-    fn color_display_format(&mut self, ui: &mut Ui) {
+    fn color_formats(&mut self, ui: &mut Ui) {
         ComboBox::from_label("Color display format")
             .selected_text(self.settings.color_display_format.as_ref())
             .show_ui(ui, |ui| {
-                ui.selectable_value(
+                color_format_selection_fill(
                     &mut self.settings.color_display_format,
-                    DisplayFmtEnum::Hex,
-                    DisplayFmtEnum::Hex.as_ref(),
-                );
-                ui.selectable_value(
-                    &mut self.settings.color_display_format,
-                    DisplayFmtEnum::HexUppercase,
-                    DisplayFmtEnum::HexUppercase.as_ref(),
-                );
-                ui.selectable_value(
-                    &mut self.settings.color_display_format,
-                    DisplayFmtEnum::CssRgb,
-                    DisplayFmtEnum::CssRgb.as_ref(),
-                );
-                ui.selectable_value(
-                    &mut self.settings.color_display_format,
-                    DisplayFmtEnum::CssHsl,
-                    DisplayFmtEnum::CssHsl.as_ref(),
-                );
-                ui.selectable_value(
-                    &mut self.settings.color_display_format,
-                    DisplayFmtEnum::Custom,
-                    DisplayFmtEnum::Custom.as_ref(),
+                    self.settings.saved_color_formats.keys(),
+                    ui,
                 );
             });
-        if let DisplayFmtEnum::Custom = self.settings.color_display_format {
-            macro_rules! display_fmt {
-                ($label:literal, $id:literal, $selected:ident, $editable:ident) => {
-                    ui.label($label);
-                    if !self.settings.saved_color_formats.is_empty() {
-                        ui.horizontal(|ui| {
-                            ComboBox::from_id_source($id)
-                                .selected_text(&self.$selected)
-                                .show_ui(ui, |ui| {
-                                    for fmt in &self.settings.saved_color_formats {
-                                        if ui
-                                            .selectable_label(&self.$selected == fmt, fmt)
-                                            .clicked()
-                                        {
-                                            self.$selected = fmt.clone();
-                                            self.settings.$editable = fmt.clone();
-                                        }
-                                    }
-                                });
-                            if ui
-                                .button(DELETE_ICON)
-                                .on_hover_text("Delete selected format string")
-                                .on_hover_cursor(CursorIcon::Default)
-                                .clicked()
-                            {
-                                let pos = self
-                                    .settings
-                                    .saved_color_formats
-                                    .iter()
-                                    .position(|fmt| fmt == &self.$selected);
-                                if let Some(pos) = pos {
-                                    self.settings.saved_color_formats.remove(pos);
-                                    let fmt = if pos > 0 {
-                                        Some(self.settings.saved_color_formats[pos - 1].clone())
-                                    } else {
-                                        self.settings.saved_color_formats.first().cloned()
-                                    };
-                                    if let Some(fmt) = fmt {
-                                        self.$selected = fmt.clone();
-                                        self.settings.$editable = fmt;
-                                    }
-                                }
-                            }
-                        });
-                    }
-                    ui.horizontal(|ui| {
-                        ui.text_edit_singleline(&mut self.settings.$editable);
-                        if ui
-                            .button(ADD_ICON)
-                            .on_hover_text("Save current format string")
-                            .on_hover_cursor(CursorIcon::Copy)
-                            .clicked()
-                        {
-                            self.settings
-                                .saved_color_formats
-                                .push(self.settings.$editable.clone());
-                        }
-                    });
-                };
-            }
-
-            ui.add_space(SPACE);
-            display_fmt!(
-                "Custom display format",
-                "display saved formats",
-                selected_display_fmt,
-                custom_display_fmt_str
-            );
-            ui.add_space(SPACE);
-            display_fmt!(
-                "Custom clipboard format",
-                "clipboard saved formats",
-                selected_clipboard_fmt,
-                custom_clipboard_fmt_str
-            );
-            ui.add_space(DOUBLE_SPACE);
+        ui.add_space(HALF_SPACE);
+        ComboBox::from_label("Clipboard format")
+            .selected_text(
+                self.settings
+                    .color_clipboard_format
+                    .as_ref()
+                    .map(|f| f.as_ref())
+                    .unwrap_or("Same as display"),
+            )
+            .show_ui(ui, |ui| {
+                ui.selectable_value(
+                    &mut self.settings.color_clipboard_format,
+                    None,
+                    "Same as display",
+                );
+                color_format_selection_fill(
+                    &mut self.settings.color_clipboard_format,
+                    self.settings.saved_color_formats.keys(),
+                    ui,
+                );
+            });
+        ui.add_space(HALF_SPACE);
+        if ui.button("Custom formats …").clicked() {
+            self.custom_formats_window.show = true;
         }
+    }
+}
+
+/// Fill the values for a color format selection.
+///
+/// Used to fill both the display and clipboard format selections.
+fn color_format_selection_fill<'a, T: From<DisplayFmtEnum> + PartialEq>(
+    fmt_ref: &mut T,
+    customs: impl IntoIterator<Item = &'a String>,
+    ui: &mut Ui,
+) {
+    ui.selectable_value(
+        fmt_ref,
+        DisplayFmtEnum::Hex.into(),
+        DisplayFmtEnum::Hex.as_ref(),
+    );
+    ui.selectable_value(
+        fmt_ref,
+        DisplayFmtEnum::HexUppercase.into(),
+        DisplayFmtEnum::HexUppercase.as_ref(),
+    );
+    ui.selectable_value(
+        fmt_ref,
+        DisplayFmtEnum::CssRgb.into(),
+        DisplayFmtEnum::CssRgb.as_ref(),
+    );
+    ui.selectable_value(
+        fmt_ref,
+        DisplayFmtEnum::CssHsl.into(),
+        DisplayFmtEnum::CssHsl.as_ref(),
+    );
+    for custom in customs {
+        ui.selectable_value(
+            fmt_ref,
+            DisplayFmtEnum::Custom(custom.clone()).into(),
+            format!("*{}", custom),
+        );
     }
 }

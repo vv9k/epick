@@ -1,9 +1,11 @@
+mod custom_formats;
 mod export;
 mod help;
 mod settings;
 
 use crate::app::ui::colors::*;
 
+pub use custom_formats::CustomFormatsWindow;
 use egui::{Frame, Slider, Stroke, Ui};
 use epaint::Shadow;
 pub use export::ExportWindow;
