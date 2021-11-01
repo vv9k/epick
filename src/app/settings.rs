@@ -3,6 +3,7 @@ use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorki
 use crate::app::ui::layout::HarmonyLayout;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -84,14 +85,10 @@ pub struct Settings {
     #[serde(default)]
     pub color_display_format: DisplayFmtEnum,
     #[serde(default)]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub custom_display_fmt_str: String,
+    pub color_clipboard_format: Option<DisplayFmtEnum>,
     #[serde(default)]
-    #[serde(skip_serializing_if = "String::is_empty")]
-    pub custom_clipboard_fmt_str: String,
-    #[serde(default)]
-    #[serde(skip_serializing_if = "Vec::is_empty")]
-    pub saved_color_formats: Vec<String>,
+    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    pub saved_color_formats: HashMap<String, String>,
     #[serde(default)]
     pub color_spaces: ColorSpaceSettings,
     #[serde(default)]
@@ -125,9 +122,8 @@ impl Default for Settings {
         let ws = RgbWorkingSpace::default();
         Self {
             color_display_format: DisplayFmtEnum::default(),
-            custom_display_fmt_str: String::new(),
-            custom_clipboard_fmt_str: String::new(),
-            saved_color_formats: vec![],
+            color_clipboard_format: None,
+            saved_color_formats: HashMap::default(),
             color_spaces: ColorSpaceSettings::default(),
             rgb_working_space: ws,
             chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
@@ -193,7 +189,7 @@ pub enum DisplayFmtEnum {
     #[serde(rename = "css-hsl")]
     CssHsl,
     #[serde(rename = "custom")]
-    Custom,
+    Custom(String),
 }
 
 impl Default for DisplayFmtEnum {
@@ -210,14 +206,14 @@ impl AsRef<str> for DisplayFmtEnum {
             HexUppercase => "hex uppercase",
             CssRgb => "css rgb",
             CssHsl => "css hsl",
-            Custom => "custom",
+            Custom(name) => name,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::app::settings::{DisplayFmtEnum, Settings, DEFAULT_COLOR_SIZE};
+    use crate::app::settings::{Settings, DEFAULT_COLOR_SIZE};
     use crate::app::ui::layout::HarmonyLayout;
     use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
     use crate::math::eq_f32;
@@ -227,8 +223,11 @@ mod tests {
     fn loads_settings() {
         let tmp = tempdir::TempDir::new("settings-test").unwrap();
         let settings_str = r#"---
-color_display_format: custom
-custom_display_fmt_str: "{r} {g} {b}"
+color_display_format:
+  custom: rgb
+color_clipboard_format: ~
+saved_color_formats:
+  rgb: "{r} {g} {b}"
 color_spaces:
   hsv: false
   luv: true
@@ -244,8 +243,6 @@ harmony_layout: gradient
         let settings = Settings::load(&path).unwrap();
         assert_eq!(settings.illuminant, Illuminant::D50);
         assert_eq!(settings.rgb_working_space, RgbWorkingSpace::Adobe);
-        assert_eq!(settings.color_display_format, DisplayFmtEnum::Custom,);
-        assert_eq!(settings.custom_display_fmt_str, "{r} {g} {b}");
         assert_eq!(
             settings.chromatic_adaptation_method,
             ChromaticAdaptationMethod::VonKries
