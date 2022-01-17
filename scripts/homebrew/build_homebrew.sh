@@ -2,7 +2,7 @@
 
 # Build release version (NOTE: I am not an expert on rust's targets)
 echo "Building..."
-# cargo build --release --target x86_64-apple-darwin
+cargo build --release --target x86_64-apple-darwin
 
 # Copy build to app
 cp "${BASH_SOURCE%/*}/../../target/x86_64-apple-darwin/release/epick" "${BASH_SOURCE%/*}/app/epick.app/Contents/Resources/epick"
