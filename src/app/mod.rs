@@ -957,6 +957,9 @@ impl App {
             if let Ok(color) = picker.get_color_under_cursor() {
                 if ui.ctx().input().key_pressed(egui::Key::P) {
                     self.picker.set_cur_color(color);
+                    if self.settings_window.settings.auto_copy_picked_color {
+                        let _ = save_to_clipboard(self.clipboard_color(&color));
+                    }
                 }
                 if ui.ctx().input().key_pressed(egui::Key::Z) {
                     self.toggle_zoom_window(&picker);

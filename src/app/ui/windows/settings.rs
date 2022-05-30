@@ -334,6 +334,10 @@ impl SettingsWindow {
                     ui,
                 );
             });
+        ui.checkbox(
+            &mut self.settings.auto_copy_picked_color,
+            "Auto copy picked color",
+        );
         ui.add_space(HALF_SPACE);
         if ui.button("Custom formats …").clicked() {
             self.custom_formats_window.show = true;
