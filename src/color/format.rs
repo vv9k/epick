@@ -125,9 +125,7 @@ impl<'a> ColorFormat<'a> {
 
                         match digit_format {
                             Some(
-                                fmt
-                                @
-                                (DigitFormat::Hex
+                                fmt @ (DigitFormat::Hex
                                 | DigitFormat::UppercaseHex
                                 | DigitFormat::Octal
                                 | DigitFormat::Decimal),
