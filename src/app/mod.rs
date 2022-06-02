@@ -880,9 +880,6 @@ impl App {
         if let Some(err) = &self.error_message {
             ui.colored_label(Color32::RED, err);
         }
-
-        let color_str = self.display_color(&self.picker.current_color);
-
         ui.horizontal(|ui| {
             ui.label("Current color: ");
             if ui
@@ -906,8 +903,9 @@ impl App {
             {
                 self.add_cur_color();
             }
-            ui.monospace(&color_str);
         });
+        let c = self.picker.current_color;
+        self.color_box_label_side(&c, vec2(25., 25.), ui, tex_allocator);
 
         self.handle_display_picker(ui, tex_allocator);
 
@@ -959,6 +957,9 @@ impl App {
             if let Ok(color) = picker.get_color_under_cursor() {
                 if ui.ctx().input().key_pressed(egui::Key::P) {
                     self.picker.set_cur_color(color);
+                    if self.settings_window.settings.auto_copy_picked_color {
+                        let _ = save_to_clipboard(self.clipboard_color(&color));
+                    }
                 }
                 if ui.ctx().input().key_pressed(egui::Key::Z) {
                     self.toggle_zoom_window(&picker);
@@ -972,8 +973,8 @@ impl App {
                     self.handle_zoom_picker(ui, picker);
                     #[cfg(windows)]
                     self.handle_zoom_picker(ui, picker);
-                    self.color_box_label_side(&color, vec2(25., 25.), ui, tex_allocator);
                 });
+                self.color_box_label_side(&color, vec2(25., 25.), ui, tex_allocator);
             }
         };
     }

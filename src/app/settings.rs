@@ -115,6 +115,10 @@ pub struct Settings {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_false")]
     pub harmony_display_color_label: bool,
+    /// Automatically copy the picked color to the clipboard
+    #[serde(default)]
+    #[serde(skip_serializing_if = "is_false")]
+    pub auto_copy_picked_color: bool,
 }
 
 impl Default for Settings {
@@ -134,6 +138,7 @@ impl Default for Settings {
             harmony_layout: HarmonyLayout::default(),
             harmony_color_size: DEFAULT_COLOR_SIZE,
             harmony_display_color_label: false,
+            auto_copy_picked_color: false,
         }
     }
 }
