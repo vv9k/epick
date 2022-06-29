@@ -8,7 +8,6 @@ use crate::color::{
 use crate::math;
 use sliders::ColorSliders;
 
-use eframe::egui::TextStyle;
 use egui::{color::Hsva, DragValue};
 use egui::{CollapsingHeader, Ui};
 use std::mem;
@@ -299,7 +298,6 @@ impl ColorPicker {
         let opaque = self.current_color.rgb();
         CollapsingHeader::new("RGB")
             .default_open(false)
-            .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, r, "red", U8_MIN..=U8_MAX, |mut r| {
                     r /= U8_MAX;
@@ -320,7 +318,6 @@ impl ColorPicker {
         let opaque = self.current_color.cmyk();
         CollapsingHeader::new("CMYK")
             .default_open(false)
-            .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, c, "cyan", 0. ..=100., |mut c| {
                     c /= 100.;
@@ -345,7 +342,6 @@ impl ColorPicker {
         let opaque = self.current_color.hsv();
         CollapsingHeader::new("HSV")
             .default_open(false)
-            .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, hue, "hue", 0. ..=360., |mut h| {
                     h /= 360.;
@@ -379,7 +375,6 @@ impl ColorPicker {
         let opaque = self.current_color.hsl();
         CollapsingHeader::new("HSL")
             .default_open(false)
-            .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, hsl_h, "hue", 0. ..=360., |mut h| {
                     h /= 360.;
@@ -401,7 +396,6 @@ impl ColorPicker {
         let opaque = self.current_color.luv(ws);
         CollapsingHeader::new("Luv")
             .default_open(false)
-            .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, luv_l, "light", 0. ..=100., |l| {
                     Xyz::from(Luv::new(l, opaque.u(), opaque.v()))
@@ -426,7 +420,6 @@ impl ColorPicker {
         let opaque = self.current_color.lch_uv(ws);
         CollapsingHeader::new("LCH(uv)")
             .default_open(false)
-            .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, lch_uv_l, "light", 0. ..=100., |l| {
                     Xyz::from(LchUV::new(l, opaque.c(), opaque.h()))
@@ -455,7 +448,6 @@ impl ColorPicker {
 
         CollapsingHeader::new("Lab")
             .default_open(false)
-            .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, lab_l, "light", 0. ..=100., |l| {
                     Lab::new(l, opaque.a(), opaque.b())
@@ -488,7 +480,6 @@ impl ColorPicker {
         );
         CollapsingHeader::new("LCH(ab)")
             .default_open(false)
-            .text_style(TextStyle::Heading)
             .show(ui, |ui| {
                 slider!(self, ui, lch_ab_l, "light", 0. ..=100., |l| {
                     LchAB::new(l, opaque.c(), opaque.h())

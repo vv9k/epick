@@ -9,10 +9,10 @@ mod settings;
 mod ui;
 
 use crate::color::{Color, ColorHarmony, DisplayFormat, Gradient};
-use crate::save_to_clipboard;
+use crate::{save_to_clipboard, TextureAllocator};
 use color_picker::ColorPicker;
 use display_picker::DisplayPickerExt;
-use render::{tex_color, TextureManager};
+use render::tex_color;
 use saved_colors::SavedColors;
 use screen_size::ScreenSize;
 use settings::{DisplayFmtEnum, Settings};
@@ -23,12 +23,11 @@ use ui::{
     windows::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow},
 };
 
+use eframe::Storage;
 use egui::{
-    color::Color32, vec2, Button, CollapsingHeader, CursorIcon, Label, Layout, Rgba, TextStyle, Ui,
+    color::Color32, style::Margin, vec2, Button, CollapsingHeader, CursorIcon, Id, Label, Layout,
+    Rgba, RichText, ScrollArea, Ui, Vec2, Visuals,
 };
-use egui::{Id, ScrollArea, Vec2, Visuals};
-use epi::Storage;
-use std::borrow::Cow;
 use std::rc::Rc;
 
 #[cfg(target_os = "linux")]
@@ -73,7 +72,7 @@ const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as 
 #[derive(Debug)]
 pub struct App {
     pub picker: ColorPicker,
-    pub texture_manager: TextureManager,
+    pub texture_manager: render::TextureManager,
     pub display_picker: Option<Rc<dyn DisplayPickerExt>>,
     pub light_theme: Visuals,
     pub dark_theme: Visuals,
@@ -98,10 +97,10 @@ pub struct App {
     pub picker_window: Option<HWND>,
 }
 
-impl epi::App for App {
-    fn update(&mut self, ctx: &egui::CtxRef, frame: &mut epi::Frame<'_>) {
+impl eframe::App for App {
+    fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         ctx.output().cursor_icon = self.cursor_icon;
-        let tex_allocator = &mut Some(frame.tex_allocator());
+        let tex_allocator = &mut Some(ctx.tex_manager());
 
         let screen_size = ScreenSize::from(ctx.available_rect());
         if self.screen_size != screen_size {
@@ -154,47 +153,6 @@ impl epi::App for App {
         storage.flush();
     }
 
-    fn setup(
-        &mut self,
-        ctx: &egui::CtxRef,
-        frame: &mut epi::Frame<'_>,
-        storage: Option<&dyn epi::Storage>,
-    ) {
-        self.load_settings(storage);
-        self.load_colors(storage);
-
-        let mut fonts = egui::FontDefinitions::default();
-        fonts.font_data.insert(
-            "Firacode".to_string(),
-            Cow::Borrowed(include_bytes!(
-                "../../assets/fonts/FiraCode/FiraCode-Regular.ttf"
-            )),
-        );
-        fonts
-            .fonts_for_family
-            .get_mut(&egui::FontFamily::Monospace)
-            .unwrap()
-            .insert(0, "Firacode".to_owned());
-
-        fonts.family_and_size.insert(
-            egui::TextStyle::Monospace,
-            (egui::FontFamily::Monospace, 16.),
-        );
-        ctx.set_fonts(fonts);
-
-        let prefer_dark = frame.info().prefer_dark_mode.unwrap_or(true);
-
-        if prefer_dark {
-            self.set_dark_theme(ctx);
-        } else {
-            self.set_light_theme(ctx);
-        }
-    }
-
-    fn name(&self) -> &str {
-        "epick"
-    }
-
     fn max_size_points(&self) -> egui::Vec2 {
         vec2(4096., 8192.)
     }
@@ -204,7 +162,7 @@ impl Default for App {
     fn default() -> Self {
         Self {
             picker: ColorPicker::default(),
-            texture_manager: TextureManager::default(),
+            texture_manager: render::TextureManager::default(),
             display_picker: display_picker::init_display_picker(),
             light_theme: light_visuals(),
             dark_theme: dark_visuals(),
@@ -232,6 +190,9 @@ impl Default for App {
 }
 
 impl App {
+    pub fn new() -> Box<dyn eframe::App + 'static> {
+        Box::new(App::default())
+    }
     fn set_error(&mut self, error: impl std::fmt::Display) {
         self.error_message = Some(error.to_string());
     }
@@ -240,12 +201,12 @@ impl App {
         self.error_message = None;
     }
 
-    fn set_dark_theme(&mut self, ctx: &egui::CtxRef) {
+    fn set_dark_theme(&mut self, ctx: &egui::Context) {
         self.settings_window.settings.is_dark_mode = true;
         ctx.set_visuals(self.dark_theme.clone());
     }
 
-    fn set_light_theme(&mut self, ctx: &egui::CtxRef) {
+    fn set_light_theme(&mut self, ctx: &egui::Context) {
         self.settings_window.settings.is_dark_mode = false;
         ctx.set_visuals(self.light_theme.clone());
     }
@@ -325,7 +286,7 @@ impl App {
         }
     }
 
-    fn set_styles(&mut self, ctx: &egui::CtxRef, screen_size: ScreenSize) {
+    fn set_styles(&mut self, ctx: &egui::Context, screen_size: ScreenSize) {
         self.screen_size = screen_size;
 
         let slider_size = match screen_size {
@@ -357,7 +318,7 @@ impl App {
         }
     }
 
-    fn check_keys_pressed(&mut self, ctx: &egui::CtxRef) {
+    fn check_keys_pressed(&mut self, ctx: &egui::Context) {
         if ctx.input().key_pressed(egui::Key::H) {
             self.show_side_panel = !self.show_side_panel;
         }
@@ -378,40 +339,38 @@ impl App {
     }
 
     fn hex_input(&mut self, ui: &mut Ui) {
-        CollapsingHeader::new("Text input")
-            .text_style(TextStyle::Heading)
-            .show(ui, |ui| {
-                ui.label("Enter a hex color: ");
-                ui.horizontal(|ui| {
-                    let resp = ui.text_edit_singleline(&mut self.picker.hex_color);
-                    if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
-                        || ui
-                            .button(PLAY_ICON)
-                            .on_hover_text("Use this color")
-                            .on_hover_cursor(CursorIcon::PointingHand)
-                            .clicked()
-                    {
-                        if self.picker.hex_color.len() < 6 {
-                            self.set_error("Enter a color first (ex. ab12ff #1200ff)".to_owned());
-                        } else if let Some(color) =
-                            Color::from_hex(self.picker.hex_color.trim_start_matches('#'))
-                        {
-                            self.picker.set_cur_color(color);
-                            self.clear_error();
-                        } else {
-                            self.set_error("The entered hex color is not valid".to_owned());
-                        }
-                    }
-                    if ui
-                        .button(ADD_ICON)
-                        .on_hover_text(ADD_DESCR)
-                        .on_hover_cursor(CursorIcon::Copy)
+        CollapsingHeader::new("Text input").show(ui, |ui| {
+            ui.label("Enter a hex color: ");
+            ui.horizontal(|ui| {
+                let resp = ui.text_edit_singleline(&mut self.picker.hex_color);
+                if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
+                    || ui
+                        .button(PLAY_ICON)
+                        .on_hover_text("Use this color")
+                        .on_hover_cursor(CursorIcon::PointingHand)
                         .clicked()
+                {
+                    if self.picker.hex_color.len() < 6 {
+                        self.set_error("Enter a color first (ex. ab12ff #1200ff)".to_owned());
+                    } else if let Some(color) =
+                        Color::from_hex(self.picker.hex_color.trim_start_matches('#'))
                     {
-                        self.add_cur_color()
+                        self.picker.set_cur_color(color);
+                        self.clear_error();
+                    } else {
+                        self.set_error("The entered hex color is not valid".to_owned());
                     }
-                });
+                }
+                if ui
+                    .button(ADD_ICON)
+                    .on_hover_text(ADD_DESCR)
+                    .on_hover_cursor(CursorIcon::Copy)
+                    .clicked()
+                {
+                    self.add_cur_color()
+                }
             });
+        });
     }
 
     fn display_format(&self) -> DisplayFormat {
@@ -466,7 +425,7 @@ impl App {
         color: &Color,
         size: Vec2,
         ui: &mut Ui,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        tex_allocator: &mut TextureAllocator,
     ) {
         ui.vertical(|ui| {
             self._color_box(color, size, ui, tex_allocator, true);
@@ -478,7 +437,7 @@ impl App {
         color: &Color,
         size: Vec2,
         ui: &mut Ui,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        tex_allocator: &mut TextureAllocator,
     ) {
         ui.horizontal(|ui| {
             self._color_box(color, size, ui, tex_allocator, true);
@@ -491,7 +450,7 @@ impl App {
         color: &Color,
         size: Vec2,
         ui: &mut Ui,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        tex_allocator: &mut TextureAllocator,
     ) {
         self._color_box(color, size, ui, tex_allocator, false);
     }
@@ -501,7 +460,7 @@ impl App {
         color: &Color,
         size: Vec2,
         ui: &mut Ui,
-        texture_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        tex_allocator: &mut TextureAllocator,
         with_label: bool,
     ) {
         let display_str = self.display_color(color);
@@ -514,7 +473,7 @@ impl App {
         );
         let color_box = tex_color(
             ui,
-            texture_allocator,
+            tex_allocator,
             &mut self.texture_manager,
             color.color32(),
             size,
@@ -544,11 +503,11 @@ impl App {
         gradient: &Gradient,
         size: Vec2,
         ui: &mut Ui,
-        texture_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
+        tex_allocator: &mut TextureAllocator,
     ) {
         let _ = tex_gradient(
             ui,
-            texture_allocator,
+            tex_allocator,
             &mut self.texture_manager,
             gradient,
             size,
@@ -556,14 +515,14 @@ impl App {
         );
     }
 
-    fn top_panel(&mut self, ctx: &egui::CtxRef) {
+    fn top_panel(&mut self, ctx: &egui::Context) {
         let frame = egui::Frame {
             fill: if ctx.style().visuals.dark_mode {
                 *D_BG_00
             } else {
                 *L_BG_0
             },
-            margin: vec2(5., 5.),
+            outer_margin: Margin::symmetric(15., 10.),
             ..Default::default()
         };
         egui::TopBottomPanel::top("top panel")
@@ -573,18 +532,14 @@ impl App {
             });
     }
 
-    fn side_panel(
-        &mut self,
-        ctx: &egui::CtxRef,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-    ) {
+    fn side_panel(&mut self, ctx: &egui::Context, tex_allocator: &mut TextureAllocator) {
         let frame = egui::Frame {
             fill: if ctx.style().visuals.dark_mode {
                 *D_BG_00
             } else {
                 *L_BG_0
             },
-            margin: (15., 10.).into(),
+            outer_margin: Margin::symmetric(15., 10.),
             ..Default::default()
         };
 
@@ -599,18 +554,14 @@ impl App {
             });
     }
 
-    fn central_panel(
-        &mut self,
-        ctx: &egui::CtxRef,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-    ) {
+    fn central_panel(&mut self, ctx: &egui::Context, tex_allocator: &mut TextureAllocator) {
         let _frame = egui::Frame {
             fill: if ctx.style().visuals.dark_mode {
                 *D_BG_0
             } else {
                 *L_BG_2
             },
-            margin: vec2(10., 5.),
+            outer_margin: Margin::symmetric(10., 5.),
             ..Default::default()
         };
         egui::CentralPanel::default().frame(_frame).show(ctx, |ui| {
@@ -726,12 +677,10 @@ impl App {
         }
     }
 
-    fn side_ui(&mut self, ui: &mut Ui, tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>) {
+    fn side_ui(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
         ui.vertical(|ui| {
             let resp = ui.horizontal(|ui| {
-                let heading = Label::new("Saved colors")
-                    .text_style(TextStyle::Heading)
-                    .strong();
+                let heading = Label::new(RichText::new("Saved colors").strong());
                 ui.add(heading);
                 ui.add_space(SPACE);
                 if ui
@@ -855,11 +804,7 @@ impl App {
         });
     }
 
-    fn display_windows(
-        &mut self,
-        ctx: &egui::CtxRef,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-    ) {
+    fn display_windows(&mut self, ctx: &egui::Context, tex_allocator: &mut TextureAllocator) {
         self.settings_window.display(ctx);
         self.settings_window.custom_formats_window.display(
             &mut self.settings_window.settings,
@@ -876,7 +821,7 @@ impl App {
         self.help_window.display(ctx);
     }
 
-    fn ui(&mut self, ui: &mut Ui, tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>) {
+    fn ui(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
         if let Some(err) = &self.error_message {
             ui.colored_label(Color32::RED, err);
         }
@@ -948,11 +893,7 @@ impl App {
         });
     }
 
-    fn handle_display_picker(
-        &mut self,
-        ui: &mut Ui,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-    ) {
+    fn handle_display_picker(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
         if let Some(picker) = self.display_picker.clone() {
             if let Ok(color) = picker.get_color_under_cursor() {
                 if ui.ctx().input().key_pressed(egui::Key::P) {

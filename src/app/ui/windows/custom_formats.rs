@@ -18,7 +18,7 @@ impl CustomFormatsWindow {
     pub(crate) fn display(
         &mut self,
         settings: &mut Settings,
-        ctx: &egui::CtxRef,
+        ctx: &egui::Context,
         preview_color: Color,
     ) {
         Window::new("Custom color formats")

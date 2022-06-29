@@ -3,17 +3,13 @@ use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::app::ui::DOUBLE_SPACE;
 use crate::app::{App, ColorHarmony};
 use crate::color::Gradient;
+use crate::TextureAllocator;
 
-use eframe::egui::TextStyle;
 use egui::{vec2, Grid, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
 
 impl App {
-    pub fn hues_window(
-        &mut self,
-        ctx: &egui::CtxRef,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-    ) {
+    pub fn hues_window(&mut self, ctx: &egui::Context, tex_allocator: &mut TextureAllocator) {
         if self.hues_window.is_open {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
@@ -46,11 +42,7 @@ impl App {
         }
     }
 
-    pub fn tints_window(
-        &mut self,
-        ctx: &egui::CtxRef,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-    ) {
+    pub fn tints_window(&mut self, ctx: &egui::Context, tex_allocator: &mut TextureAllocator) {
         if self.tints_window.is_open {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let pos = (offset, WINDOW_Y_OFFSET);
@@ -83,11 +75,7 @@ impl App {
         }
     }
 
-    pub fn shades_window(
-        &mut self,
-        ctx: &egui::CtxRef,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-    ) {
+    pub fn shades_window(&mut self, ctx: &egui::Context, tex_allocator: &mut TextureAllocator) {
         if self.shades_window.is_open {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
@@ -147,14 +135,9 @@ impl App {
             });
     }
 
-    pub fn harmonies(
-        &mut self,
-        ui: &mut Ui,
-        tex_allocator: &mut Option<&mut dyn epi::TextureAllocator>,
-    ) {
+    pub fn harmonies(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
         let color_size = self.settings_window.settings.harmony_color_size;
         CollapsingHeader::new("Harmonies")
-            .text_style(TextStyle::Heading)
             .default_open(true)
             .show(ui, |ui| {
                 let size = vec2(color_size, color_size);

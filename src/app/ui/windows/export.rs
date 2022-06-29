@@ -36,7 +36,7 @@ impl Default for ExportWindow {
 }
 
 impl ExportWindow {
-    pub fn display(&mut self, ctx: &egui::CtxRef, saved_colors: &SavedColors) -> Result<()> {
+    pub fn display(&mut self, ctx: &egui::Context, saved_colors: &SavedColors) -> Result<()> {
         if self.show {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut show = true;

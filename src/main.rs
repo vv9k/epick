@@ -1,5 +1,9 @@
 use eframe::NativeOptions;
 
 fn main() {
-    eframe::run_native(Box::new(epick::Epick::default()), NativeOptions::default())
+    eframe::run_native(
+        "epick",
+        NativeOptions::default(),
+        Box::new(|_| epick::Epick::new()),
+    )
 }

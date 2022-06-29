@@ -41,7 +41,7 @@ impl SettingsWindow {
         self.message = None;
     }
 
-    pub fn display(&mut self, ctx: &egui::CtxRef) {
+    pub fn display(&mut self, ctx: &egui::Context) {
         if self.show {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut show = true;
