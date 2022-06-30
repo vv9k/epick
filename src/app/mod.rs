@@ -190,7 +190,7 @@ impl Default for App {
 }
 
 impl App {
-    pub fn new() -> Box<dyn eframe::App + 'static> {
+    pub fn init() -> Box<dyn eframe::App + 'static> {
         Box::new(App::default())
     }
     fn set_error(&mut self, error: impl std::fmt::Display) {
