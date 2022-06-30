@@ -7,9 +7,9 @@ use std::fmt::Display;
 
 use crate::app::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
 #[cfg(not(target_arch = "wasm32"))]
-use std::fs;
-#[cfg(not(target_arch = "wasm32"))]
 use egui::CursorIcon;
+#[cfg(not(target_arch = "wasm32"))]
+use std::fs;
 
 use super::CustomFormatsWindow;
 

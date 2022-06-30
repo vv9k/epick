@@ -23,7 +23,7 @@ use ui::{
     windows::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow},
 };
 
-use eframe::Storage;
+use eframe::{CreationContext, Storage};
 use egui::{
     color::Color32, style::Margin, vec2, Button, CollapsingHeader, CursorIcon, Id, Label, Layout,
     Rgba, RichText, ScrollArea, Ui, Vec2, Visuals,
@@ -190,8 +190,35 @@ impl Default for App {
 }
 
 impl App {
-    pub fn init() -> Box<dyn eframe::App + 'static> {
-        Box::new(App::default())
+    pub fn init(context: &CreationContext) -> Box<dyn eframe::App + 'static> {
+        let mut app = Box::new(App::default());
+        app.load_settings(context.storage);
+        app.load_colors(context.storage);
+
+        let prefer_dark = context.integration_info.prefer_dark_mode.unwrap_or(true);
+
+        if prefer_dark {
+            app.set_dark_theme(&context.egui_ctx);
+        } else {
+            app.set_light_theme(&context.egui_ctx);
+        }
+
+        let mut fonts = egui::FontDefinitions::default();
+        fonts.font_data.insert(
+            "Firacode".to_string(),
+            egui::FontData::from_static(include_bytes!(
+                "../../assets/fonts/FiraCode/FiraCode-Regular.ttf"
+            )),
+        );
+        fonts
+            .families
+            .get_mut(&egui::FontFamily::Monospace)
+            .unwrap()
+            .insert(0, "Firacode".to_owned());
+
+        context.egui_ctx.set_fonts(fonts);
+
+        app
     }
     fn set_error(&mut self, error: impl std::fmt::Display) {
         self.error_message = Some(error.to_string());
@@ -213,6 +240,14 @@ impl App {
 
     fn is_dark_mode(&self) -> bool {
         self.settings_window.settings.is_dark_mode
+    }
+
+    fn set_theme(&mut self, ctx: &egui::Context) {
+        if self.is_dark_mode() {
+            self.set_light_theme(ctx);
+        } else {
+            self.set_dark_theme(ctx);
+        }
     }
 
     fn load_colors(&mut self, _storage: Option<&dyn Storage>) {
@@ -669,11 +704,7 @@ impl App {
             .on_hover_cursor(CursorIcon::PointingHand)
             .clicked()
         {
-            if self.is_dark_mode() {
-                self.set_light_theme(ui.ctx());
-            } else {
-                self.set_dark_theme(ui.ctx());
-            }
+            self.set_theme(ui.ctx());
         }
     }
 
