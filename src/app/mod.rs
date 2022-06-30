@@ -522,7 +522,7 @@ impl App {
             } else {
                 *L_BG_0
             },
-            outer_margin: Margin::symmetric(15., 10.),
+            inner_margin: Margin::symmetric(15., 10.),
             ..Default::default()
         };
         egui::TopBottomPanel::top("top panel")
@@ -539,7 +539,7 @@ impl App {
             } else {
                 *L_BG_0
             },
-            outer_margin: Margin::symmetric(15., 10.),
+            inner_margin: Margin::symmetric(15., 10.),
             ..Default::default()
         };
 
@@ -561,7 +561,7 @@ impl App {
             } else {
                 *L_BG_2
             },
-            outer_margin: Margin::symmetric(10., 5.),
+            inner_margin: Margin::symmetric(10., 5.),
             ..Default::default()
         };
         egui::CentralPanel::default().frame(_frame).show(ctx, |ui| {

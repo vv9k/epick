@@ -22,7 +22,7 @@ pub fn default_frame(is_dark_mode: bool) -> Frame {
         } else {
             *L_BG_3_TRANSPARENT
         },
-        outer_margin: Margin::symmetric(15., 15.),
+        inner_margin: Margin::symmetric(15., 15.),
         rounding: Rounding::same(5.),
         shadow: if is_dark_mode {
             Shadow::big_dark()
