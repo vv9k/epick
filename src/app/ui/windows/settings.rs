@@ -2,12 +2,14 @@ use crate::app::settings::{DisplayFmtEnum, Settings};
 use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
 
-use egui::{Color32, ComboBox, CursorIcon, Ui, Window};
+use egui::{Color32, ComboBox, Ui, Window};
 use std::fmt::Display;
 
 use crate::app::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
 #[cfg(not(target_arch = "wasm32"))]
 use std::fs;
+#[cfg(not(target_arch = "wasm32"))]
+use egui::CursorIcon;
 
 use super::CustomFormatsWindow;
 
@@ -84,9 +86,9 @@ impl SettingsWindow {
         }
     }
 
-    fn save_settings_btn(&mut self, ui: &mut Ui) {
+    fn save_settings_btn(&mut self, _ui: &mut Ui) {
         #[cfg(not(target_arch = "wasm32"))]
-        if ui
+        if _ui
             .button("Save settings")
             .on_hover_cursor(CursorIcon::PointingHand)
             .clicked()

@@ -1,9 +1,9 @@
 use eframe::NativeOptions;
 
 fn main() {
-    eframe::run_native(
-        "epick",
-        NativeOptions::default(),
-        Box::new(|_| epick::Epick::init()),
-    )
+    let opts = NativeOptions {
+        always_on_top: true,
+        ..Default::default()
+    };
+    eframe::run_native("epick", opts, Box::new(|_| epick::Epick::init()))
 }
