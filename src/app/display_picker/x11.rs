@@ -5,7 +5,7 @@ use crate::app::display_picker::DisplayPicker;
 use crate::color::Color;
 use anyhow::{Context, Result};
 use egui::Color32;
-use image::{Rgba, ImageBuffer};
+use image::{ImageBuffer, Rgba};
 use x11rb::connection::Connection;
 use x11rb::cursor::Handle as CursorHandle;
 use x11rb::image::Image;
