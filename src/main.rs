@@ -7,10 +7,7 @@ const APP_ICON_WIDTH: u32 = 48;
 const APP_ICON_HEIGHT: u32 = 48;
 
 fn main() {
-    let mut opts = NativeOptions {
-        always_on_top: true,
-        ..Default::default()
-    };
+    let mut opts = NativeOptions::default();
 
     let mut img = ImageReader::new(Cursor::new(APP_ICON_DATA));
     img.set_format(ImageFormat::Png);
