@@ -29,6 +29,7 @@ use egui::{
     Rgba, RichText, ScrollArea, Ui, Vec2, Visuals,
 };
 use std::rc::Rc;
+use std::time::SystemTime;
 
 #[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;
@@ -58,10 +59,12 @@ static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";
 
 const ZOOM_SCALE: f32 = 10.;
 const ZOOM_WIN_WIDTH: u16 = 160;
+const ZOOM_WIN_GRACE_PERIOD_MS: u128 = 100;
 const ZOOM_WIN_HEIGHT: u16 = 160;
 const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
 const ZOOM_IMAGE_HEIGHT: u16 = ZOOM_WIN_HEIGHT / ZOOM_SCALE as u16;
 const ZOOM_WIN_OFFSET: i32 = 50;
+const DEFAULT_ZOOM_WIN_POS: (i32, i32) = (ZOOM_WIN_OFFSET, ZOOM_WIN_OFFSET);
 const ZOOM_WIN_POINTER_DIAMETER: u16 = 10;
 const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
 const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
@@ -90,6 +93,10 @@ pub struct App {
     pub hues_window: HuesWindow,
     pub tints_window: TintsWindow,
     pub shades_window: ShadesWindow,
+
+    // Timeout before zoom window is moved next to the cursor so that egui window doesn't
+    // loose focus when starting to drag the zoom button.
+    pub zoom_win_grace_period: Option<SystemTime>,
 
     #[cfg(target_os = "linux")]
     pub picker_window: Option<(xproto::Window, xproto::Gcontext)>,
@@ -180,6 +187,8 @@ impl Default for App {
             hues_window: HuesWindow::default(),
             tints_window: TintsWindow::default(),
             shades_window: ShadesWindow::default(),
+
+            zoom_win_grace_period: None,
 
             #[cfg(target_os = "linux")]
             picker_window: None,
@@ -933,26 +942,18 @@ impl App {
                         let _ = save_to_clipboard(self.clipboard_color(&color));
                     }
                 }
-                if ui.ctx().input().key_pressed(egui::Key::Z) {
-                    self.toggle_zoom_window(&picker);
-                }
                 if ui.ctx().input().key_pressed(egui::Key::S) {
                     self.saved_colors.add(color);
                 }
                 ui.horizontal(|ui| {
                     ui.label("Color at cursor: ");
-                    #[cfg(target_os = "linux")]
-                    self.handle_zoom_picker(ui, picker);
-                    #[cfg(windows)]
-                    self.handle_zoom_picker(ui, picker);
+                    #[cfg(any(windows, target_os = "linux"))]
+                    self.zoom_picker_impl(ui, picker);
                 });
                 self.color_box_label_side(&color, vec2(25., 25.), ui, tex_allocator);
             }
         };
     }
-
-    #[cfg(not(any(target_os = "linux", windows)))]
-    fn toggle_zoom_window(&mut self, _: &Rc<dyn DisplayPickerExt>) {}
 
     fn toggle_mouse(&mut self, icon: CursorIcon) {
         self.cursor_icon = if icon == self.cursor_icon {
@@ -962,15 +963,17 @@ impl App {
         }
     }
 
-    #[cfg(target_os = "linux")]
-    fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
-        self.toggle_mouse(CursorIcon::Crosshair);
-        let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
+    #[cfg(any(target_os = "linux", windows))]
+    fn display_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
         if self.picker_window.is_none() {
+            self.toggle_mouse(CursorIcon::Crosshair);
+            self.zoom_win_grace_period = Some(SystemTime::now());
+
+            #[cfg(target_os = "linux")]
             if let Ok(window) = picker.spawn_window(
                 CURSOR_PICKER_WINDOW_NAME,
-                (cursor_pos.0 + ZOOM_WIN_OFFSET) as i16,
-                (cursor_pos.1 + ZOOM_WIN_OFFSET) as i16,
+                DEFAULT_ZOOM_WIN_POS.0 as i16,
+                DEFAULT_ZOOM_WIN_POS.1 as i16,
                 ZOOM_WIN_WIDTH,
                 ZOOM_WIN_HEIGHT,
                 picker.screen_num(),
@@ -978,23 +981,45 @@ impl App {
             ) {
                 self.picker_window = Some(window);
             }
-        } else {
-            // Close the window on second click
-            let _ = picker.destroy_window(self.picker_window.unwrap().0);
+
+            #[cfg(windows)]
+            if let Ok(window) = picker.spawn_window(
+                "EPICK_DIALOG",
+                CURSOR_PICKER_WINDOW_NAME,
+                DEFAULT_ZOOM_WIN_POS.0,
+                DEFAULT_ZOOM_WIN_POS.1,
+                ZOOM_WIN_WIDTH as i32,
+                ZOOM_WIN_HEIGHT as i32,
+                WS_POPUP | WS_BORDER,
+            ) {
+                self.picker_window = Some(window);
+                if let Err(e) = picker.show_window(window, SW_SHOWDEFAULT) {
+                    self.set_error(e);
+                }
+            }
+        }
+    }
+
+    #[cfg(any(target_os = "linux", windows))]
+    fn hide_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
+        if let Some(picker_window) = self.picker_window {
+            #[cfg(target_os = "linux")]
+            let _ = picker.destroy_window(picker_window.0);
+
+            #[cfg(windows)]
+            if let Err(e) = picker.destroy_window(picker_window) {
+                self.set_error(e);
+            }
+
             self.picker_window = None;
+            self.zoom_win_grace_period = None;
         }
     }
 
     #[cfg(target_os = "linux")]
-    fn handle_zoom_picker(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
-        let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
-        if ui
-            .button(ZOOM_PICKER_ICON)
-            .on_hover_cursor(CursorIcon::ZoomIn)
-            .clicked()
-        {
-            self.toggle_zoom_window(&picker);
-        } else if let Some((window, gc)) = self.picker_window {
+    fn handle_zoom_picker(&mut self, _ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
+        if let Some((window, gc)) = self.picker_window {
+            let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
             if let Ok(img) = picker.get_image(
                 picker.screen().root,
                 (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET) as i16,
@@ -1018,11 +1043,21 @@ impl App {
                     self.set_error(e);
                 };
             }
-            if let Err(e) = picker.update_window_pos(
-                window,
-                cursor_pos.0 + ZOOM_WIN_OFFSET,
-                cursor_pos.1 + ZOOM_WIN_OFFSET,
-            ) {
+            let elapsed = self
+                .zoom_win_grace_period
+                .and_then(|ts| ts.elapsed().ok())
+                .unwrap_or_default()
+                .as_millis();
+
+            let pos = if elapsed > ZOOM_WIN_GRACE_PERIOD_MS {
+                (
+                    cursor_pos.0 + ZOOM_WIN_OFFSET,
+                    cursor_pos.1 + ZOOM_WIN_OFFSET,
+                )
+            } else {
+                DEFAULT_ZOOM_WIN_POS
+            };
+            if let Err(e) = picker.update_window_pos(window, pos.0, pos.1) {
                 self.set_error(e);
                 return;
             }
@@ -1033,43 +1068,9 @@ impl App {
     }
 
     #[cfg(windows)]
-    fn toggle_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
-        self.toggle_mouse(CursorIcon::Crosshair);
-        let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
-        if self.picker_window.is_none() {
-            if let Ok(window) = picker.spawn_window(
-                "EPICK_DIALOG",
-                CURSOR_PICKER_WINDOW_NAME,
-                (cursor_pos.0 + ZOOM_WIN_OFFSET) as i32,
-                (cursor_pos.1 + ZOOM_WIN_OFFSET) as i32,
-                ZOOM_WIN_WIDTH as i32,
-                ZOOM_WIN_HEIGHT as i32,
-                WS_POPUP | WS_BORDER,
-            ) {
-                self.picker_window = Some(window);
-                if let Err(e) = picker.show_window(window, SW_SHOWDEFAULT) {
-                    self.set_error(e);
-                }
-            }
-        } else {
-            // Close the window on second click
-            if let Err(e) = picker.destroy_window(self.picker_window.unwrap()) {
-                self.set_error(e);
-            }
-            self.picker_window = None;
-        }
-    }
-
-    #[cfg(windows)]
-    fn handle_zoom_picker(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
-        let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
-        if ui
-            .button(ZOOM_PICKER_ICON)
-            .on_hover_cursor(CursorIcon::ZoomIn)
-            .clicked()
-        {
-            self.toggle_zoom_window(&picker);
-        } else if let Some(window) = self.picker_window {
+    fn handle_zoom_picker(&mut self, _ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
+        if let Some(window) = self.picker_window {
+            let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
             match picker.get_screenshot(
                 (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET) as i32,
                 (cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET) as i32,
@@ -1108,4 +1109,25 @@ impl App {
             }
         }
     }
+
+    #[cfg(any(target_os = "linux", windows))]
+    fn zoom_picker_impl(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
+        let btn = Button::new(ZOOM_PICKER_ICON).sense(egui::Sense::drag());
+        let btn = ui
+            .add(btn)
+            .on_hover_cursor(CursorIcon::ZoomIn)
+            .on_hover_text("Drag to enable zoomed window");
+
+        if btn.dragged() {
+            self.display_zoom_window(&picker);
+        }
+        if !btn.dragged() && !btn.has_focus() {
+            self.hide_zoom_window(&picker);
+        }
+
+        self.handle_zoom_picker(ui, picker);
+    }
+
+    #[cfg(not(any(target_os = "linux", windows)))]
+    fn zoom_picker_impl(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {}
 }
