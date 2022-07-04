@@ -942,9 +942,6 @@ impl App {
                         let _ = save_to_clipboard(self.clipboard_color(&color));
                     }
                 }
-                if ui.ctx().input().key_pressed(egui::Key::Z) {
-                    self.hide_zoom_window(&picker);
-                }
                 if ui.ctx().input().key_pressed(egui::Key::S) {
                     self.saved_colors.add(color);
                 }

@@ -38,7 +38,6 @@ impl HelpWindow {
                         let label = Label::new(RichText::new("Keybindings").strong());
                         ui.add(label);
 
-                        show_keybinding!(ui, "z", "display zoomed window");
                         show_keybinding!(ui, "p", "pick a color from under the cursor");
                         show_keybinding!(ui, "s", "save a color from under the cursor");
                         show_keybinding!(ui, "h", "toggle side panel");
