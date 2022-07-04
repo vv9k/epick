@@ -47,7 +47,6 @@ The gif might be outdated, to checkout the latest build of master branch head ov
 
 Here are some handy shortcuts to enhance the usage of **epick**:
 - Only supported with screen picker:
-   - `z` to display zoomed window
    - `p` to pick a color from under the cursor
    - `s` to save a color from under the cursor
 - Other:
