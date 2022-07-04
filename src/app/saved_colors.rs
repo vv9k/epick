@@ -2,6 +2,7 @@ use crate::color::Color;
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::fmt::Write as _;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -59,13 +60,14 @@ impl SavedColors {
         let mut gpl = format!("GIMP Palette\nName: {}.gpl\nColumns: 1\n#\n", name);
         for (i, (_, color)) in self.0.iter().enumerate() {
             let color = color.color32();
-            gpl.push_str(&format!(
-                "{}\t{}\t{}\tcolor {}\n",
+            let _ = writeln!(
+                gpl,
+                "{}\t{}\t{}\tcolor {}",
                 color.r(),
                 color.g(),
                 color.b(),
                 i
-            ));
+            );
         }
         gpl
     }
