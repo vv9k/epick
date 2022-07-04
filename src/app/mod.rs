@@ -1007,7 +1007,7 @@ impl App {
             let _ = picker.destroy_window(picker_window.0);
 
             #[cfg(windows)]
-            if let Err(e) = picker.destroy_window(window) {
+            if let Err(e) = picker.destroy_window(picker_window) {
                 self.set_error(e);
             }
 
