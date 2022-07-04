@@ -1129,5 +1129,5 @@ impl App {
     }
 
     #[cfg(not(any(target_os = "linux", windows)))]
-    fn zoom_picker_impl(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {}
+    fn zoom_picker_impl(&mut self, _: &mut Ui, _: Rc<dyn DisplayPickerExt>) {}
 }
