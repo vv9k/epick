@@ -5,7 +5,7 @@ use crate::app::display_picker::DisplayPicker;
 use crate::color::Color;
 use anyhow::{Context, Result};
 use egui::Color32;
-use image::{Bgra, ImageBuffer};
+use image::{Rgba, ImageBuffer};
 use x11rb::connection::Connection;
 use x11rb::cursor::Handle as CursorHandle;
 use x11rb::image::Image;
@@ -19,7 +19,7 @@ use x11rb::wrapper::ConnectionExt as _;
 
 pub fn resize_image<'a>(img: &'a Image, scale: f32) -> Image<'a> {
     let data = img.data();
-    let buffer: ImageBuffer<Bgra<u8>, &[u8]> =
+    let buffer: ImageBuffer<Rgba<u8>, &[u8]> =
         ImageBuffer::from_raw(img.width() as u32, img.height() as u32, data).unwrap();
 
     let width = (img.width() as f32 * scale) as u32;

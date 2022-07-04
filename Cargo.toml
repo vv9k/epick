@@ -18,7 +18,7 @@ serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.8"
 dirs = "4"
 nom = "7"
-image = "0.23"
+image = "0.24"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 x11rb = { version = "0.9", features = ["image", "cursor", "resource_manager"] }
@@ -30,7 +30,7 @@ windows = "0.21"
 windows = "0.21"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-native-dialog = "0.5"
+native-dialog = "0.6"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc = {version = "0.2", features = ["exception"]}
