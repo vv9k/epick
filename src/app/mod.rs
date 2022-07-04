@@ -1110,7 +1110,7 @@ impl App {
         }
     }
 
-    #[cfg(not(target = "macos"))]
+    #[cfg(any(target_os = "linux", windows))]
     fn zoom_picker_impl(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
         let btn = Button::new(ZOOM_PICKER_ICON).sense(egui::Sense::drag());
         let btn = ui
@@ -1128,6 +1128,6 @@ impl App {
         self.handle_zoom_picker(ui, picker);
     }
 
-    #[cfg(target = "macos")]
+    #[cfg(not(any(target_os = "linux", windows)))]
     fn zoom_picker_impl(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {}
 }
