@@ -49,6 +49,7 @@ pub enum WindowType {
     Splash,
     Dialog,
     Normal,
+    Notification,
 }
 
 impl WindowType {
@@ -62,6 +63,7 @@ impl WindowType {
             WindowType::Splash => b"_NET_WM_WINDOW_TYPE_SPLASH",
             WindowType::Dialog => b"_NET_WM_WINDOW_TYPE_DIALOG",
             WindowType::Normal => b"_NET_WM_WINDOW_TYPE_NORMAL",
+            WindowType::Notification => b"_NET_WM_WINDOW_TYPE_NOTIFICATION",
         }
     }
 }
