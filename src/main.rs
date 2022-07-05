@@ -28,5 +28,9 @@ fn main() {
         _ => {}
     }
 
-    eframe::run_native("epick", opts, Box::new(|ctx| epick::Epick::init(ctx)))
+    eframe::run_native(
+        "epick - Color Picker",
+        opts,
+        Box::new(|ctx| epick::Epick::init(ctx)),
+    )
 }
