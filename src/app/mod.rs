@@ -28,8 +28,8 @@ use egui::{
     color::Color32, style::Margin, vec2, Button, CollapsingHeader, CursorIcon, Id, Label, Layout,
     Rgba, RichText, ScrollArea, Ui, Vec2, Visuals,
 };
+use image::Pixel;
 use std::rc::Rc;
-use std::time::SystemTime;
 
 #[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;
@@ -965,8 +965,10 @@ impl App {
             #[cfg(target_os = "linux")]
             if let Ok(window) = picker.spawn_window(
                 CURSOR_PICKER_WINDOW_NAME,
-                ZOOM_WIN_WIDTH,
-                ZOOM_WIN_HEIGHT,
+                (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET) as i16,
+                (cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET) as i16,
+                ZOOM_WIN_WIDTH + (ZOOM_WIN_BORDER_WIDTH * 2) as u16,
+                ZOOM_WIN_HEIGHT + (ZOOM_WIN_BORDER_WIDTH * 2) as u16,
                 picker.screen_num(),
                 display_picker::x11::WindowType::Notification,
             ) {
@@ -1017,7 +1019,12 @@ impl App {
                 ZOOM_IMAGE_WIDTH,
                 ZOOM_IMAGE_HEIGHT,
             ) {
+                let border_color = image::Rgba::from_slice(&[255, 255, 255, 255]);
                 let img = display_picker::x11::resize_image(&img, ZOOM_SCALE);
+                let img =
+                    display_picker::x11::add_border(&img, border_color, ZOOM_WIN_BORDER_WIDTH)
+                        .unwrap();
+
                 if let Err(e) = img.put(picker.conn(), window, gc, 0, 0) {
                     self.set_error(e);
                     return;
