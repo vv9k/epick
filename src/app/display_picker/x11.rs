@@ -5,7 +5,7 @@ use crate::app::display_picker::DisplayPicker;
 use crate::color::Color;
 use anyhow::{Context, Result};
 use egui::Color32;
-use image::{ImageBuffer, Rgba};
+use image::{imageops, ImageBuffer, Rgba};
 use x11rb::connection::Connection;
 use x11rb::cursor::Handle as CursorHandle;
 use x11rb::image::Image;
@@ -25,8 +25,7 @@ pub fn resize_image<'a>(img: &'a Image, scale: f32) -> Image<'a> {
     let width = (img.width() as f32 * scale) as u32;
     let height = (img.height() as f32 * scale) as u32;
 
-    let resized =
-        image::imageops::resize(&buffer, width, height, image::imageops::FilterType::Nearest);
+    let resized = imageops::resize(&buffer, width, height, image::imageops::FilterType::Nearest);
 
     Image::new(
         width as u16,
@@ -40,6 +39,39 @@ pub fn resize_image<'a>(img: &'a Image, scale: f32) -> Image<'a> {
     .unwrap()
 }
 
+pub fn add_border<'a>(img: &'a Image, color: &Rgba<u8>, width: u32) -> Result<Image<'a>> {
+    let data = img.data();
+    let border_width = width;
+    let width = img.width() as u32;
+    let height = img.height() as u32;
+
+    let base_image: ImageBuffer<Rgba<u8>, &[u8]> =
+        ImageBuffer::from_raw(width, height, data).context("failed to initialize image buffer")?;
+
+    let mut frame_buffer: ImageBuffer<Rgba<u8>, Vec<u8>> =
+        ImageBuffer::new(width + border_width * 2, height + border_width * 2);
+
+    imageops::vertical_gradient(&mut frame_buffer, color, color);
+
+    imageops::replace(
+        &mut frame_buffer,
+        &base_image,
+        border_width as i64,
+        border_width as i64,
+    );
+
+    Image::new(
+        (width + border_width * 2) as u16,
+        (height + border_width * 2) as u16,
+        img.scanline_pad(),
+        img.depth(),
+        img.bits_per_pixel(),
+        img.byte_order(),
+        Cow::Owned(frame_buffer.into_raw()),
+    )
+    .context("failed to create a new image with border")
+}
+
 pub enum WindowType {
     Desktop,
     Dock,
@@ -49,6 +81,7 @@ pub enum WindowType {
     Splash,
     Dialog,
     Normal,
+    Notification,
 }
 
 impl WindowType {
@@ -62,6 +95,7 @@ impl WindowType {
             WindowType::Splash => b"_NET_WM_WINDOW_TYPE_SPLASH",
             WindowType::Dialog => b"_NET_WM_WINDOW_TYPE_DIALOG",
             WindowType::Normal => b"_NET_WM_WINDOW_TYPE_NORMAL",
+            WindowType::Notification => b"_NET_WM_WINDOW_TYPE_NOTIFICATION",
         }
     }
 }

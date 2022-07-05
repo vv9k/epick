@@ -28,8 +28,8 @@ use egui::{
     color::Color32, style::Margin, vec2, Button, CollapsingHeader, CursorIcon, Id, Label, Layout,
     Rgba, RichText, ScrollArea, Ui, Vec2, Visuals,
 };
+use image::Pixel;
 use std::rc::Rc;
-use std::time::SystemTime;
 
 #[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;
@@ -59,14 +59,13 @@ static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";
 
 const ZOOM_SCALE: f32 = 10.;
 const ZOOM_WIN_WIDTH: u16 = 160;
-const ZOOM_WIN_GRACE_PERIOD_MS: u128 = 100;
 const ZOOM_WIN_HEIGHT: u16 = 160;
 const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
 const ZOOM_IMAGE_HEIGHT: u16 = ZOOM_WIN_HEIGHT / ZOOM_SCALE as u16;
 const ZOOM_WIN_OFFSET: i32 = 50;
-const DEFAULT_ZOOM_WIN_POS: (i32, i32) = (i32::MAX, i32::MAX);
 const ZOOM_WIN_POINTER_DIAMETER: u16 = 10;
 const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
+const ZOOM_WIN_BORDER_WIDTH: u32 = 1;
 const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
 const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as i32;
 
@@ -93,10 +92,6 @@ pub struct App {
     pub hues_window: HuesWindow,
     pub tints_window: TintsWindow,
     pub shades_window: ShadesWindow,
-
-    // Timeout before zoom window is moved next to the cursor so that egui window doesn't
-    // loose focus when starting to drag the zoom button.
-    pub zoom_win_grace_period: Option<SystemTime>,
 
     #[cfg(target_os = "linux")]
     pub picker_window: Option<(xproto::Window, xproto::Gcontext)>,
@@ -187,8 +182,6 @@ impl Default for App {
             hues_window: HuesWindow::default(),
             tints_window: TintsWindow::default(),
             shades_window: ShadesWindow::default(),
-
-            zoom_win_grace_period: None,
 
             #[cfg(target_os = "linux")]
             picker_window: None,
@@ -967,17 +960,17 @@ impl App {
     fn display_zoom_window(&mut self, picker: &Rc<dyn DisplayPickerExt>) {
         if self.picker_window.is_none() {
             self.toggle_mouse(CursorIcon::Crosshair);
-            self.zoom_win_grace_period = Some(SystemTime::now());
+            let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
 
             #[cfg(target_os = "linux")]
             if let Ok(window) = picker.spawn_window(
                 CURSOR_PICKER_WINDOW_NAME,
-                DEFAULT_ZOOM_WIN_POS.0 as i16,
-                DEFAULT_ZOOM_WIN_POS.1 as i16,
-                ZOOM_WIN_WIDTH,
-                ZOOM_WIN_HEIGHT,
+                (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET) as i16,
+                (cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET) as i16,
+                ZOOM_WIN_WIDTH + (ZOOM_WIN_BORDER_WIDTH * 2) as u16,
+                ZOOM_WIN_HEIGHT + (ZOOM_WIN_BORDER_WIDTH * 2) as u16,
                 picker.screen_num(),
-                display_picker::x11::WindowType::Dialog,
+                display_picker::x11::WindowType::Notification,
             ) {
                 self.picker_window = Some(window);
             }
@@ -986,8 +979,8 @@ impl App {
             if let Ok(window) = picker.spawn_window(
                 "EPICK_DIALOG",
                 CURSOR_PICKER_WINDOW_NAME,
-                DEFAULT_ZOOM_WIN_POS.0,
-                DEFAULT_ZOOM_WIN_POS.1,
+                (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET),
+                (cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET),
                 ZOOM_WIN_WIDTH as i32,
                 ZOOM_WIN_HEIGHT as i32,
                 WS_POPUP | WS_BORDER,
@@ -1012,7 +1005,6 @@ impl App {
             }
 
             self.picker_window = None;
-            self.zoom_win_grace_period = None;
         }
     }
 
@@ -1027,7 +1019,12 @@ impl App {
                 ZOOM_IMAGE_WIDTH,
                 ZOOM_IMAGE_HEIGHT,
             ) {
+                let border_color = image::Rgba::from_slice(&[255, 255, 255, 255]);
                 let img = display_picker::x11::resize_image(&img, ZOOM_SCALE);
+                let img =
+                    display_picker::x11::add_border(&img, border_color, ZOOM_WIN_BORDER_WIDTH)
+                        .unwrap();
+
                 if let Err(e) = img.put(picker.conn(), window, gc, 0, 0) {
                     self.set_error(e);
                     return;
@@ -1043,21 +1040,11 @@ impl App {
                     self.set_error(e);
                 };
             }
-            let elapsed = self
-                .zoom_win_grace_period
-                .and_then(|ts| ts.elapsed().ok())
-                .unwrap_or_default()
-                .as_millis();
-
-            let pos = if elapsed > ZOOM_WIN_GRACE_PERIOD_MS {
-                (
-                    cursor_pos.0 + ZOOM_WIN_OFFSET,
-                    cursor_pos.1 + ZOOM_WIN_OFFSET,
-                )
-            } else {
-                DEFAULT_ZOOM_WIN_POS
-            };
-            if let Err(e) = picker.update_window_pos(window, pos.0, pos.1) {
+            if let Err(e) = picker.update_window_pos(
+                window,
+                cursor_pos.0 + ZOOM_WIN_OFFSET,
+                cursor_pos.1 + ZOOM_WIN_OFFSET,
+            ) {
                 self.set_error(e);
                 return;
             }
