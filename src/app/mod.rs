@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 mod color_picker;
 mod display_picker;
+mod error;
 mod render;
 mod saved_colors;
 mod scheme;
@@ -12,6 +13,7 @@ use crate::color::{Color, ColorHarmony, DisplayFormat, Gradient};
 use crate::{save_to_clipboard, TextureAllocator};
 use color_picker::ColorPicker;
 use display_picker::DisplayPickerExt;
+use error::{append_global_error, DisplayError, ERROR_STACK};
 use render::tex_color;
 use saved_colors::SavedColors;
 use screen_size::ScreenSize;
@@ -30,6 +32,7 @@ use egui::{
 };
 use image::Pixel;
 use std::rc::Rc;
+use std::time::Duration;
 
 #[cfg(target_os = "linux")]
 use x11rb::protocol::xproto;
@@ -69,6 +72,8 @@ const ZOOM_WIN_BORDER_WIDTH: u32 = 1;
 const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
 const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as i32;
 
+const ERROR_DISPLAY_DURATION: Duration = Duration::new(20, 0);
+
 //####################################################################################################
 
 #[derive(Debug)]
@@ -97,6 +102,8 @@ pub struct App {
     pub picker_window: Option<(xproto::Window, xproto::Gcontext)>,
     #[cfg(windows)]
     pub picker_window: Option<HWND>,
+
+    pub display_errors: Vec<DisplayError>,
 }
 
 impl eframe::App for App {
@@ -126,6 +133,13 @@ impl eframe::App for App {
         frame.set_window_size(ctx.used_size());
 
         self.picker.check_for_change();
+
+        // populate display errors from the global error stack
+        if let Ok(mut stack) = ERROR_STACK.try_lock() {
+            while let Some(error) = stack.errors.pop_front() {
+                self.display_errors.push(error);
+            }
+        }
 
         // No need to repaint in wasm, there is no way to pick color from under the cursor anyway
         #[cfg(not(target_arch = "wasm32"))]
@@ -183,6 +197,8 @@ impl Default for App {
             tints_window: TintsWindow::default(),
             shades_window: ShadesWindow::default(),
 
+            display_errors: Default::default(),
+
             #[cfg(target_os = "linux")]
             picker_window: None,
             #[cfg(windows)]
@@ -221,13 +237,6 @@ impl App {
         context.egui_ctx.set_fonts(fonts);
 
         app
-    }
-    fn set_error(&mut self, error: impl std::fmt::Display) {
-        self.error_message = Some(error.to_string());
-    }
-
-    fn clear_error(&mut self) {
-        self.error_message = None;
     }
 
     fn set_dark_theme(&mut self, ctx: &egui::Context) {
@@ -364,9 +373,8 @@ impl App {
     fn add_color(&mut self, color: Color) {
         if !self.saved_colors.add(color) {
             let color_str = self.display_color(&color);
-            self.set_error(format!("Color {} already saved!", color_str));
+            append_global_error(format!("Color {} already saved!", color_str));
         } else {
-            self.clear_error();
             self.show_side_panel = true;
         }
     }
@@ -388,14 +396,13 @@ impl App {
                         .clicked()
                 {
                     if self.picker.hex_color.len() < 6 {
-                        self.set_error("Enter a color first (ex. ab12ff #1200ff)".to_owned());
+                        append_global_error("Enter a color first (ex. ab12ff #1200ff)".to_owned());
                     } else if let Some(color) =
                         Color::from_hex(self.picker.hex_color.trim_start_matches('#'))
                     {
                         self.picker.set_cur_color(color);
-                        self.clear_error();
                     } else {
-                        self.set_error("The entered hex color is not valid".to_owned());
+                        append_global_error("The entered hex color is not valid".to_owned());
                     }
                 }
                 if ui
@@ -845,7 +852,7 @@ impl App {
             self.picker.current_color,
         );
         if let Err(e) = self.export_window.display(ctx, &self.saved_colors) {
-            self.set_error(e);
+            append_global_error(e);
         }
 
         self.shades_window(ctx, tex_allocator);
@@ -855,9 +862,37 @@ impl App {
     }
 
     fn ui(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
-        if let Some(err) = &self.error_message {
-            ui.colored_label(Color32::RED, err);
-        }
+        let mut top_padding = 0.;
+        let mut err_idx = 0;
+        self.display_errors.retain(|e| {
+            if let Ok(elapsed) = e.timestamp().elapsed() {
+                if elapsed >= ERROR_DISPLAY_DURATION {
+                    false
+                } else {
+                    if let Some(rsp) = egui::Window::new("Error")
+                        .collapsible(false)
+                        .id(Id::new(format!("err_ntf_{err_idx}")))
+                        .anchor(
+                            egui::Align2::RIGHT_TOP,
+                            (-self.side_panel_box_width - 25., top_padding),
+                        )
+                        .hscroll(true)
+                        .fixed_size((self.side_panel_box_width, 50.))
+                        .show(ui.ctx(), |ui| {
+                            let label = Label::new(RichText::new(e.message()).color(Color32::RED))
+                                .wrap(true);
+                            ui.add(label);
+                        })
+                    {
+                        top_padding += rsp.response.rect.height() + 6.;
+                        err_idx += 1;
+                    };
+                    true
+                }
+            } else {
+                false
+            }
+        });
         ui.horizontal(|ui| {
             ui.label("Current color: ");
             if ui
@@ -868,9 +903,7 @@ impl App {
             {
                 if let Err(e) = save_to_clipboard(self.clipboard_color(&self.picker.current_color))
                 {
-                    self.set_error(format!("Failed to save color to clipboard - {}", e));
-                } else {
-                    self.clear_error();
+                    append_global_error(format!("Failed to save color to clipboard - {}", e));
                 }
             }
             if ui
@@ -987,7 +1020,7 @@ impl App {
             ) {
                 self.picker_window = Some(window);
                 if let Err(e) = picker.show_window(window, SW_SHOWDEFAULT) {
-                    self.set_error(e);
+                    append_global_error(e);
                 }
             }
         }
@@ -1001,7 +1034,7 @@ impl App {
 
             #[cfg(windows)]
             if let Err(e) = picker.destroy_window(picker_window) {
-                self.set_error(e);
+                append_global_error(e);
             }
 
             self.picker_window = None;
@@ -1026,7 +1059,7 @@ impl App {
                         .unwrap();
 
                 if let Err(e) = img.put(picker.conn(), window, gc, 0, 0) {
-                    self.set_error(e);
+                    append_global_error(e);
                     return;
                 };
 
@@ -1037,7 +1070,7 @@ impl App {
                     (ZOOM_WIN_HEIGHT / 2) as i16,
                     ZOOM_WIN_POINTER_DIAMETER,
                 ) {
-                    self.set_error(e);
+                    append_global_error(e);
                 };
             }
             if let Err(e) = picker.update_window_pos(
@@ -1045,11 +1078,11 @@ impl App {
                 cursor_pos.0 + ZOOM_WIN_OFFSET,
                 cursor_pos.1 + ZOOM_WIN_OFFSET,
             ) {
-                self.set_error(e);
+                append_global_error(e);
                 return;
             }
             if let Err(e) = picker.flush() {
-                self.set_error(e);
+                append_global_error(e);
             }
         }
     }
@@ -1066,7 +1099,7 @@ impl App {
             ) {
                 Ok(bitmap) => {
                     if let Err(e) = picker.render_bitmap(&bitmap, window, 0, 0, ZOOM_SCALE) {
-                        self.set_error(e);
+                        append_global_error(e);
                     }
                     let left = ((ZOOM_WIN_WIDTH / 2) - ZOOM_WIN_POINTER_RADIUS) as i32;
                     let top = ((ZOOM_WIN_HEIGHT / 2) - ZOOM_WIN_POINTER_RADIUS) as i32;
@@ -1078,11 +1111,11 @@ impl App {
                         top + ZOOM_WIN_POINTER_DIAMETER as i32,
                         true,
                     ) {
-                        self.set_error(e);
+                        append_global_error(e);
                     }
                 }
                 Err(e) => {
-                    self.set_error(e);
+                    append_global_error(e);
                 }
             }
             if let Err(e) = picker.move_window(
@@ -1092,7 +1125,7 @@ impl App {
                 ZOOM_WIN_WIDTH as i32,
                 ZOOM_WIN_HEIGHT as i32,
             ) {
-                self.set_error(e);
+                append_global_error(e);
             }
         }
     }

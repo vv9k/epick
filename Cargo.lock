@@ -648,6 +648,7 @@ dependencies = [
  "native-dialog",
  "nom",
  "objc",
+ "once_cell",
  "serde",
  "serde_yaml",
  "tempdir",
