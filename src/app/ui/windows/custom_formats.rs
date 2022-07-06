@@ -1,7 +1,10 @@
 use egui::{Button, Key, TextBuffer, TextEdit, Window};
 
 use crate::{
-    app::{settings::Settings, ADD_ICON, APPLY_ICON, DELETE_ICON, EDIT_ICON},
+    app::{
+        settings::{DisplayFmtEnum, Settings},
+        ADD_ICON, APPLY_ICON, DELETE_ICON, EDIT_ICON,
+    },
     color::{Color, DisplayFormat},
 };
 
@@ -62,6 +65,22 @@ impl CustomFormatsWindow {
                             } else if *k == self.highlighted_key && edit_re.lost_focus() {
                                 self.highlighted_key.clear();
                             }
+
+                            if !retain {
+                                // Check if format is used by current display format
+                                let is_in_use = matches!(&settings.color_display_format, DisplayFmtEnum::Custom(fmt) if fmt == k);
+                                if is_in_use {
+                                    settings.color_display_format = DisplayFmtEnum::default();
+                                }
+
+                                // Check if format is used by current clipboard format
+                                let is_in_use = matches!(&settings.color_clipboard_format, Some(DisplayFmtEnum::Custom(fmt)) if fmt == k);
+                                if is_in_use {
+                                    settings.color_clipboard_format =
+                                        Some(DisplayFmtEnum::default());
+                                }
+                            }
+
                             ui.end_row();
                             retain
                         });

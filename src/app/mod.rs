@@ -426,7 +426,18 @@ impl App {
                 degree_symbol: true,
             },
             DisplayFmtEnum::Custom(ref name) => {
-                DisplayFormat::Custom(&self.settings_window.settings.saved_color_formats[name])
+                if self
+                    .settings_window
+                    .settings
+                    .saved_color_formats
+                    .get(name)
+                    .is_some()
+                {
+                    DisplayFormat::Custom(&self.settings_window.settings.saved_color_formats[name])
+                } else {
+                    append_global_error(format!("Custom color format `{name}` not found"));
+                    DisplayFmtEnum::default_display_format()
+                }
             }
         }
     }
@@ -454,7 +465,18 @@ impl App {
                 degree_symbol: false,
             },
             DisplayFmtEnum::Custom(name) => {
-                DisplayFormat::Custom(&self.settings_window.settings.saved_color_formats[name])
+                if self
+                    .settings_window
+                    .settings
+                    .saved_color_formats
+                    .get(name)
+                    .is_some()
+                {
+                    DisplayFormat::Custom(&self.settings_window.settings.saved_color_formats[name])
+                } else {
+                    append_global_error(format!("Custom color format `{name}` not found"));
+                    DisplayFmtEnum::default_display_format()
+                }
             }
         };
         color.display(

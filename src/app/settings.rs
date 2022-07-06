@@ -1,4 +1,6 @@
-use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
+use crate::color::{
+    ChromaticAdaptationMethod, ColorHarmony, DisplayFormat, Illuminant, RgbWorkingSpace,
+};
 
 use crate::app::ui::layout::HarmonyLayout;
 use anyhow::{Context, Result};
@@ -213,6 +215,12 @@ impl AsRef<str> for DisplayFmtEnum {
             CssHsl => "css hsl",
             Custom(name) => name,
         }
+    }
+}
+
+impl DisplayFmtEnum {
+    pub fn default_display_format() -> DisplayFormat<'static> {
+        DisplayFormat::Hex
     }
 }
 
