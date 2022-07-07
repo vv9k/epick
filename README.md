@@ -17,6 +17,11 @@ If you happen to use Arch Linux you can grab **epick** from [AUR](https://aur.ar
 $ paru -S epick
 ```
 
+If you have HomeBrew installed, you can use:
+```bash
+brew tap vv9k/epick && brew install --cask epick
+```
+
 ## Build
 
 Install required libraries (only required on Linux):
