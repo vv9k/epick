@@ -11,7 +11,6 @@ use egui::{
     style::{Selection, Widgets},
     CursorIcon, Id, InnerResponse, LayerId, Order, Rect, Sense, Shape, Stroke, Ui, Vec2, Visuals,
 };
-use epaint::RectShape;
 
 pub const SPACE: f32 = 7.;
 pub const DOUBLE_SPACE: f32 = SPACE * 2.;

@@ -30,7 +30,6 @@ use egui::{
     color::Color32, style::Margin, vec2, Button, CollapsingHeader, CursorIcon, Id, Label, Layout,
     Rgba, RichText, ScrollArea, Ui, Vec2, Visuals,
 };
-use image::Pixel;
 use std::rc::Rc;
 use std::time::Duration;
 
