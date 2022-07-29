@@ -1073,6 +1073,7 @@ impl App {
                 ZOOM_IMAGE_WIDTH,
                 ZOOM_IMAGE_HEIGHT,
             ) {
+                use image::Pixel;
                 let border_color = image::Rgba::from_slice(&[255, 255, 255, 255]);
                 let img = display_picker::x11::resize_image(&img, ZOOM_SCALE);
                 let img =
