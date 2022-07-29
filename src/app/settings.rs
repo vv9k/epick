@@ -166,7 +166,8 @@ impl Settings {
 
     /// Saves this settings as YAML file in the provided `path`.
     pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
-        let data = serde_yaml::to_vec(&self).context("failed to serialize settings")?;
+        let mut data = Vec::with_capacity(128);
+        serde_yaml::to_writer(&mut data, &self).context("failed to serialize settings")?;
         fs::write(path, &data).context("failed to write settings to file")
     }
 

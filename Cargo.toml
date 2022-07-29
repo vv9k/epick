@@ -15,7 +15,7 @@ clipboard = "0.5"
 lazy_static = "1"
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
-serde_yaml = "0.8"
+serde_yaml = "0.9"
 dirs = "4"
 nom = "7"
 image = "0.24"

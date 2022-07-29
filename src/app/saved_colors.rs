@@ -97,7 +97,8 @@ impl SavedColors {
 
     /// Saves this colors as YAML file in the provided `path`.
     pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
-        let data = serde_yaml::to_vec(&self).context("failed to serialize saved colors")?;
+        let mut data = Vec::with_capacity(128);
+        serde_yaml::to_writer(&mut data, &self).context("failed to serialize saved colors")?;
         fs::write(path, &data).context("failed to write saved colors to a file")
     }
 
