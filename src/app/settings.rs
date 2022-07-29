@@ -236,12 +236,10 @@ mod tests {
     #[test]
     fn loads_settings() {
         let tmp = tempdir::TempDir::new("settings-test").unwrap();
-        let settings_str = r#"---
-color_display_format:
-  custom: rgb
-color_clipboard_format: ~
+        let settings_str = r#"color_display_format: !custom rgb
+color_clipboard_format: null
 saved_color_formats:
-  rgb: "{r} {g} {b}"
+  rgb: '{r} {g} {b}'
 color_spaces:
   hsv: false
   luv: true
