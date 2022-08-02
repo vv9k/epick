@@ -100,7 +100,7 @@ jobs:
         run: echo "::set-output name=EPICK_ARCHIVE::epick-${{steps.set_version_win.outputs.EPICK_VERSION}}-${{ matrix.target}}"
       - name: Install dependencies
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
+        run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
       - run: cargo build --release
         name: Release build
       - name: Prepare archive directory
@@ -156,3 +156,36 @@ jobs:
           asset_name: ${{ steps.set_name_win.outputs.EPICK_ARCHIVE }}.zip
           tag: ${{ steps.set_version_win.outputs.EPICK_VERSION }}
           overwrite: true
+      - name: Install pkger
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          curl -LO https://github.com/vv9k/pkger/releases/download/0.8.0/pkger-0.8.0-0.amd64.deb
+          sudo dpkg -i pkger-0.8.0-0.amd64.deb
+          /usr/bin/pkger init
+          mkdir -p $HOME/.config/pkger/recipes/epick
+          cp pkger.yml $HOME/.config/pkger/recipes/epick/recipe.yaml
+      - name: Build RPM and DEB
+        if: matrix.os == 'ubuntu-latest'
+        run: /usr/bin/pkger build -s deb -s rpm -- epick
+      - name: Upload deb
+        if: matrix.os == 'ubuntu-latest'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_name: wojciechkepka/epick
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: /home/runner/.config/pkger/output/pkger-deb/epick-${{steps.set_version.outputs.EPICK_VERSION}}-0.amd64.deb
+          asset_name: pkger-${{steps.set_version.outputs.EPICK_VERSION}}-0.amd64.deb
+          tag: ${{ steps.set_version.outputs.EPICK_VERSION }}
+          overwrite: true
+      - name: Upload rpm
+        if: matrix.os == 'ubuntu-latest'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_name: wojciechkepka/epick
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: /home/runner/.config/pkger/output/pkger-rpm/epick-${{steps.set_version.outputs.EPICK_VERSION}}-0.x86_64.rpm
+          asset_name: epick-${{steps.set_version.outputs.EPICK_VERSION}}-0.x86_64.rpm
+          tag: ${{ steps.set_version.outputs.EPICK_VERSION }}
+          overwrite: true
+
+
