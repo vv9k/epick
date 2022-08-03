@@ -42,7 +42,7 @@ use x11rb::protocol::xproto;
 #[cfg(windows)]
 use crate::app::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 use crate::app::render::tex_gradient;
-use crate::app::ui::SPACE;
+use crate::app::ui::{DOUBLE_SPACE, SPACE};
 
 static ADD_DESCR: &str = "Add this color to saved colors";
 static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";
@@ -67,6 +67,12 @@ lazy_static::lazy_static! {
     pub static ref KEYBINDINGS: KeyBindings = default_keybindings();
 }
 
+#[derive(Copy, Clone)]
+pub enum CentralPanelTab {
+    Picker,
+    Palettes,
+}
+
 pub struct App {
     pub picker: ColorPicker,
     pub texture_manager: render::TextureManager,
@@ -78,6 +84,7 @@ pub struct App {
     pub screen_size: ScreenSize,
     pub cursor_icon: CursorIcon,
     pub pick_color: Color,
+    pub central_panel_tab: CentralPanelTab,
 
     // side panel
     pub sp_show: bool,
@@ -180,6 +187,8 @@ impl Default for App {
             screen_size: ScreenSize::Desktop(0., 0.),
             cursor_icon: CursorIcon::default(),
             pick_color: Color::black(),
+
+            central_panel_tab: CentralPanelTab::Picker,
 
             sp_show: false,
             sp_edit_palette_name: false,
@@ -592,78 +601,65 @@ impl App {
             });
     }
 
-    fn central_panel(&mut self, ctx: &egui::Context, tex_allocator: &mut TextureAllocator) {
-        let _frame = egui::Frame {
-            fill: if ctx.style().visuals.dark_mode {
-                *D_BG_0
-            } else {
-                *L_BG_2
-            },
-            inner_margin: Margin::symmetric(10., 5.),
-            ..Default::default()
-        };
-        egui::CentralPanel::default().frame(_frame).show(ctx, |ui| {
-            self.ui(ui, tex_allocator);
-        });
-    }
-
     fn top_ui(&mut self, ui: &mut Ui) {
         ui.horizontal(|ui| {
-            if self.hues_window.is_open {
-                if ui
-                    .button("hues")
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
-                {
-                    self.hues_window.is_open = false;
-                }
-            } else {
-                let btn = Button::new("hues").fill(Rgba::from_black_alpha(0.));
-                if ui
-                    .add(btn)
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
-                {
-                    self.hues_window.is_open = true;
-                }
+            macro_rules! add_button_if {
+                ($text:expr, $condition:expr, $block:tt) => {
+                    add_button_if!($text, $condition, $block, $block);
+                };
+                ($text:expr, $condition:expr, $block_a:tt, $block_b:tt) => {
+                    if $condition {
+                        if ui
+                            .button($text)
+                            .on_hover_cursor(CursorIcon::PointingHand)
+                            .clicked()
+                        $block_a;
+                    } else {
+                        let btn = Button::new($text).fill(Rgba::from_black_alpha(0.));
+                        if ui
+                            .add(btn)
+                            .on_hover_cursor(CursorIcon::PointingHand)
+                            .clicked()
+                        $block_b;
+                    }
+                };
             }
-            if self.tints_window.is_open {
-                if ui
-                    .button("tints")
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
+            add_button_if!(
+                "picker",
+                matches!(self.central_panel_tab, CentralPanelTab::Picker),
                 {
-                    self.tints_window.is_open = false;
+                    self.central_panel_tab = CentralPanelTab::Picker;
                 }
-            } else {
-                let btn = Button::new("tints").fill(Rgba::from_black_alpha(0.));
-                if ui
-                    .add(btn)
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
+            );
+            add_button_if!(
+                "palettes",
+                matches!(self.central_panel_tab, CentralPanelTab::Palettes),
                 {
-                    self.tints_window.is_open = true;
+                    self.central_panel_tab = CentralPanelTab::Palettes;
+                    self.sp_show = false;
                 }
-            }
+            );
 
-            if self.shades_window.is_open {
-                if ui
-                    .button("shades")
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
-                {
-                    self.shades_window.is_open = false;
-                }
-            } else {
-                let btn = Button::new("shades").fill(Rgba::from_black_alpha(0.));
-                if ui
-                    .add(btn)
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
-                {
-                    self.shades_window.is_open = true;
-                }
-            }
+            ui.add_space(DOUBLE_SPACE);
+
+            add_button_if!(
+                "hues",
+                self.hues_window.is_open,
+                { self.hues_window.is_open = false },
+                { self.hues_window.is_open = true }
+            );
+            add_button_if!(
+                "shades",
+                self.shades_window.is_open,
+                { self.shades_window.is_open = false },
+                { self.shades_window.is_open = true }
+            );
+            add_button_if!(
+                "tints",
+                self.tints_window.is_open,
+                { self.tints_window.is_open = false },
+                { self.tints_window.is_open = true }
+            );
 
             ui.with_layout(Layout::right_to_left(), |ui| {
                 if ui
@@ -728,7 +724,52 @@ impl App {
         self.help_window.display(ctx);
     }
 
-    fn ui(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
+    fn central_panel(&mut self, ctx: &egui::Context, tex_allocator: &mut TextureAllocator) {
+        let _frame = egui::Frame {
+            fill: if ctx.style().visuals.dark_mode {
+                *D_BG_0
+            } else {
+                *L_BG_2
+            },
+            inner_margin: Margin::symmetric(10., 5.),
+            ..Default::default()
+        };
+        egui::CentralPanel::default()
+            .frame(_frame)
+            .show(ctx, |ui| match self.central_panel_tab {
+                CentralPanelTab::Picker => self.picker_ui(ui, tex_allocator),
+                CentralPanelTab::Palettes => self.palettes_ui(ui, tex_allocator),
+            });
+    }
+
+    fn palettes_ui(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
+        ScrollArea::new([true, true]).show(ui, |ui| {
+            for palette in self
+                .palettes
+                .clone()
+                .iter()
+                .filter(|p| !p.palette.is_empty())
+            {
+                if palette.palette.is_empty() {
+                    continue;
+                }
+                let label = RichText::new(&palette.name).heading();
+                ui.add(Label::new(label));
+                egui::Grid::new(&palette.name)
+                    .spacing((0., 0.))
+                    .show(ui, |ui| {
+                        for color in palette.palette.iter() {
+                            ui.vertical(|ui| {
+                                self.color_box_no_label(color, vec2(50., 50.), ui, tex_allocator);
+                            });
+                        }
+                    });
+                ui.add_space(DOUBLE_SPACE);
+            }
+        });
+    }
+
+    fn picker_ui(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
         let mut top_padding = 0.;
         let mut err_idx = 0;
         self.display_errors.retain(|e| {

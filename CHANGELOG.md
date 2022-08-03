@@ -4,6 +4,7 @@
 - Fix side panel width when no colors are added
 - Add support for multiple palettes
 - Disable keybindings when entering text
+- Add new central panel tab where all palettes are displayed
 
 # 0.7.0
 - Fix invisible circle on 2D HSV slider

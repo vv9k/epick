@@ -20,7 +20,7 @@ impl Default for NamedPalette {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Palettes {
     palettes: Vec<NamedPalette>,
     current_idx: usize,
