@@ -256,7 +256,11 @@ mod tests {
         palettes.append_empty();
         assert_eq!(palettes.len(), 2);
         palettes.move_to_last();
-        assert_eq!(palettes.current(), &NamedPalette::default());
+        let p = NamedPalette {
+            name: "palette0".into(),
+            palette: Palette::default(),
+        };
+        assert_eq!(palettes.current(), &p);
     }
 
     #[test]
