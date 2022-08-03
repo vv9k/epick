@@ -5,13 +5,19 @@ use std::collections::HashMap;
 pub type KeyBindingFunc = Box<dyn Fn(&mut App, &egui::Context) + Send + Sync + 'static>;
 
 pub struct KeyBinding {
+    description: &'static str,
+    str_key: &'static str,
     key: egui::Key,
     binding: KeyBindingFunc,
 }
 
 impl KeyBinding {
-    pub fn new(key: egui::Key, binding: KeyBindingFunc) -> Self {
-        Self { key, binding }
+    pub fn str_key(&self) -> &'static str {
+        self.str_key
+    }
+
+    pub fn description(&self) -> &'static str {
+        self.description
     }
 
     pub fn key(&self) -> egui::Key {
@@ -29,10 +35,6 @@ impl KeyBindings {
         Self(bindings)
     }
 
-    pub fn insert(&mut self, key: egui::Key, binding: KeyBindingFunc) -> Option<KeyBinding> {
-        self.0.insert(key, KeyBinding::new(key, binding))
-    }
-
     pub fn iter(&self) -> impl Iterator<Item = &KeyBinding> {
         self.0.values()
     }
@@ -44,6 +46,8 @@ pub fn default_keybindings() -> KeyBindings {
             (
                 egui::Key::H,
                 KeyBinding {
+                    description: "toggle the side panel",
+                    str_key: "h",
                     key: egui::Key::H,
                     binding: Box::new(|mut app, _| {
                         app.sp_show = !app.sp_show;
@@ -53,6 +57,8 @@ pub fn default_keybindings() -> KeyBindings {
             (
                 egui::Key::P,
                 KeyBinding {
+                    description: "pick a color from under the cursor",
+                    str_key: "p",
                     key: egui::Key::P,
                     binding: Box::new(|app, _| {
                         app.picker.set_cur_color(app.pick_color);
@@ -65,6 +71,8 @@ pub fn default_keybindings() -> KeyBindings {
             (
                 egui::Key::S,
                 KeyBinding {
+                    description: "save a color from under the cursor",
+                    str_key: "s",
                     key: egui::Key::S,
                     binding: Box::new(|app, _| {
                         app.palettes.current_mut().palette.add(app.pick_color);

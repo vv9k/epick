@@ -64,7 +64,7 @@ const ERROR_DISPLAY_DURATION: Duration = Duration::new(20, 0);
 //####################################################################################################
 
 lazy_static::lazy_static! {
-    static ref KEYBINDINGS: KeyBindings = default_keybindings();
+    pub static ref KEYBINDINGS: KeyBindings = default_keybindings();
 }
 
 pub struct App {

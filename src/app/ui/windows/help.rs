@@ -1,4 +1,5 @@
 use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
+use crate::app::KEYBINDINGS;
 use egui::RichText;
 use egui::{Label, Window};
 
@@ -13,15 +14,6 @@ impl HelpWindow {
     }
 
     pub fn display(&mut self, ctx: &egui::Context) {
-        macro_rules! show_keybinding {
-            ($ui:ident, $key:literal, $description:literal) => {
-                $ui.horizontal(|ui| {
-                    let key = Label::new(RichText::new($key).strong());
-                    ui.add(key);
-                    ui.label($description);
-                });
-            };
-        }
         if self.is_open {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
@@ -35,12 +27,15 @@ impl HelpWindow {
                 .show(ctx, |ui| {
                     windows::apply_default_style(ui, is_dark_mode);
                     ui.vertical(|ui| {
-                        let label = Label::new(RichText::new("Keybindings").strong());
+                        let label = Label::new(RichText::new("Keybindings").heading());
                         ui.add(label);
-
-                        show_keybinding!(ui, "p", "pick a color from under the cursor");
-                        show_keybinding!(ui, "s", "save a color from under the cursor");
-                        show_keybinding!(ui, "h", "toggle side panel");
+                        for kb in KEYBINDINGS.iter() {
+                            ui.horizontal(|ui| {
+                                let key = Label::new(RichText::new(kb.str_key()).strong());
+                                ui.add(key);
+                                ui.label(kb.description());
+                            });
+                        }
                     });
                 });
 
