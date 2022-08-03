@@ -3,6 +3,7 @@
 - Remove sleep when zoom window is dragged so that the movement in smoother
 - Fix side panel width when no colors are added
 - Add support for multiple palettes
+- Disable keybindings when entering text
 
 # 0.7.0
 - Fix invisible circle on 2D HSV slider

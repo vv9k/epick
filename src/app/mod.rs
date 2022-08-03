@@ -85,8 +85,6 @@ pub struct App {
     pub sp_trigger_edit_focus: bool,
     pub sp_box_width: f32,
 
-    pub is_any_textedit_focused: bool,
-
     pub settings_window: SettingsWindow,
     pub export_window: ExportWindow,
     pub help_window: HelpWindow,
@@ -136,7 +134,7 @@ impl eframe::App for App {
             }
         }
 
-        if !self.is_any_textedit_focused {
+        if ctx.memory().focus().is_none() {
             self.check_keys_pressed(ctx);
         }
 
@@ -187,8 +185,6 @@ impl Default for App {
             sp_edit_palette_name: false,
             sp_trigger_edit_focus: false,
             sp_box_width: 0.,
-
-            is_any_textedit_focused: false,
 
             settings_window: SettingsWindow::default(),
             export_window: ExportWindow::default(),
