@@ -87,8 +87,9 @@ impl Palettes {
     }
 
     pub fn append_empty(&mut self) {
+        use std::fmt::Write as _;
         let mut palette = NamedPalette::default();
-        palette.name.push_str(&format!("{}", self.len() - 1));
+        let _ = write!(palette.name, "{}", self.len() - 1);
         self.add(palette);
     }
 
