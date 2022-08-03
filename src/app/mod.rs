@@ -269,11 +269,8 @@ impl App {
             #[cfg(target_arch = "wasm32")]
             if let Some(storage) = _storage {
                 if let Some(yaml) = storage.get_string(Palettes::STORAGE_KEY) {
-                    if let Ok(colors) = Palettes::from_yaml_str(&yaml) {
-                        self.saved_colors = colors;
-                        if !self.saved_colors.is_empty() {
-                            self.show_side_panel = true;
-                        }
+                    if let Ok(palettes) = Palettes::from_yaml_str(&yaml) {
+                        self.palettes = palettes;
                     }
                 }
             }
@@ -289,7 +286,7 @@ impl App {
     fn save_colors(&self, _storage: &mut dyn Storage) {
         #[cfg(target_arch = "wasm32")]
         if self.settings_window.settings.cache_colors {
-            if let Ok(yaml) = self.saved_colors.as_yaml_str() {
+            if let Ok(yaml) = self.palettes.as_yaml_str() {
                 _storage.set_string(Palettes::STORAGE_KEY, yaml);
             }
         }
