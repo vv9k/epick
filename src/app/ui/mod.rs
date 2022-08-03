@@ -16,6 +16,23 @@ pub const SPACE: f32 = 7.;
 pub const DOUBLE_SPACE: f32 = SPACE * 2.;
 pub const HALF_SPACE: f32 = SPACE / 2.;
 
+pub mod icon {
+    pub static ADD: &str = "\u{2795}";
+    pub static COPY: &str = "\u{1F3F7}";
+    pub static ZOOM_PICKER: &str = "\u{1F489}";
+    pub static SETTINGS: &str = "\u{2699}";
+    pub static EXPAND: &str = "\u{2B0C}";
+    pub static EXPORT: &str = "\u{1F5B9}";
+    pub static CLEAR: &str = "\u{1F5D1}";
+    pub static DELETE: &str = "\u{1F5D9}";
+    pub static PLAY: &str = "\u{25B6}";
+    pub static DARK_MODE: &str = "\u{1F319}";
+    pub static LIGHT_MODE: &str = "\u{2600}";
+    pub static HELP: &str = "\u{FF1F}";
+    pub static EDIT: &str = "\u{270F}";
+    pub static APPLY: &str = "\u{2714}";
+}
+
 pub mod colors {
     use egui::{Color32, Rgba};
     use lazy_static::lazy_static;

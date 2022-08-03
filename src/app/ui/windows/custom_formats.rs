@@ -3,7 +3,7 @@ use egui::{Button, Key, TextBuffer, TextEdit, Window};
 use crate::{
     app::{
         settings::{DisplayFmtEnum, Settings},
-        ADD_ICON, APPLY_ICON, DELETE_ICON, EDIT_ICON,
+        ui::icon,
     },
     color::{Color, DisplayFormat},
 };
@@ -35,7 +35,7 @@ impl CustomFormatsWindow {
                     .show(ui, |ui| {
                         settings.saved_color_formats.retain(|k, v| {
                             let mut retain = true;
-                            if ui.button(DELETE_ICON).clicked() {
+                            if ui.button(icon::DELETE).clicked() {
                                 retain = false;
                             }
                             let text_edit_id = ui.make_persistent_id(format!("ke_{}", k));
@@ -43,7 +43,7 @@ impl CustomFormatsWindow {
                                 let valid = name_valid(&self.new_key, keys.iter());
                                 let edit_re = ui
                                     .add(TextEdit::singleline(&mut self.new_key).id(text_edit_id));
-                                let btn_re = ui.add_enabled(valid, Button::new(APPLY_ICON));
+                                let btn_re = ui.add_enabled(valid, Button::new(icon::APPLY));
                                 if valid
                                     && (btn_re.clicked() || (edit_re.lost_focus() && enter_pressed))
                                 {
@@ -53,7 +53,7 @@ impl CustomFormatsWindow {
                                 }
                             } else {
                                 ui.label(k);
-                                if ui.button(EDIT_ICON).clicked() {
+                                if ui.button(icon::EDIT).clicked() {
                                     ui.memory().request_focus(text_edit_id);
                                     self.edit_key = k.clone();
                                     self.new_key = k.clone();
@@ -86,7 +86,7 @@ impl CustomFormatsWindow {
                         });
                         ui.end_row();
                         let mut adding_new_opened = false;
-                        if ui.button(ADD_ICON).clicked() {
+                        if ui.button(icon::ADD).clicked() {
                             self.adding_new ^= true;
                             adding_new_opened = true;
                         }
@@ -97,7 +97,7 @@ impl CustomFormatsWindow {
                             }
                             let valid =
                                 name_valid(&self.new_name, settings.saved_color_formats.keys());
-                            let btn_re = ui.add_enabled(valid, Button::new(APPLY_ICON));
+                            let btn_re = ui.add_enabled(valid, Button::new(icon::APPLY));
                             if valid
                                 && (btn_re.clicked() || (edit_re.lost_focus() && enter_pressed))
                             {

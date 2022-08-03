@@ -1,8 +1,7 @@
 use crate::app::{
     render::tex_color,
-    ui::{colors::*, drag_source, drop_target, HALF_SPACE, SPACE},
-    App, ADD_ICON, APPLY_ICON, CLEAR_ICON, COPY_ICON, DELETE_ICON, EDIT_ICON, EXPORT_ICON,
-    PLAY_ICON,
+    ui::{colors::*, drag_source, drop_target, icon, HALF_SPACE, SPACE},
+    App,
 };
 use crate::{save_to_clipboard, TextureAllocator};
 
@@ -92,7 +91,7 @@ impl App {
     fn side_panel_button_toolbar(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
         ui.horizontal(|ui| {
             if ui
-                .button(ADD_ICON)
+                .button(icon::ADD)
                 .on_hover_text("Add a new palette")
                 .clicked()
             {
@@ -100,7 +99,7 @@ impl App {
                 self.palettes.move_to_last();
             }
             if ui
-                .button(CLEAR_ICON)
+                .button(icon::CLEAR)
                 .on_hover_text("Clear colors")
                 .on_hover_cursor(CursorIcon::PointingHand)
                 .clicked()
@@ -108,7 +107,7 @@ impl App {
                 self.palettes.current_mut().palette.clear();
             }
             if ui
-                .button(EXPORT_ICON)
+                .button(icon::EXPORT)
                 .on_hover_text("Export")
                 .on_hover_cursor(CursorIcon::PointingHand)
                 .clicked()
@@ -116,7 +115,7 @@ impl App {
                 self.export_window.show = true;
             }
             if ui
-                .button(COPY_ICON)
+                .button(icon::COPY)
                 .on_hover_text("Copy all colors to clipboard")
                 .on_hover_cursor(CursorIcon::Alias)
                 .clicked()
@@ -125,7 +124,7 @@ impl App {
             }
             #[allow(clippy::collapsible_if)]
             if ui
-                .button(EDIT_ICON)
+                .button(icon::EDIT)
                 .on_hover_text("Change palette name")
                 .on_hover_cursor(CursorIcon::Text)
                 .clicked()
@@ -134,7 +133,7 @@ impl App {
                 self.sp_trigger_edit_focus = self.sp_edit_palette_name;
             }
             if ui
-                .button(DELETE_ICON)
+                .button(icon::DELETE)
                 .on_hover_text("Delete current palette")
                 .clicked()
             {
@@ -165,7 +164,7 @@ impl App {
                 }
                 current_palette.name = edit_name;
                 if ui
-                    .button(APPLY_ICON)
+                    .button(icon::APPLY)
                     .on_hover_text("Finish editing")
                     .clicked()
                 {
@@ -208,7 +207,7 @@ impl App {
                         let box_response = ui.horizontal(|ui| {
                             ui.vertical(|ui| {
                                 if ui
-                                    .button(PLAY_ICON)
+                                    .button(icon::PLAY)
                                     .on_hover_text("Use this color")
                                     .on_hover_cursor(CursorIcon::PointingHand)
                                     .clicked()
@@ -216,7 +215,7 @@ impl App {
                                     self.picker.set_cur_color(*color);
                                 }
                                 if ui
-                                    .button(COPY_ICON)
+                                    .button(icon::COPY)
                                     .on_hover_text("Copy color")
                                     .on_hover_cursor(CursorIcon::Alias)
                                     .clicked()
@@ -226,7 +225,7 @@ impl App {
                                     );
                                 }
                                 if ui
-                                    .button(DELETE_ICON)
+                                    .button(icon::DELETE)
                                     .on_hover_text("Delete this color")
                                     .on_hover_cursor(CursorIcon::PointingHand)
                                     .clicked()

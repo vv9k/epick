@@ -22,7 +22,7 @@ use settings::{DisplayFmtEnum, Settings};
 use ui::{
     color_tooltip,
     colors::*,
-    dark_visuals, light_visuals,
+    dark_visuals, icon, light_visuals,
     windows::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow},
 };
 
@@ -41,21 +41,6 @@ use x11rb::protocol::xproto;
 use crate::app::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 use crate::app::render::tex_gradient;
 use crate::app::ui::SPACE;
-
-pub static ADD_ICON: &str = "\u{2795}";
-pub static COPY_ICON: &str = "\u{1F3F7}";
-pub static ZOOM_PICKER_ICON: &str = "\u{1F489}";
-pub static SETTINGS_ICON: &str = "\u{2699}";
-pub static EXPAND_ICON: &str = "\u{2B0C}";
-pub static EXPORT_ICON: &str = "\u{1F5B9}";
-pub static CLEAR_ICON: &str = "\u{1F5D1}";
-pub static DELETE_ICON: &str = "\u{1F5D9}";
-pub static PLAY_ICON: &str = "\u{25B6}";
-pub static DARK_MODE_ICON: &str = "\u{1F319}";
-pub static LIGHT_MODE_ICON: &str = "\u{2600}";
-pub static HELP_ICON: &str = "\u{FF1F}";
-pub static EDIT_ICON: &str = "\u{270F}";
-pub static APPLY_ICON: &str = "\u{2714}";
 
 static ADD_DESCR: &str = "Add this color to saved colors";
 static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";
@@ -387,7 +372,7 @@ impl App {
                 let resp = ui.text_edit_singleline(&mut self.picker.hex_color);
                 if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
                     || ui
-                        .button(PLAY_ICON)
+                        .button(icon::PLAY)
                         .on_hover_text("Use this color")
                         .on_hover_cursor(CursorIcon::PointingHand)
                         .clicked()
@@ -403,7 +388,7 @@ impl App {
                     }
                 }
                 if ui
-                    .button(ADD_ICON)
+                    .button(icon::ADD)
                     .on_hover_text(ADD_DESCR)
                     .on_hover_cursor(CursorIcon::Copy)
                     .clicked()
@@ -670,7 +655,7 @@ impl App {
 
             ui.with_layout(Layout::right_to_left(), |ui| {
                 if ui
-                    .button(HELP_ICON)
+                    .button(icon::HELP)
                     .on_hover_text("Show help")
                     .on_hover_cursor(CursorIcon::Help)
                     .clicked()
@@ -678,7 +663,7 @@ impl App {
                     self.help_window.toggle_window();
                 }
                 if ui
-                    .button(EXPAND_ICON)
+                    .button(icon::EXPAND)
                     .on_hover_text("Show/hide side panel")
                     .on_hover_cursor(CursorIcon::ResizeHorizontal)
                     .clicked()
@@ -686,7 +671,7 @@ impl App {
                     self.sp_show = !self.sp_show;
                 }
                 if ui
-                    .button(SETTINGS_ICON)
+                    .button(icon::SETTINGS)
                     .on_hover_text("Settings")
                     .on_hover_cursor(CursorIcon::PointingHand)
                     .clicked()
@@ -700,9 +685,9 @@ impl App {
 
     fn dark_light_switch(&mut self, ui: &mut Ui) {
         let btn = if self.is_dark_mode() {
-            LIGHT_MODE_ICON
+            icon::LIGHT_MODE
         } else {
-            DARK_MODE_ICON
+            icon::DARK_MODE
         };
         if ui
             .button(btn)
@@ -766,7 +751,7 @@ impl App {
         ui.horizontal(|ui| {
             ui.label("Current color: ");
             if ui
-                .button(COPY_ICON)
+                .button(icon::COPY)
                 .on_hover_text("Copy color to clipboard")
                 .on_hover_cursor(CursorIcon::Alias)
                 .clicked()
@@ -777,7 +762,7 @@ impl App {
                 }
             }
             if ui
-                .button(ADD_ICON)
+                .button(icon::ADD)
                 .on_hover_text(ADD_DESCR)
                 .on_hover_cursor(CursorIcon::Copy)
                 .clicked()
@@ -1005,7 +990,7 @@ impl App {
 
     #[cfg(any(target_os = "linux", windows))]
     fn zoom_picker_impl(&mut self, ui: &mut Ui, picker: Rc<dyn DisplayPickerExt>) {
-        let btn = Button::new(ZOOM_PICKER_ICON).sense(egui::Sense::drag());
+        let btn = Button::new(icon::ZOOM_PICKER).sense(egui::Sense::drag());
         let btn = ui
             .add(btn)
             .on_hover_cursor(CursorIcon::ZoomIn)
