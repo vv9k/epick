@@ -2,8 +2,8 @@
 mod color_picker;
 mod display_picker;
 mod error;
+mod palettes;
 mod render;
-mod saved_colors;
 mod scheme;
 mod screen_size;
 mod settings;
@@ -14,8 +14,8 @@ use crate::{save_to_clipboard, TextureAllocator};
 use color_picker::ColorPicker;
 use display_picker::DisplayPickerExt;
 use error::{append_global_error, DisplayError, ERROR_STACK};
+use palettes::Palettes;
 use render::tex_color;
-use saved_colors::SavedColors;
 use screen_size::ScreenSize;
 use settings::{DisplayFmtEnum, Settings};
 use ui::{
@@ -39,7 +39,7 @@ use x11rb::protocol::xproto;
 #[cfg(windows)]
 use crate::app::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 use crate::app::render::tex_gradient;
-use crate::app::ui::SPACE;
+use crate::app::ui::{HALF_SPACE, SPACE};
 
 pub static ADD_ICON: &str = "\u{2795}";
 pub static COPY_ICON: &str = "\u{1F3F7}";
@@ -82,12 +82,13 @@ pub struct App {
     pub display_picker: Option<Rc<dyn DisplayPickerExt>>,
     pub light_theme: Visuals,
     pub dark_theme: Visuals,
-    pub saved_colors: SavedColors,
+    pub palettes: Palettes,
     pub error_message: Option<String>,
     pub screen_size: ScreenSize,
     pub cursor_icon: CursorIcon,
 
     pub show_side_panel: bool,
+    pub edit_side_palette_name: bool,
     pub side_panel_box_width: f32,
 
     pub settings_window: SettingsWindow,
@@ -178,12 +179,13 @@ impl Default for App {
             display_picker: display_picker::init_display_picker(),
             light_theme: light_visuals(),
             dark_theme: dark_visuals(),
-            saved_colors: SavedColors::default(),
+            palettes: Palettes::default(),
             error_message: None,
             screen_size: ScreenSize::Desktop(0., 0.),
             cursor_icon: CursorIcon::default(),
 
             show_side_panel: false,
+            edit_side_palette_name: false,
             side_panel_box_width: 0.,
 
             settings_window: SettingsWindow::default(),
@@ -262,8 +264,8 @@ impl App {
         if self.settings_window.settings.cache_colors {
             #[cfg(target_arch = "wasm32")]
             if let Some(storage) = _storage {
-                if let Some(yaml) = storage.get_string(SavedColors::STORAGE_KEY) {
-                    if let Ok(colors) = SavedColors::from_yaml_str(&yaml) {
+                if let Some(yaml) = storage.get_string(Palettes::STORAGE_KEY) {
+                    if let Ok(colors) = Palettes::from_yaml_str(&yaml) {
                         self.saved_colors = colors;
                         if !self.saved_colors.is_empty() {
                             self.show_side_panel = true;
@@ -272,12 +274,9 @@ impl App {
                 }
             }
             #[cfg(not(target_arch = "wasm32"))]
-            if let Some(path) = SavedColors::dir("epick") {
-                if let Ok(colors) = SavedColors::load(path.join(SavedColors::FILE_NAME)) {
-                    self.saved_colors = colors;
-                    if !self.saved_colors.is_empty() {
-                        self.show_side_panel = true;
-                    }
+            if let Some(path) = Palettes::dir("epick") {
+                if let Ok(palettes) = Palettes::load(path.join(Palettes::FILE_NAME)) {
+                    self.palettes = palettes;
                 }
             }
         }
@@ -287,12 +286,12 @@ impl App {
         #[cfg(target_arch = "wasm32")]
         if self.settings_window.settings.cache_colors {
             if let Ok(yaml) = self.saved_colors.as_yaml_str() {
-                _storage.set_string(SavedColors::STORAGE_KEY, yaml);
+                _storage.set_string(Palettes::STORAGE_KEY, yaml);
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
-        if let Some(dir) = SavedColors::dir("epick") {
-            let _ = self.saved_colors.save(dir.join(SavedColors::FILE_NAME));
+        if let Some(dir) = Palettes::dir("epick") {
+            let _ = self.palettes.save(dir.join(Palettes::FILE_NAME));
         }
     }
 
@@ -368,7 +367,7 @@ impl App {
     }
 
     fn add_color(&mut self, color: Color) {
-        if !self.saved_colors.add(color) {
+        if !self.palettes.current_mut().palette.add(color) {
             let color_str = self.display_color(&color);
             append_global_error(format!("Color {} already saved!", color_str));
         } else {
@@ -737,55 +736,145 @@ impl App {
         }
     }
 
-    fn side_ui(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
-        ui.vertical(|ui| {
-            let resp = ui.horizontal(|ui| {
-                let heading = Label::new(RichText::new("Saved colors").strong());
+    fn side_panel_palette_picker(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
+        let current_palette = self.palettes.current().clone();
+        let mut selected_palette_name = current_palette.name.clone();
+        ui.horizontal(|ui| {
+            egui::ComboBox::from_id_source("side-panel-palette-chooser")
+                .selected_text(&current_palette.name)
+                .width(self.side_panel_box_width * 0.69)
+                .show_ui(ui, |ui| {
+                    for palette in self.palettes.iter() {
+                        let _ = ui.selectable_value(
+                            &mut selected_palette_name,
+                            palette.name.clone(),
+                            &palette.name,
+                        );
+                    }
+                });
+
+            if selected_palette_name != current_palette.name {
+                self.palettes.move_to_name(&selected_palette_name);
+            }
+        })
+    }
+
+    fn side_panel_button_toolbar(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
+        ui.horizontal(|ui| {
+            if ui
+                .button(ADD_ICON)
+                .on_hover_text("Add a new palette")
+                .clicked()
+            {
+                self.palettes.append_empty();
+                self.palettes.move_to_last();
+            }
+            if ui
+                .button(CLEAR_ICON)
+                .on_hover_text("Clear colors")
+                .on_hover_cursor(CursorIcon::PointingHand)
+                .clicked()
+            {
+                self.palettes.current_mut().palette.clear();
+            }
+            if ui
+                .button(EXPORT_ICON)
+                .on_hover_text("Export")
+                .on_hover_cursor(CursorIcon::PointingHand)
+                .clicked()
+            {
+                self.export_window.show = true;
+            }
+            if ui
+                .button(COPY_ICON)
+                .on_hover_text("Copy all colors to clipboard")
+                .on_hover_cursor(CursorIcon::Alias)
+                .clicked()
+            {
+                let _ = save_to_clipboard(self.palettes.current().palette.as_hex_list());
+            }
+            if !self.edit_side_palette_name {
+                if ui
+                    .button(EDIT_ICON)
+                    .on_hover_text("Change palette name")
+                    .on_hover_cursor(CursorIcon::Text)
+                    .clicked()
+                {
+                    self.edit_side_palette_name = true;
+                }
+            }
+            if ui
+                .button(DELETE_ICON)
+                .on_hover_text("Delete current palette")
+                .clicked()
+            {
+                self.palettes.remove_current();
+            }
+        })
+    }
+
+    fn side_panel_palette_name(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
+        let current_palette = self.palettes.current_mut();
+        let mut name_text = if current_palette.name.is_empty() {
+            "Current palette".to_string()
+        } else {
+            current_palette.name.clone()
+        };
+        const MAX_NAME_LEN: usize = 15;
+        const NAME_MULTIPLIER: usize = 10;
+        const NAME_MAX_WIDTH: usize = MAX_NAME_LEN * NAME_MULTIPLIER;
+        const NAME_MIN_WIDTH: usize = 50;
+        if name_text.len() > MAX_NAME_LEN {
+            name_text.truncate(MAX_NAME_LEN);
+            name_text.push_str("...");
+        }
+        ui.scope(|ui| {
+            if self.edit_side_palette_name {
+                let mut edit_name = current_palette.name.clone();
+                let width = (edit_name.len() * NAME_MULTIPLIER)
+                    .max(NAME_MIN_WIDTH)
+                    .min(NAME_MAX_WIDTH) as f32;
+                egui::TextEdit::singleline(&mut edit_name)
+                    .desired_width(width)
+                    .show(ui);
+                current_palette.name = edit_name;
+                if ui
+                    .button(APPLY_ICON)
+                    .on_hover_text("Finish editing")
+                    .clicked()
+                {
+                    self.edit_side_palette_name = false;
+                }
+            } else {
+                let heading = Label::new(RichText::new(name_text).heading());
                 ui.add(heading);
-                ui.add_space(SPACE);
-                if ui
-                    .button(CLEAR_ICON)
-                    .on_hover_text("Clear colors")
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
-                {
-                    self.saved_colors.clear();
-                }
-                if ui
-                    .button(EXPORT_ICON)
-                    .on_hover_text("Export")
-                    .on_hover_cursor(CursorIcon::PointingHand)
-                    .clicked()
-                {
-                    self.export_window.show = true;
-                }
-                if ui
-                    .button(COPY_ICON)
-                    .on_hover_text("Copy all colors to clipboard")
-                    .on_hover_cursor(CursorIcon::Alias)
-                    .clicked()
-                {
-                    let _ = save_to_clipboard(self.saved_colors.as_hex_list());
-                }
-            });
-            self.side_panel_box_width = resp.response.rect.width();
+            }
+        })
+    }
 
-            let mut src_row = None;
-            let mut dst_row = None;
+    fn side_panel_colors_column(
+        &mut self,
+        ui: &mut Ui,
+        tex_allocator: &mut TextureAllocator,
+    ) -> egui::InnerResponse<()> {
+        let current_palette = self.palettes.current().clone();
+        let mut src_row = None;
+        let mut dst_row = None;
 
-            let saved_colors = self.saved_colors.as_ref().to_vec();
-            let display_strings: Vec<_> = saved_colors
-                .iter()
-                .map(|(_, c)| self.display_color(c))
-                .collect();
-            let max_len = display_strings
-                .iter()
-                .map(|s| s.len())
-                .max()
-                .unwrap_or_default();
-            let box_width = (max_len * 11).max((self.side_panel_box_width * 0.8) as usize) as f32;
+        let display_strings: Vec<_> = current_palette
+            .palette
+            .iter()
+            .map(|c| self.display_color(c))
+            .collect();
+        let max_len = display_strings
+            .iter()
+            .map(|s| s.len())
+            .max()
+            .unwrap_or_default();
+        let box_width = (max_len * 11).max((self.side_panel_box_width * 0.8) as usize) as f32;
 
-            for (idx, (_, color)) in saved_colors.iter().enumerate() {
+        let resp = ui.scope(|ui| {
+            for (idx, color) in current_palette.palette.iter().enumerate() {
                 let resp = drop_target(ui, true, |ui| {
                     let color_id = Id::new("side-color").with(idx);
                     let color_str = &display_strings[idx];
@@ -816,7 +905,7 @@ impl App {
                                     .on_hover_cursor(CursorIcon::PointingHand)
                                     .clicked()
                                 {
-                                    self.saved_colors.remove(color);
+                                    self.palettes.current_mut().palette.remove(color);
                                 }
                             });
                             ui.vertical(|ui| {
@@ -851,16 +940,33 @@ impl App {
                     dst_row = Some(idx);
                 }
             }
+        });
 
-            if let Some(src_row) = src_row {
-                if let Some(dst_row) = dst_row {
-                    if ui.input().pointer.any_released() {
-                        if let Some(it) = self.saved_colors.remove_pos(src_row) {
-                            self.saved_colors.insert(dst_row, it.1);
-                        }
+        if let Some(src_row) = src_row {
+            if let Some(dst_row) = dst_row {
+                if ui.input().pointer.any_released() {
+                    let palette = &mut self.palettes.current_mut().palette;
+                    if let Some(it) = palette.remove_pos(src_row) {
+                        palette.insert(dst_row, it);
                     }
                 }
             }
+        }
+
+        resp
+    }
+
+    fn side_ui(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
+        ui.vertical(|ui| {
+            self.side_panel_palette_picker(ui);
+            ui.add_space(HALF_SPACE);
+
+            let resp = self.side_panel_button_toolbar(ui);
+            self.side_panel_box_width = resp.response.rect.width() * 1.3;
+
+            self.side_panel_palette_name(ui);
+            ui.add_space(SPACE);
+            self.side_panel_colors_column(ui, tex_allocator);
         });
     }
 
@@ -871,7 +977,7 @@ impl App {
             ctx,
             self.picker.current_color,
         );
-        if let Err(e) = self.export_window.display(ctx, &self.saved_colors) {
+        if let Err(e) = self.export_window.display(ctx, &self.palettes) {
             append_global_error(e);
         }
 
@@ -989,7 +1095,7 @@ impl App {
                     }
                 }
                 if ui.ctx().input().key_pressed(egui::Key::S) {
-                    self.saved_colors.add(color);
+                    self.palettes.current_mut().palette.add(color);
                 }
                 ui.horizontal(|ui| {
                     ui.label("Color at cursor: ");
