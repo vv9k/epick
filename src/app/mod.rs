@@ -101,6 +101,7 @@ pub struct App {
     pub picker_window: Option<(xproto::Window, xproto::Gcontext)>,
     #[cfg(windows)]
     pub picker_window: Option<HWND>,
+    pub zoom_window_dragged: bool,
 
     pub display_errors: Vec<DisplayError>,
 }
@@ -147,18 +148,14 @@ impl eframe::App for App {
             // gets updated even when the pointer is not in the egui window area.
             ctx.request_repaint();
 
-            const SLEEP_DURATION: u64 = 100; // ms
-            #[cfg(any(target_os = "linux", windows))]
-            let sleep_duration = if self.picker_window.is_some() {
-                // Quicker repaints so that the zoomed window doesn't lag behind
-                SLEEP_DURATION / 4
-            } else {
-                SLEEP_DURATION
-            };
-            #[cfg(not(any(target_os = "linux", windows)))]
-            let sleep_duration = SLEEP_DURATION;
+            if self.zoom_window_dragged {
+                // When zooming we want to continually repaint for smooth experience
+                // even if the pointer is not over main window area
+                return;
+            }
 
-            std::thread::sleep(std::time::Duration::from_millis(sleep_duration));
+            // Otherwise sleep to save some cycles
+            std::thread::sleep(std::time::Duration::from_millis(100));
         }
     }
 
@@ -202,6 +199,7 @@ impl Default for App {
             picker_window: None,
             #[cfg(windows)]
             picker_window: None,
+            zoom_window_dragged: false,
         }
     }
 }
@@ -1163,10 +1161,12 @@ impl App {
             .on_hover_text("Drag to enable zoomed window");
 
         if btn.dragged() {
+            self.zoom_window_dragged = true;
             self.display_zoom_window(&picker);
         }
         if !btn.dragged() && !btn.has_focus() {
             self.hide_zoom_window(&picker);
+            self.zoom_window_dragged = false;
         }
 
         self.handle_zoom_picker(ui, picker);

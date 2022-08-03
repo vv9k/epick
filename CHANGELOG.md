@@ -1,5 +1,6 @@
 #
 - Add an extra black border to the zoom picker window on Linux so that the window is visible on both black and white backgrounds
+- Remove sleep when zoom window is dragged so that the movement in smoother
 
 # 0.7.0
 - Fix invisible circle on 2D HSV slider
