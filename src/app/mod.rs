@@ -67,7 +67,7 @@ const ZOOM_IMAGE_HEIGHT: u16 = ZOOM_WIN_HEIGHT / ZOOM_SCALE as u16;
 const ZOOM_WIN_OFFSET: i32 = 50;
 const ZOOM_WIN_POINTER_DIAMETER: u16 = 10;
 const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
-const ZOOM_WIN_BORDER_WIDTH: u32 = 1;
+const ZOOM_WIN_BORDER_WIDTH: u32 = 2;
 const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
 const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as i32;
 
@@ -1074,11 +1074,13 @@ impl App {
                 ZOOM_IMAGE_HEIGHT,
             ) {
                 use image::Pixel;
-                let border_color = image::Rgba::from_slice(&[255, 255, 255, 255]);
+                let white = image::Rgba::from_slice(&[255, 255, 255, 255]);
+                let black = image::Rgba::from_slice(&[0, 0, 0, 255]);
                 let img = display_picker::x11::resize_image(&img, ZOOM_SCALE);
-                let img =
-                    display_picker::x11::add_border(&img, border_color, ZOOM_WIN_BORDER_WIDTH)
-                        .unwrap();
+                let img = display_picker::x11::add_border(&img, white, ZOOM_WIN_BORDER_WIDTH / 2)
+                    .unwrap();
+                let img = display_picker::x11::add_border(&img, black, ZOOM_WIN_BORDER_WIDTH / 2)
+                    .unwrap();
 
                 if let Err(e) = img.put(picker.conn(), window, gc, 0, 0) {
                     append_global_error(e);

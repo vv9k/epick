@@ -1,3 +1,6 @@
+#
+- Add an extra black border to the zoom picker window on Linux so that the window is visible on both black and white backgrounds
+
 # 0.7.0
 - Fix invisible circle on 2D HSV slider
 - Update layout of current and cursor color [#40](https://github.com/vv9k/epick/pull/40)
