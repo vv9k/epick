@@ -793,6 +793,7 @@ impl App {
             {
                 let _ = save_to_clipboard(self.palettes.current().palette.as_hex_list());
             }
+            #[allow(clippy::collapsible_if)]
             if !self.edit_side_palette_name {
                 if ui
                     .button(EDIT_ICON)

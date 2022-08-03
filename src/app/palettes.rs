@@ -68,7 +68,7 @@ impl Palettes {
 
     pub fn move_to_name(&mut self, name: impl AsRef<str>) {
         let name = name.as_ref();
-        if let Some(idx) = self.palettes.iter().position(|p| &p.name == name) {
+        if let Some(idx) = self.palettes.iter().position(|p| p.name == name) {
             self.current_idx = idx;
         }
     }
@@ -252,19 +252,19 @@ mod tests {
     fn removal() {
         let (p1, p2, p3, p4) = test_palettes();
         let mut palettes = Palettes::new(p1.clone());
-        palettes.add(p1.clone());
-        palettes.add(p2.clone());
-        palettes.add(p3.clone());
-        palettes.add(p4.clone());
+        palettes.add(p1);
+        palettes.add(p2);
+        palettes.add(p3);
+        palettes.add(p4);
     }
 
     #[test]
     fn addition() {
         let (p1, p2, p3, p4) = test_palettes();
         let mut palettes = Palettes::new(p1.clone());
-        palettes.add(p1.clone());
-        palettes.add(p2.clone());
-        palettes.add(p3.clone());
-        palettes.add(p4.clone());
+        palettes.add(p1);
+        palettes.add(p2);
+        palettes.add(p3);
+        palettes.add(p4);
     }
 }
