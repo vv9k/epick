@@ -87,9 +87,11 @@ pub struct App {
     pub screen_size: ScreenSize,
     pub cursor_icon: CursorIcon,
 
-    pub show_side_panel: bool,
-    pub edit_side_palette_name: bool,
-    pub side_panel_box_width: f32,
+    // side panel
+    pub sp_show: bool,
+    pub sp_edit_palette_name: bool,
+    pub sp_trigger_edit_focus: bool,
+    pub sp_box_width: f32,
 
     pub settings_window: SettingsWindow,
     pub export_window: ExportWindow,
@@ -125,7 +127,7 @@ impl eframe::App for App {
 
         self.central_panel(ctx, tex_allocator);
 
-        if self.show_side_panel {
+        if self.sp_show {
             self.side_panel(ctx, tex_allocator);
         }
 
@@ -184,9 +186,10 @@ impl Default for App {
             screen_size: ScreenSize::Desktop(0., 0.),
             cursor_icon: CursorIcon::default(),
 
-            show_side_panel: false,
-            edit_side_palette_name: false,
-            side_panel_box_width: 0.,
+            sp_show: false,
+            sp_edit_palette_name: false,
+            sp_trigger_edit_focus: false,
+            sp_box_width: 0.,
 
             settings_window: SettingsWindow::default(),
             export_window: ExportWindow::default(),
@@ -362,7 +365,7 @@ impl App {
 
     fn check_keys_pressed(&mut self, ctx: &egui::Context) {
         if ctx.input().key_pressed(egui::Key::H) {
-            self.show_side_panel = !self.show_side_panel;
+            self.sp_show = !self.sp_show;
         }
     }
 
@@ -371,7 +374,7 @@ impl App {
             let color_str = self.display_color(&color);
             append_global_error(format!("Color {} already saved!", color_str));
         } else {
-            self.show_side_panel = true;
+            self.sp_show = true;
         }
     }
 
@@ -608,8 +611,8 @@ impl App {
         egui::SidePanel::right("colors")
             .frame(frame)
             .resizable(false)
-            .max_width(self.side_panel_box_width * 1.2)
-            .default_width(self.side_panel_box_width)
+            .max_width(self.sp_box_width * 1.2)
+            .default_width(self.sp_box_width)
             .show(ctx, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
                     self.side_ui(ui, tex_allocator);
@@ -705,7 +708,7 @@ impl App {
                     .on_hover_cursor(CursorIcon::ResizeHorizontal)
                     .clicked()
                 {
-                    self.show_side_panel = !self.show_side_panel;
+                    self.sp_show = !self.sp_show;
                 }
                 if ui
                     .button(SETTINGS_ICON)
@@ -737,26 +740,46 @@ impl App {
     }
 
     fn side_panel_palette_picker(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
-        let current_palette = self.palettes.current().clone();
-        let mut selected_palette_name = current_palette.name.clone();
+        let original_name = self.palettes.current().name.clone();
+        let mut selected_palette_name = original_name;
+        Self::format_palette_name(&mut selected_palette_name);
         ui.horizontal(|ui| {
             egui::ComboBox::from_id_source("side-panel-palette-chooser")
-                .selected_text(&current_palette.name)
-                .width(self.side_panel_box_width * 0.69)
+                .selected_text(&selected_palette_name)
+                .width(self.sp_box_width * 0.69)
                 .show_ui(ui, |ui| {
                     for palette in self.palettes.iter() {
+                        let mut display_name = palette.name.clone();
+                        Self::format_palette_name(&mut display_name);
                         let _ = ui.selectable_value(
                             &mut selected_palette_name,
                             palette.name.clone(),
-                            &palette.name,
+                            display_name,
                         );
                     }
                 });
 
-            if selected_palette_name != current_palette.name {
+            if !&self
+                .palettes
+                .current()
+                .name
+                .starts_with(selected_palette_name.trim_end_matches("..."))
+            {
                 self.palettes.move_to_name(&selected_palette_name);
             }
         })
+    }
+
+    const MAX_NAME_LEN: usize = 15;
+    const NAME_MULTIPLIER: usize = 10;
+    const NAME_MAX_WIDTH: usize = Self::MAX_NAME_LEN * Self::NAME_MULTIPLIER;
+    const NAME_MIN_WIDTH: usize = 50;
+
+    fn format_palette_name(name: &mut String) {
+        if name.len() > Self::MAX_NAME_LEN {
+            name.truncate(Self::MAX_NAME_LEN);
+            name.push_str("...");
+        }
     }
 
     fn side_panel_button_toolbar(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
@@ -794,15 +817,14 @@ impl App {
                 let _ = save_to_clipboard(self.palettes.current().palette.as_hex_list());
             }
             #[allow(clippy::collapsible_if)]
-            if !self.edit_side_palette_name {
-                if ui
-                    .button(EDIT_ICON)
-                    .on_hover_text("Change palette name")
-                    .on_hover_cursor(CursorIcon::Text)
-                    .clicked()
-                {
-                    self.edit_side_palette_name = true;
-                }
+            if ui
+                .button(EDIT_ICON)
+                .on_hover_text("Change palette name")
+                .on_hover_cursor(CursorIcon::Text)
+                .clicked()
+            {
+                self.sp_edit_palette_name = !self.sp_edit_palette_name;
+                self.sp_trigger_edit_focus = self.sp_edit_palette_name;
             }
             if ui
                 .button(DELETE_ICON)
@@ -816,35 +838,31 @@ impl App {
 
     fn side_panel_palette_name(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
         let current_palette = self.palettes.current_mut();
-        let mut name_text = if current_palette.name.is_empty() {
+        let name_text = if current_palette.name.is_empty() {
             "Current palette".to_string()
         } else {
             current_palette.name.clone()
         };
-        const MAX_NAME_LEN: usize = 15;
-        const NAME_MULTIPLIER: usize = 10;
-        const NAME_MAX_WIDTH: usize = MAX_NAME_LEN * NAME_MULTIPLIER;
-        const NAME_MIN_WIDTH: usize = 50;
-        if name_text.len() > MAX_NAME_LEN {
-            name_text.truncate(MAX_NAME_LEN);
-            name_text.push_str("...");
-        }
         ui.scope(|ui| {
-            if self.edit_side_palette_name {
+            if self.sp_edit_palette_name {
                 let mut edit_name = current_palette.name.clone();
-                let width = (edit_name.len() * NAME_MULTIPLIER)
-                    .max(NAME_MIN_WIDTH)
-                    .min(NAME_MAX_WIDTH) as f32;
-                egui::TextEdit::singleline(&mut edit_name)
+                let width = (edit_name.len() * Self::NAME_MULTIPLIER)
+                    .max(Self::NAME_MIN_WIDTH)
+                    .min(Self::NAME_MAX_WIDTH) as f32;
+                let resp = egui::TextEdit::singleline(&mut edit_name)
                     .desired_width(width)
                     .show(ui);
+                if self.sp_trigger_edit_focus {
+                    resp.response.request_focus();
+                    self.sp_trigger_edit_focus = false;
+                }
                 current_palette.name = edit_name;
                 if ui
                     .button(APPLY_ICON)
                     .on_hover_text("Finish editing")
                     .clicked()
                 {
-                    self.edit_side_palette_name = false;
+                    self.sp_edit_palette_name = false;
                 }
             } else {
                 let heading = Label::new(RichText::new(name_text).heading());
@@ -872,7 +890,7 @@ impl App {
             .map(|s| s.len())
             .max()
             .unwrap_or_default();
-        let box_width = (max_len * 11).max((self.side_panel_box_width * 0.8) as usize) as f32;
+        let box_width = (max_len * 11).max((self.sp_box_width * 0.64) as usize) as f32;
 
         let resp = ui.scope(|ui| {
             for (idx, color) in current_palette.palette.iter().enumerate() {
@@ -929,7 +947,7 @@ impl App {
                                 });
                             });
                         });
-                        self.side_panel_box_width = box_response.response.rect.width();
+                        self.sp_box_width = box_response.response.rect.width();
                     });
                     if ui.memory().is_being_dragged(color_id) {
                         src_row = Some(idx);
@@ -963,7 +981,7 @@ impl App {
             ui.add_space(HALF_SPACE);
 
             let resp = self.side_panel_button_toolbar(ui);
-            self.side_panel_box_width = resp.response.rect.width() * 1.3;
+            self.sp_box_width = resp.response.rect.width() * 1.3;
 
             self.side_panel_palette_name(ui);
             ui.add_space(SPACE);
@@ -1001,10 +1019,10 @@ impl App {
                         .id(Id::new(format!("err_ntf_{err_idx}")))
                         .anchor(
                             egui::Align2::RIGHT_TOP,
-                            (-self.side_panel_box_width - 25., top_padding),
+                            (-self.sp_box_width - 25., top_padding),
                         )
                         .hscroll(true)
-                        .fixed_size((self.side_panel_box_width, 50.))
+                        .fixed_size((self.sp_box_width, 50.))
                         .show(ui.ctx(), |ui| {
                             let label = Label::new(RichText::new(e.message()).color(Color32::RED))
                                 .wrap(true);

@@ -5,10 +5,19 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-#[derive(Clone, Default, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
 pub struct NamedPalette {
     pub name: String,
     pub palette: Palette,
+}
+
+impl Default for NamedPalette {
+    fn default() -> Self {
+        Self {
+            name: "palette".into(),
+            palette: Palette::default(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -78,7 +87,8 @@ impl Palettes {
     }
 
     pub fn append_empty(&mut self) {
-        let palette = NamedPalette::default();
+        let mut palette = NamedPalette::default();
+        palette.name.push_str(&format!("{}", self.len() - 1));
         self.add(palette);
     }
 
