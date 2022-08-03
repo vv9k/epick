@@ -76,6 +76,12 @@ impl Palette {
     }
 }
 
+impl std::iter::FromIterator<Color> for Palette {
+    fn from_iter<T: IntoIterator<Item = Color>>(iter: T) -> Self {
+        Self(iter.into_iter().collect())
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum PaletteFormat {
     Gimp,

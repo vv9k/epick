@@ -1,5 +1,6 @@
-use crate::app::saved_colors::{PaletteFormat, SavedColors};
+use crate::app::palettes::Palettes;
 use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
+use crate::color::PaletteFormat;
 
 use anyhow::Result;
 use egui::color::Color32;
@@ -36,7 +37,7 @@ impl Default for ExportWindow {
 }
 
 impl ExportWindow {
-    pub fn display(&mut self, ctx: &egui::Context, saved_colors: &SavedColors) -> Result<()> {
+    pub fn display(&mut self, ctx: &egui::Context, palettes: &Palettes) -> Result<()> {
         if self.show {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut show = true;
@@ -115,9 +116,12 @@ impl ExportWindow {
                             .on_hover_cursor(CursorIcon::PointingHand)
                             .clicked()
                         {
+                            let palette = &palettes.current();
                             let palette = match self.format {
-                                PaletteFormat::Gimp => saved_colors.as_gimp_palette(&self.name),
-                                PaletteFormat::Text => saved_colors.as_hex_list(),
+                                PaletteFormat::Gimp => {
+                                    palette.palette.as_gimp_palette(&palette.name)
+                                }
+                                PaletteFormat::Text => palette.palette.as_hex_list(),
                             };
                             let p = PathBuf::from(&self.path);
                             let filename = format!("{}.{}", &self.name, self.format.extension());
