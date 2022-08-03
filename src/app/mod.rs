@@ -2,6 +2,7 @@
 mod color_picker;
 mod display_picker;
 mod error;
+mod keybinding;
 mod palettes;
 mod render;
 mod scheme;
@@ -15,6 +16,7 @@ use crate::{save_to_clipboard, TextureAllocator};
 use color_picker::ColorPicker;
 use display_picker::DisplayPickerExt;
 use error::{append_global_error, DisplayError, ERROR_STACK};
+use keybinding::{default_keybindings, KeyBindings};
 use palettes::Palettes;
 use render::tex_color;
 use screen_size::ScreenSize;
@@ -61,7 +63,10 @@ const ERROR_DISPLAY_DURATION: Duration = Duration::new(20, 0);
 
 //####################################################################################################
 
-#[derive(Debug)]
+lazy_static::lazy_static! {
+    static ref KEYBINDINGS: KeyBindings = default_keybindings();
+}
+
 pub struct App {
     pub picker: ColorPicker,
     pub texture_manager: render::TextureManager,
@@ -72,12 +77,15 @@ pub struct App {
     pub error_message: Option<String>,
     pub screen_size: ScreenSize,
     pub cursor_icon: CursorIcon,
+    pub pick_color: Color,
 
     // side panel
     pub sp_show: bool,
     pub sp_edit_palette_name: bool,
     pub sp_trigger_edit_focus: bool,
     pub sp_box_width: f32,
+
+    pub is_any_textedit_focused: bool,
 
     pub settings_window: SettingsWindow,
     pub export_window: ExportWindow,
@@ -105,8 +113,6 @@ impl eframe::App for App {
             self.set_styles(ctx, screen_size);
         }
 
-        self.check_keys_pressed(ctx);
-
         self.check_settings_change();
 
         self.top_panel(ctx);
@@ -128,6 +134,10 @@ impl eframe::App for App {
             while let Some(error) = stack.errors.pop_front() {
                 self.display_errors.push(error);
             }
+        }
+
+        if !self.is_any_textedit_focused {
+            self.check_keys_pressed(ctx);
         }
 
         // No need to repaint in wasm, there is no way to pick color from under the cursor anyway
@@ -171,11 +181,14 @@ impl Default for App {
             error_message: None,
             screen_size: ScreenSize::Desktop(0., 0.),
             cursor_icon: CursorIcon::default(),
+            pick_color: Color::black(),
 
             sp_show: false,
             sp_edit_palette_name: false,
             sp_trigger_edit_focus: false,
             sp_box_width: 0.,
+
+            is_any_textedit_focused: false,
 
             settings_window: SettingsWindow::default(),
             export_window: ExportWindow::default(),
@@ -347,8 +360,11 @@ impl App {
     }
 
     fn check_keys_pressed(&mut self, ctx: &egui::Context) {
-        if ctx.input().key_pressed(egui::Key::H) {
-            self.sp_show = !self.sp_show;
+        for kb in KEYBINDINGS.iter() {
+            if ctx.input().key_pressed(kb.key()) {
+                let f = kb.binding();
+                f(self, ctx)
+            }
         }
     }
 
@@ -817,15 +833,7 @@ impl App {
     fn handle_display_picker(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
         if let Some(picker) = self.display_picker.clone() {
             if let Ok(color) = picker.get_color_under_cursor() {
-                if ui.ctx().input().key_pressed(egui::Key::P) {
-                    self.picker.set_cur_color(color);
-                    if self.settings_window.settings.auto_copy_picked_color {
-                        let _ = save_to_clipboard(self.clipboard_color(&color));
-                    }
-                }
-                if ui.ctx().input().key_pressed(egui::Key::S) {
-                    self.palettes.current_mut().palette.add(color);
-                }
+                self.pick_color = color;
                 ui.horizontal(|ui| {
                     ui.label("Color at cursor: ");
                     #[cfg(any(windows, target_os = "linux"))]
