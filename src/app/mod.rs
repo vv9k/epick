@@ -610,6 +610,7 @@ impl App {
             .frame(frame)
             .resizable(false)
             .max_width(self.side_panel_box_width * 1.2)
+            .default_width(self.side_panel_box_width)
             .show(ctx, |ui| {
                 ScrollArea::vertical().show(ui, |ui| {
                     self.side_ui(ui, tex_allocator);
@@ -767,7 +768,7 @@ impl App {
                     let _ = save_to_clipboard(self.saved_colors.as_hex_list());
                 }
             });
-            let sidebar_w = resp.response.rect.width();
+            self.side_panel_box_width = resp.response.rect.width();
 
             let mut src_row = None;
             let mut dst_row = None;
@@ -782,7 +783,7 @@ impl App {
                 .map(|s| s.len())
                 .max()
                 .unwrap_or_default();
-            let box_width = (max_len * 11).max((sidebar_w * 0.8) as usize).min(220) as f32;
+            let box_width = (max_len * 11).max((self.side_panel_box_width * 0.8) as usize) as f32;
 
             for (idx, (_, color)) in saved_colors.iter().enumerate() {
                 let resp = drop_target(ui, true, |ui| {
