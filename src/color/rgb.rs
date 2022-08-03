@@ -45,6 +45,14 @@ impl Rgb {
         }
     }
 
+    pub const fn new_unchecked(red: f32, green: f32, blue: f32) -> Self {
+        Self {
+            r: red,
+            g: green,
+            b: blue,
+        }
+    }
+
     pub fn new_scaled(red: u8, green: u8, blue: u8) -> Self {
         Self::new(
             red as f32 / U8_MAX,
