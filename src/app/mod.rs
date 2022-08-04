@@ -728,6 +728,13 @@ impl App {
 
     fn palettes_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         ScrollArea::new([true, true]).show(ui, |ui| {
+            ui.horizontal(|ui| {
+                ui.checkbox(
+                    &mut ctx.app.palettes_tab_display_label,
+                    "Display color labels",
+                );
+            });
+
             for palette in ctx
                 .app
                 .palettes
@@ -741,15 +748,19 @@ impl App {
                 let label = RichText::new(&palette.name).heading();
                 ui.add(Label::new(label));
                 egui::Grid::new(&palette.name)
-                    .spacing((0., 0.))
+                    .spacing((2.5, 0.))
                     .show(ui, |ui| {
                         for color in palette.palette.iter() {
-                            ui.vertical(|ui| {
-                                self.color_box_no_label(ctx, color, vec2(50., 50.), ui, false);
-                            });
+                            if ctx.app.palettes_tab_display_label {
+                                self.color_box_label_under(ctx, color, vec2(50., 50.), ui, false);
+                            } else {
+                                ui.vertical(|ui| {
+                                    self.color_box_no_label(ctx, color, vec2(50., 50.), ui, false);
+                                });
+                            }
                         }
                     });
-                ui.add_space(DOUBLE_SPACE);
+                ui.add_space(SPACE);
             }
         });
     }

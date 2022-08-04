@@ -11,6 +11,8 @@ pub struct AppCtx {
     pub settings: Settings,
 
     pub palettes: Palettes,
+    pub palettes_tab_display_label: bool,
+
     pub screen_size: ScreenSize,
     pub cursor_icon: CursorIcon,
     pub cursor_pick_color: Color,
@@ -34,7 +36,10 @@ impl Default for AppCtx {
     fn default() -> Self {
         Self {
             settings: Settings::default(),
+
             palettes: Palettes::default(),
+            palettes_tab_display_label: false,
+
             screen_size: ScreenSize::Desktop(0., 0.),
             cursor_icon: CursorIcon::default(),
             cursor_pick_color: Color::black(),
@@ -56,7 +61,9 @@ impl AppCtx {
     pub fn new(context: &CreationContext) -> Self {
         Self {
             settings: load_settings(context.storage).unwrap_or_default(),
+
             palettes: Palettes::default(),
+            palettes_tab_display_label: false,
             screen_size: ScreenSize::Desktop(0., 0.),
             cursor_icon: CursorIcon::default(),
             cursor_pick_color: Color::black(),
