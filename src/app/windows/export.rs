@@ -1,8 +1,5 @@
-use crate::app::{
-    palettes::NamedPalette,
-    windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
-};
-use crate::color::PaletteFormat;
+use crate::app::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
+use crate::color::{NamedPalette, PaletteFormat};
 
 use anyhow::Result;
 use egui::color::Color32;

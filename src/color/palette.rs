@@ -3,6 +3,21 @@ use crate::color::Color;
 use serde::{Deserialize, Serialize};
 use std::fmt::Write as _;
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+pub struct NamedPalette {
+    pub name: String,
+    pub palette: Palette,
+}
+
+impl Default for NamedPalette {
+    fn default() -> Self {
+        Self {
+            name: "palette".into(),
+            palette: Palette::default(),
+        }
+    }
+}
+
 #[derive(Clone, Default, Debug, Deserialize, Serialize, PartialEq)]
 pub struct Palette(Vec<Color>);
 

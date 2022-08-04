@@ -1,24 +1,9 @@
-use crate::color::Palette;
+use crate::color::NamedPalette;
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
-
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
-pub struct NamedPalette {
-    pub name: String,
-    pub palette: Palette,
-}
-
-impl Default for NamedPalette {
-    fn default() -> Self {
-        Self {
-            name: "palette".into(),
-            palette: Palette::default(),
-        }
-    }
-}
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Palettes {
@@ -203,7 +188,7 @@ impl std::ops::Index<usize> for Palettes {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::color::{Color, Rgb};
+    use crate::color::{Color, Palette, Rgb};
     const C1: crate::color::Color = Color::Rgb(Rgb::new_unchecked(0., 0., 0.));
     const C2: crate::color::Color = Color::Rgb(Rgb::new_unchecked(0., 1., 0.));
     const C3: crate::color::Color = Color::Rgb(Rgb::new_unchecked(1., 0., 1.));

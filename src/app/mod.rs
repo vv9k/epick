@@ -1,12 +1,12 @@
 #![allow(dead_code)]
 mod context;
 mod keybinding;
-mod palettes;
 mod scheme;
 mod settings;
 mod sidepanel;
 pub mod windows;
 
+use crate::color::Palettes;
 use crate::color::{Color, ColorHarmony, DisplayFormat, Gradient};
 use crate::color_picker::ColorPicker;
 use crate::display_picker::{self, DisplayPickerExt};
@@ -22,7 +22,6 @@ use crate::ui::{
 };
 use context::{AppCtx, FrameCtx};
 use keybinding::{default_keybindings, KeyBindings};
-use palettes::Palettes;
 use settings::{DisplayFmtEnum, Settings};
 use windows::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
 

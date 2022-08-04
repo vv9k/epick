@@ -10,13 +10,15 @@ mod lch_ab;
 mod lch_uv;
 mod luv;
 mod palette;
+mod palettes;
 mod rgb;
 mod working_space;
 mod xyy;
 mod xyz;
 
 pub use gradient::Gradient;
-pub use palette::{Palette, PaletteFormat};
+pub use palette::{NamedPalette, Palette, PaletteFormat};
+pub use palettes::Palettes;
 
 pub use chromatic_adaptation::ChromaticAdaptationMethod;
 pub use cmyk::Cmyk;
