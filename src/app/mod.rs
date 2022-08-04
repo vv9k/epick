@@ -26,7 +26,7 @@ use settings::{DisplayFmtEnum, Settings};
 use ui::{
     color_tooltip,
     colors::*,
-    dark_visuals, icon, light_visuals,
+    dark_visuals, drag_source, drop_target, icon, light_visuals,
     windows::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow},
 };
 
@@ -776,13 +776,50 @@ impl App {
                 egui::Grid::new(&palette.name)
                     .spacing((2.5, 0.))
                     .show(ui, |ui| {
-                        for color in palette.palette.iter() {
-                            if ctx.app.palettes_tab_display_label {
-                                self.color_box_label_under(ctx, color, vec2(50., 50.), ui, false);
-                            } else {
-                                ui.vertical(|ui| {
-                                    self.color_box_no_label(ctx, color, vec2(50., 50.), ui, false);
+                        let mut src_row = None;
+                        let mut dst_row = None;
+                        for (i, color) in palette.palette.iter().enumerate() {
+                            let resp = drop_target(ui, true, |ui| {
+                                let color_id = Id::new(&palette.name).with(i);
+                                drag_source(ui, color_id, |ui| {
+                                    if ctx.app.palettes_tab_display_label {
+                                        self.color_box_label_under(
+                                            ctx,
+                                            color,
+                                            vec2(50., 50.),
+                                            ui,
+                                            false,
+                                        );
+                                    } else {
+                                        ui.vertical(|ui| {
+                                            self.color_box_no_label(
+                                                ctx,
+                                                color,
+                                                vec2(50., 50.),
+                                                ui,
+                                                false,
+                                            );
+                                        });
+                                    }
+                                    if ui.memory().is_being_dragged(color_id) {
+                                        src_row = Some(i);
+                                    }
                                 });
+                            });
+                            let is_being_dragged = ui.memory().is_anything_being_dragged();
+                            if is_being_dragged && resp.response.hovered() {
+                                dst_row = Some(i);
+                            }
+                        }
+                        if let Some(src_row) = src_row {
+                            if let Some(dst_row) = dst_row {
+                                if ui.input().pointer.any_released() {
+                                    ctx.app.palettes.move_to_name(&palette.name);
+                                    let palette = &mut ctx.app.palettes.current_mut().palette;
+                                    if let Some(it) = palette.remove_pos(src_row) {
+                                        palette.insert(dst_row, it);
+                                    }
+                                }
                             }
                         }
                     });
