@@ -1,6 +1,6 @@
 use crate::{
     app::{
-        windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
+        window::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
         App, ColorHarmony, FrameCtx,
     },
     color::Gradient,
@@ -21,13 +21,13 @@ macro_rules! scheme_window_impl {
             let mut is_open = true;
             let is_dark_mode = $ctx.egui.style().visuals.dark_mode;
             Window::new($title)
-                .frame(windows::default_frame(is_dark_mode))
+                .frame(window::default_frame(is_dark_mode))
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .collapsible(false)
                 .vscroll(true)
                 .open(&mut is_open)
                 .show($ctx.egui, |ui| {
-                    windows::apply_default_style(ui, is_dark_mode);
+                    window::apply_default_style(ui, is_dark_mode);
                     $self.$win.sliders(ui);
 
                     let colors = $colors;

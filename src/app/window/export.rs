@@ -1,4 +1,4 @@
-use crate::app::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
+use crate::app::window::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::color::{NamedPalette, PaletteFormat};
 
 use anyhow::Result;
@@ -42,11 +42,11 @@ impl ExportWindow {
             let mut show = true;
             let is_dark_mode = ctx.style().visuals.dark_mode;
             Window::new("export")
-                .frame(windows::default_frame(is_dark_mode))
+                .frame(window::default_frame(is_dark_mode))
                 .open(&mut show)
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .show(ctx, |ui| {
-                    windows::apply_default_style(ui, is_dark_mode);
+                    window::apply_default_style(ui, is_dark_mode);
                     ui.vertical(|ui| {
                         ui.horizontal(|ui| {
                             ComboBox::from_label("format")

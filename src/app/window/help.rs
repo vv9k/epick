@@ -1,5 +1,5 @@
 use crate::app::{
-    windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
+    window::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
     KEYBINDINGS,
 };
 
@@ -24,11 +24,11 @@ impl HelpWindow {
 
             Window::new("Help")
                 .collapsible(false)
-                .frame(windows::default_frame(is_dark_mode))
+                .frame(window::default_frame(is_dark_mode))
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .open(&mut is_open)
                 .show(ctx, |ui| {
-                    windows::apply_default_style(ui, is_dark_mode);
+                    window::apply_default_style(ui, is_dark_mode);
                     ui.vertical(|ui| {
                         let label = Label::new(RichText::new("Keybindings").heading());
                         ui.add(label);

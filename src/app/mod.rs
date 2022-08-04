@@ -4,7 +4,7 @@ mod keybinding;
 mod scheme;
 mod settings;
 mod sidepanel;
-pub mod windows;
+pub mod window;
 
 use crate::color::Palettes;
 use crate::color::{Color, ColorHarmony, DisplayFormat, Gradient};
@@ -23,7 +23,7 @@ use crate::ui::{
 use context::{AppCtx, FrameCtx};
 use keybinding::{default_keybindings, KeyBindings};
 use settings::{DisplayFmtEnum, Settings};
-use windows::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
+use window::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
 
 use eframe::{CreationContext, Storage};
 use egui::{
