@@ -1,3 +1,4 @@
+use crate::app::ui::colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP};
 use crate::app::ui::layout::HarmonyLayout;
 use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::app::ui::DOUBLE_SPACE;
@@ -30,8 +31,15 @@ impl App {
                         self.hues_window.hue_color_size,
                     );
 
+                    let base_cb = ColorBox::builder()
+                        .hover_help(COLORBOX_PICK_TOOLTIP)
+                        .label(true)
+                        .size(size);
                     hues.iter().for_each(|hue| {
-                        self.color_box_label_side(ctx, hue, size, ui, false);
+                        let cb = base_cb.clone().color(*hue).build();
+                        ui.horizontal(|ui| {
+                            self.display_color_box(cb, ctx, ui);
+                        });
                     });
                 });
 
@@ -63,8 +71,15 @@ impl App {
                         self.tints_window.tint_color_size,
                         self.tints_window.tint_color_size,
                     );
+                    let base_cb = ColorBox::builder()
+                        .hover_help(COLORBOX_PICK_TOOLTIP)
+                        .label(true)
+                        .size(size);
                     tints.iter().for_each(|tint| {
-                        self.color_box_label_side(ctx, tint, size, ui, false);
+                        let cb = base_cb.clone().color(*tint).build();
+                        ui.horizontal(|ui| {
+                            self.display_color_box(cb, ctx, ui);
+                        });
                     });
                 });
 
@@ -95,9 +110,16 @@ impl App {
                         self.shades_window.shade_color_size,
                         self.shades_window.shade_color_size,
                     );
+                    let base_cb = ColorBox::builder()
+                        .hover_help(COLORBOX_PICK_TOOLTIP)
+                        .label(true)
+                        .size(size);
 
                     shades.iter().for_each(|shade| {
-                        self.color_box_label_side(ctx, shade, size, ui, false);
+                        let cb = base_cb.clone().color(*shade).build();
+                        ui.horizontal(|ui| {
+                            self.display_color_box(cb, ctx, ui);
+                        });
                     });
                 });
 
@@ -174,13 +196,13 @@ impl App {
                 macro_rules! cb {
                     ($color:ident, $size:expr, $ui:ident, $display_labels:ident) => {
                         $ui.scope(|ui| {
-                            if $display_labels {
-                                self.color_box_label_under(ctx, &$color, $size, ui, false);
-                            } else {
-                                ui.vertical(|ui| {
-                                    self.color_box_no_label(ctx, &$color, $size, ui, false);
-                                });
-                            }
+                            let colorbox = crate::app::ui::colorbox::ColorBox::builder()
+                                .color($color)
+                                .size($size)
+                                .label($display_labels).build();
+                            ui.vertical(|ui| {
+                                self.display_color_box(colorbox, ctx, ui);
+                            });
                         });
                     };
                     ($color:ident, $ui:ident, $display_labels:ident) => {

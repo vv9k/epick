@@ -1,3 +1,4 @@
+pub mod colorbox;
 pub mod layout;
 pub mod slider_1d;
 pub mod slider_2d;
@@ -147,10 +148,12 @@ pub fn color_tooltip(
     display_format: DisplayFormat,
     ws: RgbWorkingSpace,
     illuminant: Illuminant,
+    text: Option<&str>,
 ) -> String {
     format!(
-        "{}\n\nPrimary click: set current\nMiddle click: save color\nSecondary click: copy color",
-        color.display(display_format, ws, illuminant)
+        "{}\n\n{}",
+        color.display(display_format, ws, illuminant),
+        text.unwrap_or_default()
     )
 }
 

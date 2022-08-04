@@ -25,6 +25,7 @@ use screen_size::ScreenSize;
 use settings::{DisplayFmtEnum, Settings};
 use ui::{
     color_tooltip,
+    colorbox::{ColorBox, COLORBOX_DRAG_TOOLTIP, COLORBOX_PICK_TOOLTIP},
     colors::*,
     dark_visuals, drag_source, drop_target, icon, light_visuals,
     windows::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow},
@@ -464,86 +465,42 @@ impl App {
         )
     }
 
-    fn color_box_label_under(
-        &mut self,
-        ctx: &mut FrameCtx<'_>,
-        color: &Color,
-        size: Vec2,
-        ui: &mut Ui,
-        border: bool,
-    ) {
-        ui.vertical(|ui| {
-            self._color_box(ctx, color, size, ui, true, border);
-        });
-    }
-
-    fn color_box_label_side(
-        &mut self,
-        ctx: &mut FrameCtx<'_>,
-        color: &Color,
-        size: Vec2,
-        ui: &mut Ui,
-        border: bool,
-    ) {
-        ui.horizontal(|ui| {
-            self._color_box(ctx, color, size, ui, true, border);
-        });
-    }
-
-    #[allow(dead_code)]
-    fn color_box_no_label(
-        &mut self,
-        ctx: &mut FrameCtx<'_>,
-        color: &Color,
-        size: Vec2,
-        ui: &mut Ui,
-        border: bool,
-    ) {
-        self._color_box(ctx, color, size, ui, false, border);
-    }
-
-    fn _color_box(
-        &mut self,
-        ctx: &mut FrameCtx<'_>,
-        color: &Color,
-        size: Vec2,
-        ui: &mut Ui,
-        with_label: bool,
-        border: bool,
-    ) {
-        let display_str = self.display_color(ctx, color);
+    fn display_color_box(&mut self, color_box: ColorBox, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
+        let color = color_box.color();
+        let display_str = self.display_color(ctx, &color);
         let format = self.display_format(ctx);
         let on_hover = color_tooltip(
-            color,
+            &color,
             format,
             ctx.app.settings.rgb_working_space,
             ctx.app.settings.illuminant,
+            color_box.hover_help(),
         );
         let tex_allocator = &mut ctx.tex_allocator();
-        let color_box = tex_color(
+        let resp = tex_color(
             ui,
             tex_allocator,
             &mut self.texture_manager,
-            color.color32(),
-            size,
+            color_box.color().color32(),
+            color_box.size(),
             Some(&on_hover),
-            border,
+            color_box.border(),
         );
-        if let Some(color_box) = color_box {
-            if with_label {
+        if let Some(resp) = resp {
+            if color_box.label() {
                 ui.monospace(&display_str);
             }
 
-            if color_box.clicked() {
-                self.picker.set_cur_color(*color);
+            if resp.clicked() {
+                self.picker.set_cur_color(color);
             }
 
-            if color_box.middle_clicked() {
-                self.add_color(ctx, *color);
+            if resp.middle_clicked() {
+                self.add_color(ctx, color);
             }
 
-            if color_box.secondary_clicked() {
-                let _ = save_to_clipboard(self.clipboard_color(ctx, color));
+            if resp.secondary_clicked() {
+                let _ = save_to_clipboard(self.clipboard_color(ctx, &color));
             }
         }
     }
@@ -782,29 +739,19 @@ impl App {
                             let resp = drop_target(ui, true, |ui| {
                                 let color_id = Id::new(&palette.name).with(i);
                                 drag_source(ui, color_id, |ui| {
-                                    if ctx.app.palettes_tab_display_label {
-                                        self.color_box_label_under(
-                                            ctx,
-                                            color,
-                                            vec2(50., 50.),
-                                            ui,
-                                            false,
-                                        );
-                                    } else {
-                                        ui.vertical(|ui| {
-                                            self.color_box_no_label(
-                                                ctx,
-                                                color,
-                                                vec2(50., 50.),
-                                                ui,
-                                                false,
-                                            );
-                                        });
-                                    }
-                                    if ui.memory().is_being_dragged(color_id) {
-                                        src_row = Some(i);
-                                    }
+                                    let cb = ColorBox::builder()
+                                        .size((50., 50.))
+                                        .color(*color)
+                                        .label(ctx.app.palettes_tab_display_label)
+                                        .hover_help(COLORBOX_DRAG_TOOLTIP)
+                                        .build();
+                                    ui.vertical(|ui| {
+                                        self.display_color_box(cb, ctx, ui);
+                                    });
                                 });
+                                if ui.memory().is_being_dragged(color_id) {
+                                    src_row = Some(i);
+                                }
                             });
                             let is_being_dragged = ui.memory().is_anything_being_dragged();
                             if is_being_dragged && resp.response.hovered() {
@@ -883,8 +830,16 @@ impl App {
                 self.add_cur_color(ctx);
             }
         });
-        let c = self.picker.current_color;
-        self.color_box_label_side(ctx, &c, vec2(25., 25.), ui, true);
+        let cb = ColorBox::builder()
+            .size((25., 25.))
+            .color(self.picker.current_color)
+            .label(true)
+            .hover_help(COLORBOX_PICK_TOOLTIP)
+            .border(true)
+            .build();
+        ui.horizontal(|ui| {
+            self.display_color_box(cb, ctx, ui);
+        });
 
         self.handle_display_picker(ctx, ui);
 
@@ -936,7 +891,16 @@ impl App {
                     #[cfg(any(windows, target_os = "linux"))]
                     self.zoom_picker_impl(ctx, ui, picker);
                 });
-                self.color_box_label_side(ctx, &color, vec2(25., 25.), ui, true);
+                let cb = ColorBox::builder()
+                    .size((25., 25.))
+                    .color(color)
+                    .label(true)
+                    .hover_help(COLORBOX_PICK_TOOLTIP)
+                    .border(true)
+                    .build();
+                ui.horizontal(|ui| {
+                    self.display_color_box(cb, ctx, ui);
+                });
             }
         };
     }
