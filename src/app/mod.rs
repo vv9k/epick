@@ -746,7 +746,33 @@ impl App {
                     continue;
                 }
                 let label = RichText::new(&palette.name).heading();
-                ui.add(Label::new(label));
+                ui.horizontal(|ui| {
+                    ui.add(Label::new(label));
+                    if ui
+                        .button(icon::EXPORT)
+                        .on_hover_text("Export")
+                        .on_hover_cursor(CursorIcon::PointingHand)
+                        .clicked()
+                    {
+                        self.export_window.show = true;
+                        self.export_window.export_palette = Some(palette.clone());
+                    }
+                    if ui
+                        .button(icon::COPY)
+                        .on_hover_text("Copy all colors to clipboard")
+                        .on_hover_cursor(CursorIcon::Alias)
+                        .clicked()
+                    {
+                        let _ = save_to_clipboard(palette.palette.as_hex_list());
+                    }
+                    if ui
+                        .button(icon::DELETE)
+                        .on_hover_text("Delete this palette")
+                        .clicked()
+                    {
+                        ctx.app.palettes.remove(&palette);
+                    }
+                });
                 egui::Grid::new(&palette.name)
                     .spacing((2.5, 0.))
                     .show(ui, |ui| {
