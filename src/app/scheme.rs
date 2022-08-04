@@ -14,125 +14,82 @@ use crate::{
 use egui::{vec2, Grid, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
 
-impl App {
-    pub fn hues_window(&mut self, ctx: &mut FrameCtx<'_>) {
-        if self.hues_window.is_open {
-            let offset = ctx.egui.style().spacing.slider_width * WINDOW_X_OFFSET;
+macro_rules! scheme_window_impl {
+    ($title:literal, $self:ident, $ctx:ident, $win:ident, $size_field:ident, $colors:expr) => {{
+        if $self.$win.is_open {
+            let offset = $ctx.egui.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
-            let is_dark_mode = ctx.egui.style().visuals.dark_mode;
-            Window::new("Hues")
+            let is_dark_mode = $ctx.egui.style().visuals.dark_mode;
+            Window::new($title)
                 .frame(windows::default_frame(is_dark_mode))
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .collapsible(false)
                 .vscroll(true)
                 .open(&mut is_open)
-                .show(ctx.egui, |ui| {
+                .show($ctx.egui, |ui| {
                     windows::apply_default_style(ui, is_dark_mode);
-                    self.hues_window.sliders(ui);
+                    $self.$win.sliders(ui);
 
-                    let color = &self.picker.current_color;
-                    let hues = color.hues(self.hues_window.num_of_hues, self.hues_window.hues_step);
-                    let size = vec2(
-                        self.hues_window.hue_color_size,
-                        self.hues_window.hue_color_size,
-                    );
+                    let colors = $colors;
+                    let size = vec2($self.$win.$size_field, $self.$win.$size_field);
 
                     let base_cb = ColorBox::builder()
                         .hover_help(COLORBOX_PICK_TOOLTIP)
                         .label(true)
                         .size(size);
-                    hues.iter().for_each(|hue| {
-                        let cb = base_cb.clone().color(*hue).build();
+                    colors.iter().for_each(|color| {
+                        let cb = base_cb.clone().color(*color).build();
                         ui.horizontal(|ui| {
-                            self.display_color_box(cb, ctx, ui);
+                            $self.display_color_box(cb, $ctx, ui);
                         });
                     });
                 });
 
             if !is_open {
-                self.hues_window.is_open = false;
+                $self.$win.is_open = false;
             }
         }
+    }};
+}
+
+impl App {
+    pub fn hues_window(&mut self, ctx: &mut FrameCtx<'_>) {
+        scheme_window_impl!(
+            "Hues",
+            self,
+            ctx,
+            hues_window,
+            hue_color_size,
+            self.picker
+                .current_color
+                .hues(self.hues_window.num_of_hues, self.hues_window.hues_step)
+        );
     }
 
     pub fn tints_window(&mut self, ctx: &mut FrameCtx<'_>) {
-        if self.tints_window.is_open {
-            let offset = ctx.egui.style().spacing.slider_width * WINDOW_X_OFFSET;
-            let pos = (offset, WINDOW_Y_OFFSET);
-            let mut is_open = true;
-            let is_dark_mode = ctx.egui.style().visuals.dark_mode;
-            Window::new("Tints")
-                .frame(windows::default_frame(is_dark_mode))
-                .collapsible(false)
-                .default_pos(pos)
-                .vscroll(true)
-                .open(&mut is_open)
-                .show(ctx.egui, |ui| {
-                    windows::apply_default_style(ui, is_dark_mode);
-                    self.tints_window.sliders(ui);
-
-                    let color = &self.picker.current_color;
-                    let tints = color.tints(self.tints_window.num_of_tints);
-                    let size = vec2(
-                        self.tints_window.tint_color_size,
-                        self.tints_window.tint_color_size,
-                    );
-                    let base_cb = ColorBox::builder()
-                        .hover_help(COLORBOX_PICK_TOOLTIP)
-                        .label(true)
-                        .size(size);
-                    tints.iter().for_each(|tint| {
-                        let cb = base_cb.clone().color(*tint).build();
-                        ui.horizontal(|ui| {
-                            self.display_color_box(cb, ctx, ui);
-                        });
-                    });
-                });
-
-            if !is_open {
-                self.tints_window.is_open = false;
-            }
-        }
+        scheme_window_impl!(
+            "Tints",
+            self,
+            ctx,
+            tints_window,
+            tint_color_size,
+            self.picker
+                .current_color
+                .tints(self.tints_window.num_of_tints)
+        );
     }
 
     pub fn shades_window(&mut self, ctx: &mut FrameCtx<'_>) {
-        if self.shades_window.is_open {
-            let offset = ctx.egui.style().spacing.slider_width * WINDOW_X_OFFSET;
-            let mut is_open = true;
-            let is_dark_mode = ctx.egui.style().visuals.dark_mode;
-            Window::new("Shades")
-                .frame(windows::default_frame(is_dark_mode))
-                .collapsible(false)
-                .default_pos((offset, WINDOW_Y_OFFSET))
-                .vscroll(true)
-                .open(&mut is_open)
-                .show(ctx.egui, |ui| {
-                    windows::apply_default_style(ui, is_dark_mode);
-                    self.shades_window.sliders(ui);
-
-                    let color = self.picker.current_color;
-                    let shades = color.shades(self.shades_window.num_of_shades);
-                    let size = vec2(
-                        self.shades_window.shade_color_size,
-                        self.shades_window.shade_color_size,
-                    );
-                    let base_cb = ColorBox::builder()
-                        .hover_help(COLORBOX_PICK_TOOLTIP)
-                        .label(true)
-                        .size(size);
-
-                    shades.iter().for_each(|shade| {
-                        let cb = base_cb.clone().color(*shade).build();
-                        ui.horizontal(|ui| {
-                            self.display_color_box(cb, ctx, ui);
-                        });
-                    });
-                });
-
-            if !is_open {
-                self.shades_window.is_open = false;
-            }
-        }
+        scheme_window_impl!(
+            "Shades",
+            self,
+            ctx,
+            shades_window,
+            shade_color_size,
+            self.picker
+                .current_color
+                .shades(self.shades_window.num_of_shades)
+        );
     }
 
     fn harmony_layout_combobox(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
