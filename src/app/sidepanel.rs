@@ -51,32 +51,17 @@ impl App {
     }
 
     fn side_panel_palette_picker(&mut self, ui: &mut Ui) -> egui::InnerResponse<()> {
-        let original_name = self.palettes.current().name.clone();
-        let mut selected_palette_name = original_name;
-        Self::format_palette_name(&mut selected_palette_name);
+        let mut selected_palette = self.palettes.current_idx();
         ui.horizontal(|ui| {
-            egui::ComboBox::from_id_source("side-panel-palette-chooser")
-                .selected_text(&selected_palette_name)
+            let resp = egui::ComboBox::from_id_source("side-panel-palette-chooser")
                 .width(self.sp_box_width * 0.69)
-                .show_ui(ui, |ui| {
-                    for palette in self.palettes.iter() {
-                        let mut display_name = palette.name.clone();
-                        Self::format_palette_name(&mut display_name);
-                        let _ = ui.selectable_value(
-                            &mut selected_palette_name,
-                            palette.name.clone(),
-                            display_name,
-                        );
-                    }
+                .show_index(ui, &mut selected_palette, self.palettes.len(), |i| {
+                    let mut name = self.palettes[i].name.clone();
+                    Self::format_palette_name(&mut name);
+                    name
                 });
-
-            if !&self
-                .palettes
-                .current()
-                .name
-                .starts_with(selected_palette_name.trim_end_matches("..."))
-            {
-                self.palettes.move_to_name(&selected_palette_name);
+            if resp.changed() {
+                self.palettes.move_to_idx(selected_palette);
             }
         })
     }

@@ -43,6 +43,10 @@ impl Palettes {
         }
     }
 
+    pub fn current_idx(&self) -> usize {
+        self.current_idx
+    }
+
     pub fn current(&self) -> &NamedPalette {
         // SAFETY: Palettes always keeps at least one palette thus it is always accessible
         unsafe { self.palettes.get_unchecked(self.current_idx) }
@@ -51,6 +55,10 @@ impl Palettes {
     pub fn current_mut(&mut self) -> &mut NamedPalette {
         // SAFETY: Palettes always keeps at least one palette thus it is always accessible
         unsafe { self.palettes.get_unchecked_mut(self.current_idx) }
+    }
+
+    pub fn nth(&self, n: usize) -> Option<&NamedPalette> {
+        self.palettes.get(n)
     }
 
     pub fn len(&self) -> usize {
@@ -71,8 +79,14 @@ impl Palettes {
         }
     }
 
+    pub fn move_to_idx(&mut self, idx: usize) {
+        if idx < self.len() {
+            self.current_idx = idx;
+        }
+    }
+
     pub fn move_to_last(&mut self) {
-        self.current_idx = self.palettes.len() - 1;
+        self.current_idx = self.len() - 1;
     }
 
     pub fn move_to_name(&mut self, name: impl AsRef<str>) {
@@ -175,6 +189,14 @@ impl Palettes {
         }
 
         None
+    }
+}
+
+impl std::ops::Index<usize> for Palettes {
+    type Output = NamedPalette;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.palettes[index]
     }
 }
 
