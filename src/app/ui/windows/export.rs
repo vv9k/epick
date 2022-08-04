@@ -1,4 +1,4 @@
-use crate::app::palettes::{NamedPalette, Palettes};
+use crate::app::palettes::NamedPalette;
 use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::color::PaletteFormat;
 

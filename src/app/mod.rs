@@ -770,7 +770,7 @@ impl App {
                         .on_hover_text("Delete this palette")
                         .clicked()
                     {
-                        ctx.app.palettes.remove(&palette);
+                        ctx.app.palettes.remove(palette);
                     }
                 });
                 egui::Grid::new(&palette.name)
