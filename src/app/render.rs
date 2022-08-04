@@ -12,9 +12,18 @@ pub fn tex_color(
     color: Color32,
     size: Vec2,
     on_hover: Option<&str>,
+    border: bool,
 ) -> Option<Response> {
     let gradient = Gradient::one_color(color);
-    tex_gradient(ui, tex_allocator, tex_mngr, &gradient, size, on_hover)
+    tex_gradient(
+        ui,
+        tex_allocator,
+        tex_mngr,
+        &gradient,
+        size,
+        on_hover,
+        border,
+    )
 }
 
 pub fn tex_gradient(
@@ -24,13 +33,14 @@ pub fn tex_gradient(
     gradient: &Gradient,
     size: Vec2,
     on_hover: Option<&str>,
+    border: bool,
 ) -> Option<Response> {
     if let Some(tex_allocator) = tex_allocator {
         let resp = ui.horizontal(|ui| {
             let tex = tex_mngr.get(tex_allocator, gradient);
             let texel_offset = 0.5 / (gradient.0.len() as f32);
             let uv = Rect::from_min_max(pos2(texel_offset, 0.0), pos2(1.0 - texel_offset, 1.0));
-            let image = ImageButton::new(tex, size).uv(uv);
+            let image = ImageButton::new(tex, size).frame(border).uv(uv);
             let mut resp = ui.add(image).on_hover_cursor(CursorIcon::PointingHand);
 
             if let Some(on_hover) = on_hover {

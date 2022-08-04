@@ -31,7 +31,7 @@ impl App {
                     );
 
                     hues.iter().for_each(|hue| {
-                        self.color_box_label_side(ctx, hue, size, ui);
+                        self.color_box_label_side(ctx, hue, size, ui, false);
                     });
                 });
 
@@ -64,7 +64,7 @@ impl App {
                         self.tints_window.tint_color_size,
                     );
                     tints.iter().for_each(|tint| {
-                        self.color_box_label_side(ctx, tint, size, ui);
+                        self.color_box_label_side(ctx, tint, size, ui, false);
                     });
                 });
 
@@ -97,7 +97,7 @@ impl App {
                     );
 
                     shades.iter().for_each(|shade| {
-                        self.color_box_label_side(ctx, shade, size, ui);
+                        self.color_box_label_side(ctx, shade, size, ui, false);
                     });
                 });
 
@@ -140,46 +140,45 @@ impl App {
             .default_open(true)
             .show(ui, |ui| {
                 let size = vec2(color_size, color_size);
-                const BORDER_OFFSET: f32 = 8.;
                 let gradient_size = vec2(
-                    color_size * 4. + BORDER_OFFSET,
-                    color_size * 2. + BORDER_OFFSET,
+                    color_size * 4. ,
+                    color_size * 2. ,
                 );
                 let dbl_width = vec2(
-                    color_size * 2. + BORDER_OFFSET,
+                    color_size * 2. ,
                     color_size,
                 );
                 let dbl_height = vec2(
                     color_size,
-                    color_size * 2. + BORDER_OFFSET,
+                    color_size * 2. ,
                 );
 
                 let dbl_width_third_height = vec2(
-                    color_size * 2. + BORDER_OFFSET,
+                    color_size * 2. ,
                     color_size * 2. / 3.,
                 );
                 let dbl_height_third_width = vec2(
                     color_size * 2. / 3.,
-                    color_size * 2. + BORDER_OFFSET,
+                    color_size * 2. ,
                 );
 
                 let half_height = vec2(
-                    color_size + BORDER_OFFSET,
+                    color_size ,
                     color_size * 1. / 2.,
                 );
                 let half_width = vec2(
                     color_size * 1. / 2.,
-                    color_size + BORDER_OFFSET,
+                    color_size ,
                 );
 
                 macro_rules! cb {
                     ($color:ident, $size:expr, $ui:ident, $display_labels:ident) => {
                         $ui.scope(|ui| {
                             if $display_labels {
-                                self.color_box_label_under(ctx, &$color, $size, ui);
+                                self.color_box_label_under(ctx, &$color, $size, ui, false);
                             } else {
                                 ui.vertical(|ui| {
-                                    self.color_box_no_label(ctx, &$color, $size, ui);
+                                    self.color_box_no_label(ctx, &$color, $size, ui, false);
                                 });
                             }
                         });
@@ -277,7 +276,7 @@ impl App {
                             HarmonyLayout::Gradient => {
                                 ui.vertical(|ui| {
                                     let gradient = Gradient::from_colors([$c1, $c2, $c3]);
-                                    self.gradient_box(ctx, &gradient, gradient_size, ui);
+                                    self.gradient_box(ctx, &gradient, gradient_size, ui, false);
                                 });
                             }
                         }
@@ -321,7 +320,7 @@ impl App {
                             HarmonyLayout::Gradient => {
                                 ui.vertical(|ui| {
                                     let gradient = Gradient::from_colors([$c1, $c2, $c3, $c4]);
-                                    self.gradient_box(ctx, &gradient, gradient_size, ui);
+                                    self.gradient_box(ctx, &gradient, gradient_size, ui, false);
                                 });
                             }
                         }
@@ -349,7 +348,7 @@ impl App {
                                 HarmonyLayout::Gradient => {
                                     let gradient = Gradient::from_colors([color, compl]);
                                     ui.vertical(|ui| {
-                                        self.gradient_box(ctx, &gradient, gradient_size, ui);
+                                        self.gradient_box(ctx, &gradient, gradient_size, ui, false);
                                     });
                                 }
                             }

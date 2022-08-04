@@ -470,9 +470,10 @@ impl App {
         color: &Color,
         size: Vec2,
         ui: &mut Ui,
+        border: bool,
     ) {
         ui.vertical(|ui| {
-            self._color_box(ctx, color, size, ui, true);
+            self._color_box(ctx, color, size, ui, true, border);
         });
     }
 
@@ -482,9 +483,10 @@ impl App {
         color: &Color,
         size: Vec2,
         ui: &mut Ui,
+        border: bool,
     ) {
         ui.horizontal(|ui| {
-            self._color_box(ctx, color, size, ui, true);
+            self._color_box(ctx, color, size, ui, true, border);
         });
     }
 
@@ -495,8 +497,9 @@ impl App {
         color: &Color,
         size: Vec2,
         ui: &mut Ui,
+        border: bool,
     ) {
-        self._color_box(ctx, color, size, ui, false);
+        self._color_box(ctx, color, size, ui, false, border);
     }
 
     fn _color_box(
@@ -506,6 +509,7 @@ impl App {
         size: Vec2,
         ui: &mut Ui,
         with_label: bool,
+        border: bool,
     ) {
         let display_str = self.display_color(ctx, color);
         let format = self.display_format(ctx);
@@ -523,6 +527,7 @@ impl App {
             color.color32(),
             size,
             Some(&on_hover),
+            border,
         );
         if let Some(color_box) = color_box {
             if with_label {
@@ -543,7 +548,14 @@ impl App {
         }
     }
 
-    fn gradient_box(&mut self, ctx: &mut FrameCtx, gradient: &Gradient, size: Vec2, ui: &mut Ui) {
+    fn gradient_box(
+        &mut self,
+        ctx: &mut FrameCtx,
+        gradient: &Gradient,
+        size: Vec2,
+        ui: &mut Ui,
+        border: bool,
+    ) {
         let tex_allocator = &mut ctx.tex_allocator();
         let _ = tex_gradient(
             ui,
@@ -552,6 +564,7 @@ impl App {
             gradient,
             size,
             None,
+            border,
         );
     }
 
@@ -732,7 +745,7 @@ impl App {
                     .show(ui, |ui| {
                         for color in palette.palette.iter() {
                             ui.vertical(|ui| {
-                                self.color_box_no_label(ctx, color, vec2(50., 50.), ui);
+                                self.color_box_no_label(ctx, color, vec2(50., 50.), ui, false);
                             });
                         }
                     });
@@ -797,7 +810,7 @@ impl App {
             }
         });
         let c = self.picker.current_color;
-        self.color_box_label_side(ctx, &c, vec2(25., 25.), ui);
+        self.color_box_label_side(ctx, &c, vec2(25., 25.), ui, true);
 
         self.handle_display_picker(ctx, ui);
 
@@ -849,7 +862,7 @@ impl App {
                     #[cfg(any(windows, target_os = "linux"))]
                     self.zoom_picker_impl(ctx, ui, picker);
                 });
-                self.color_box_label_side(ctx, &color, vec2(25., 25.), ui);
+                self.color_box_label_side(ctx, &color, vec2(25., 25.), ui, true);
             }
         };
     }

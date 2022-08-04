@@ -247,6 +247,7 @@ impl App {
                                         color.color32(),
                                         size,
                                         Some(&help),
+                                        false,
                                     );
                                 });
                             });
