@@ -1,6 +1,11 @@
 mod app;
 mod color;
+mod color_picker;
+mod display_picker;
+mod error;
 mod math;
+mod render;
+mod screen_size;
 mod ui;
 
 pub use app::App as Epick;

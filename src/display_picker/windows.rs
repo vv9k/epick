@@ -4,8 +4,8 @@ windows::include_bindings!();
 
 use std::ptr::{null, null_mut};
 
-use crate::app::display_picker::DisplayPicker;
 use crate::color::Color;
+use crate::display_picker::DisplayPicker;
 use anyhow::{Error, Result};
 use egui::Color32;
 use Windows::Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, POINT, PWSTR, WPARAM};

@@ -1,8 +1,8 @@
 #![cfg(unix)]
 use std::borrow::Cow;
 
-use crate::app::display_picker::DisplayPicker;
 use crate::color::Color;
+use crate::display_picker::DisplayPicker;
 use anyhow::{Context, Result};
 use egui::Color32;
 use image::{imageops, ImageBuffer, Rgba};

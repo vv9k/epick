@@ -1,33 +1,28 @@
 #![allow(dead_code)]
-mod color_picker;
 mod context;
-mod display_picker;
-mod error;
 mod keybinding;
 mod palettes;
-mod render;
 mod scheme;
-mod screen_size;
 mod settings;
 mod sidepanel;
 pub mod windows;
 
 use crate::color::{Color, ColorHarmony, DisplayFormat, Gradient};
+use crate::color_picker::ColorPicker;
+use crate::display_picker::{self, DisplayPickerExt};
+use crate::error::{append_global_error, DisplayError, ERROR_STACK};
+use crate::render::{render_color, render_gradient, TextureManager};
 use crate::save_to_clipboard;
+use crate::screen_size::ScreenSize;
 use crate::ui::{
     color_tooltip,
     colorbox::{ColorBox, COLORBOX_DRAG_TOOLTIP, COLORBOX_PICK_TOOLTIP},
     colors::*,
     dark_visuals, drag_source, drop_target, icon, light_visuals, DOUBLE_SPACE, SPACE,
 };
-use color_picker::ColorPicker;
 use context::{AppCtx, FrameCtx};
-use display_picker::DisplayPickerExt;
-use error::{append_global_error, DisplayError, ERROR_STACK};
 use keybinding::{default_keybindings, KeyBindings};
 use palettes::Palettes;
-use render::tex_color;
-use screen_size::ScreenSize;
 use settings::{DisplayFmtEnum, Settings};
 use windows::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
 
@@ -46,8 +41,7 @@ use std::time::Duration;
 use x11rb::protocol::xproto;
 
 #[cfg(windows)]
-use crate::app::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
-use crate::app::render::tex_gradient;
+use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 
 static ADD_DESCR: &str = "Add this color to saved colors";
 static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";
@@ -119,7 +113,7 @@ pub fn save_settings(settings: &Settings, _storage: &mut dyn Storage) {
 
 pub struct App {
     pub picker: ColorPicker,
-    pub texture_manager: render::TextureManager,
+    pub texture_manager: TextureManager,
     pub display_picker: Option<Rc<dyn DisplayPickerExt>>,
     pub error_message: Option<String>,
 
@@ -216,8 +210,8 @@ impl App {
 
         let app = Box::new(Self {
             picker: ColorPicker::default(),
-            texture_manager: render::TextureManager::default(),
-            display_picker: display_picker::init_display_picker(),
+            texture_manager: TextureManager::default(),
+            display_picker: crate::display_picker::init_display_picker(),
             error_message: None,
 
             settings_window: SettingsWindow::default(),
@@ -476,7 +470,7 @@ impl App {
             color_box.hover_help(),
         );
         let tex_allocator = &mut ctx.tex_allocator();
-        let resp = tex_color(
+        let resp = render_color(
             ui,
             tex_allocator,
             &mut self.texture_manager,
@@ -513,7 +507,7 @@ impl App {
         border: bool,
     ) {
         let tex_allocator = &mut ctx.tex_allocator();
-        let _ = tex_gradient(
+        let _ = render_gradient(
             ui,
             tex_allocator,
             &mut self.texture_manager,

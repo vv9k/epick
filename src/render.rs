@@ -5,7 +5,7 @@ use egui::{
 };
 use std::collections::HashMap;
 
-pub fn tex_color(
+pub fn render_color(
     ui: &mut Ui,
     tex_allocator: &mut crate::TextureAllocator,
     tex_mngr: &mut TextureManager,
@@ -15,7 +15,7 @@ pub fn tex_color(
     border: bool,
 ) -> Option<Response> {
     let gradient = Gradient::one_color(color);
-    tex_gradient(
+    render_gradient(
         ui,
         tex_allocator,
         tex_mngr,
@@ -26,7 +26,7 @@ pub fn tex_color(
     )
 }
 
-pub fn tex_gradient(
+pub fn render_gradient(
     ui: &mut Ui,
     tex_allocator: &mut crate::TextureAllocator,
     tex_mngr: &mut TextureManager,

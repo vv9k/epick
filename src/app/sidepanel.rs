@@ -1,5 +1,6 @@
 use crate::{
-    app::{render::tex_color, App, FrameCtx},
+    app::{App, FrameCtx},
+    render::render_color,
     save_to_clipboard,
     ui::{colors::*, drag_source, drop_target, icon, HALF_SPACE, SPACE},
 };
@@ -240,7 +241,7 @@ impl App {
                                 let size = vec2(box_width, box_width / 2.);
                                 let tex_allocator = &mut ctx.tex_allocator();
                                 drag_source(ui, color_id, |ui| {
-                                    tex_color(
+                                    render_color(
                                         ui,
                                         tex_allocator,
                                         &mut self.texture_manager,
