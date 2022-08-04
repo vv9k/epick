@@ -34,7 +34,7 @@ impl Default for Palettes {
 
 impl Palettes {
     pub const STORAGE_KEY: &'static str = "epick.saved.palettes";
-    pub const FILE_NAME: &'static str = "palettes.yaml";
+    pub const FILE_NAME: &'static str = "palettes.json";
 
     pub fn new(palette: NamedPalette) -> Self {
         Self {
@@ -152,24 +152,24 @@ impl Palettes {
     }
 
     /// Loads the saved colors from the specified file located at `path`. The file is expected to
-    /// be a valid YAML file.
+    /// be a valid json file.
     pub fn load(path: impl AsRef<Path>) -> Result<Self> {
         let data = fs::read(path).context("failed to read saved colors file")?;
-        serde_yaml::from_slice(&data).context("failed to deserialize saved colors file")
+        serde_json::from_slice(&data).context("failed to deserialize saved colors file")
     }
 
-    pub fn from_yaml_str(yaml: &str) -> Result<Self> {
-        serde_yaml::from_str(yaml).context("failed to deserialize saved colors from YAML")
+    pub fn from_json_str(json: &str) -> Result<Self> {
+        serde_json::from_str(json).context("failed to deserialize saved colors from json")
     }
 
-    pub fn as_yaml_str(&self) -> Result<String> {
-        serde_yaml::to_string(&self).context("failed to serialize saved colors as YAML")
+    pub fn as_json_str(&self) -> Result<String> {
+        serde_json::to_string(&self).context("failed to serialize saved colors as json")
     }
 
-    /// Saves this colors as YAML file in the provided `path`.
+    /// Saves this colors as json file in the provided `path`.
     pub fn save(&self, path: impl AsRef<Path>) -> Result<()> {
         let mut data = Vec::with_capacity(128);
-        serde_yaml::to_writer(&mut data, &self).context("failed to serialize saved colors")?;
+        serde_json::to_writer(&mut data, &self).context("failed to serialize saved colors")?;
         fs::write(path, &data).context("failed to write saved colors to a file")
     }
 
