@@ -698,7 +698,7 @@ impl App {
             ctx.egui,
             self.picker.current_color,
         );
-        if let Err(e) = self.export_window.display(ctx.egui, &ctx.app.palettes) {
+        if let Err(e) = self.export_window.display(ctx.egui) {
             append_global_error(e);
         }
 

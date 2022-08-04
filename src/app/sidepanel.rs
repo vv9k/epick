@@ -106,6 +106,7 @@ impl App {
                 .clicked()
             {
                 self.export_window.show = true;
+                self.export_window.export_palette = Some(ctx.app.palettes.current().clone());
             }
             if ui
                 .button(icon::COPY)
