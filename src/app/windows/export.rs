@@ -1,5 +1,7 @@
-use crate::app::palettes::NamedPalette;
-use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
+use crate::app::{
+    palettes::NamedPalette,
+    windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
+};
 use crate::color::PaletteFormat;
 
 use anyhow::Result;

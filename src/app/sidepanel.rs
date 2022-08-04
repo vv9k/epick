@@ -1,9 +1,8 @@
-use crate::app::{
-    render::tex_color,
+use crate::{
+    app::{render::tex_color, App, FrameCtx},
+    save_to_clipboard,
     ui::{colors::*, drag_source, drop_target, icon, HALF_SPACE, SPACE},
-    App, FrameCtx,
 };
-use crate::save_to_clipboard;
 
 use egui::{style::Margin, vec2, CursorIcon, Id, Label, RichText, ScrollArea, Ui};
 

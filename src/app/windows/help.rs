@@ -1,5 +1,8 @@
-use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
-use crate::app::KEYBINDINGS;
+use crate::app::{
+    windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
+    KEYBINDINGS,
+};
+
 use egui::RichText;
 use egui::{Label, Window};
 

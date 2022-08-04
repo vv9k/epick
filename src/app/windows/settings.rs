@@ -1,19 +1,19 @@
-use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::app::{
+    windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
     AppCtx, {DisplayFmtEnum, Settings},
 };
 use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
+use crate::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
 
 use egui::{Color32, ComboBox, Ui, Window};
 use std::fmt::Display;
 
-use crate::app::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
 #[cfg(not(target_arch = "wasm32"))]
 use egui::CursorIcon;
 #[cfg(not(target_arch = "wasm32"))]
 use std::fs;
 
-use super::CustomFormatsWindow;
+use crate::app::windows::CustomFormatsWindow;
 
 #[derive(Debug, Default)]
 pub struct SettingsWindow {

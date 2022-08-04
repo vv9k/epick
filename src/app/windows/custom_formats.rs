@@ -1,11 +1,9 @@
 use egui::{Button, Key, TextBuffer, TextEdit, Window};
 
 use crate::{
-    app::{
-        settings::{DisplayFmtEnum, Settings},
-        ui::icon,
-    },
+    app::settings::{DisplayFmtEnum, Settings},
     color::{Color, DisplayFormat},
+    ui::icon,
 };
 
 #[derive(Default, Debug)]

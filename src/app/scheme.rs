@@ -1,9 +1,15 @@
-use crate::app::ui::colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP};
-use crate::app::ui::layout::HarmonyLayout;
-use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
-use crate::app::ui::DOUBLE_SPACE;
-use crate::app::{App, ColorHarmony, FrameCtx};
-use crate::color::Gradient;
+use crate::{
+    app::{
+        windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
+        App, ColorHarmony, FrameCtx,
+    },
+    color::Gradient,
+    ui::{
+        colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP},
+        layout::HarmonyLayout,
+        DOUBLE_SPACE,
+    },
+};
 
 use egui::{vec2, Grid, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
@@ -196,7 +202,7 @@ impl App {
                 macro_rules! cb {
                     ($color:ident, $size:expr, $ui:ident, $display_labels:ident) => {
                         $ui.scope(|ui| {
-                            let colorbox = crate::app::ui::colorbox::ColorBox::builder()
+                            let colorbox = ColorBox::builder()
                                 .color($color)
                                 .size($size)
                                 .label($display_labels).build();

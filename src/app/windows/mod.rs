@@ -3,7 +3,7 @@ mod export;
 mod help;
 mod settings;
 
-use crate::app::ui::colors::*;
+use crate::ui::colors::*;
 
 pub use custom_formats::CustomFormatsWindow;
 use egui::{style::Margin, Frame, Rounding, Slider, Stroke, Ui};

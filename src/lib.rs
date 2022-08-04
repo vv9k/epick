@@ -1,6 +1,7 @@
 mod app;
 mod color;
 mod math;
+mod ui;
 
 pub use app::App as Epick;
 

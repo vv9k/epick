@@ -1,11 +1,11 @@
 mod sliders;
 
-use crate::app::ui::{slider_1d, slider_2d, SPACE};
 use crate::color::{
     CIEColor, Cmyk, Color, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, Rgb, RgbWorkingSpace, Xyz,
     U8_MAX, U8_MIN,
 };
 use crate::math;
+use crate::ui::{slider_1d, slider_2d, SPACE};
 use sliders::ColorSliders;
 
 use egui::{color::Hsva, DragValue};

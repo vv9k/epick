@@ -10,10 +10,16 @@ mod scheme;
 mod screen_size;
 mod settings;
 mod sidepanel;
-mod ui;
+pub mod windows;
 
 use crate::color::{Color, ColorHarmony, DisplayFormat, Gradient};
 use crate::save_to_clipboard;
+use crate::ui::{
+    color_tooltip,
+    colorbox::{ColorBox, COLORBOX_DRAG_TOOLTIP, COLORBOX_PICK_TOOLTIP},
+    colors::*,
+    dark_visuals, drag_source, drop_target, icon, light_visuals, DOUBLE_SPACE, SPACE,
+};
 use color_picker::ColorPicker;
 use context::{AppCtx, FrameCtx};
 use display_picker::DisplayPickerExt;
@@ -23,13 +29,7 @@ use palettes::Palettes;
 use render::tex_color;
 use screen_size::ScreenSize;
 use settings::{DisplayFmtEnum, Settings};
-use ui::{
-    color_tooltip,
-    colorbox::{ColorBox, COLORBOX_DRAG_TOOLTIP, COLORBOX_PICK_TOOLTIP},
-    colors::*,
-    dark_visuals, drag_source, drop_target, icon, light_visuals,
-    windows::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow},
-};
+use windows::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
 
 use eframe::{CreationContext, Storage};
 use egui::{
@@ -48,7 +48,6 @@ use x11rb::protocol::xproto;
 #[cfg(windows)]
 use crate::app::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
 use crate::app::render::tex_gradient;
-use crate::app::ui::{DOUBLE_SPACE, SPACE};
 
 static ADD_DESCR: &str = "Add this color to saved colors";
 static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";

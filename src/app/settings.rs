@@ -2,7 +2,7 @@ use crate::color::{
     ChromaticAdaptationMethod, ColorHarmony, DisplayFormat, Illuminant, RgbWorkingSpace,
 };
 
-use crate::app::ui::layout::HarmonyLayout;
+use crate::ui::layout::HarmonyLayout;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -228,9 +228,9 @@ impl DisplayFmtEnum {
 #[cfg(test)]
 mod tests {
     use crate::app::settings::{Settings, DEFAULT_COLOR_SIZE};
-    use crate::app::ui::layout::HarmonyLayout;
     use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
     use crate::math::eq_f32;
+    use crate::ui::layout::HarmonyLayout;
     use std::fs;
 
     #[test]
