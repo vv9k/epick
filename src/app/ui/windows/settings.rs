@@ -1,5 +1,7 @@
-use crate::app::settings::{DisplayFmtEnum, Settings};
 use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
+use crate::app::{
+    AppCtx, {DisplayFmtEnum, Settings},
+};
 use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
 
 use egui::{Color32, ComboBox, Ui, Window};
@@ -18,7 +20,6 @@ pub struct SettingsWindow {
     pub show: bool,
     pub error: Option<String>,
     pub message: Option<String>,
-    pub settings: Settings,
     selected_display_fmt: String,
     selected_clipboard_fmt: String,
     pub custom_formats_window: CustomFormatsWindow,
@@ -43,7 +44,7 @@ impl SettingsWindow {
         self.message = None;
     }
 
-    pub fn display(&mut self, ctx: &egui::Context) {
+    pub fn display(&mut self, app_ctx: &mut AppCtx, ctx: &egui::Context) {
         if self.show {
             let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut show = true;
@@ -61,21 +62,21 @@ impl SettingsWindow {
                         ui.colored_label(Color32::GREEN, msg);
                     }
 
-                    self.color_formats(ui);
+                    self.color_formats(app_ctx, ui);
                     ui.add_space(HALF_SPACE);
-                    self.rgb_working_space(ui);
+                    self.rgb_working_space(app_ctx, ui);
                     ui.add_space(HALF_SPACE);
-                    self.illuminant(ui);
+                    self.illuminant(app_ctx, ui);
                     ui.add_space(HALF_SPACE);
-                    self.chromatic_adaptation_method(ui);
+                    self.chromatic_adaptation_method(app_ctx, ui);
                     ui.add_space(HALF_SPACE);
-                    self.color_harmony(ui);
+                    self.color_harmony(app_ctx, ui);
                     ui.add_space(HALF_SPACE);
-                    ui.checkbox(&mut self.settings.cache_colors, "Cache colors");
+                    ui.checkbox(&mut app_ctx.settings.cache_colors, "Cache colors");
                     ui.add_space(DOUBLE_SPACE);
-                    self.color_spaces(ui);
+                    self.color_spaces(app_ctx, ui);
                     ui.add_space(SPACE);
-                    self.save_settings_btn(ui);
+                    self.save_settings_btn(app_ctx, ui);
                 });
 
             if !show {
@@ -86,7 +87,7 @@ impl SettingsWindow {
         }
     }
 
-    fn save_settings_btn(&mut self, _ui: &mut Ui) {
+    fn save_settings_btn(&mut self, app_ctx: &mut AppCtx, _ui: &mut Ui) {
         #[cfg(not(target_arch = "wasm32"))]
         if _ui
             .button("Save settings")
@@ -100,7 +101,7 @@ impl SettingsWindow {
                     }
                 }
                 let path = dir.join("config.yaml");
-                if let Err(e) = self.settings.save(&path) {
+                if let Err(e) = app_ctx.settings.save(&path) {
                     self.set_error(e);
                 } else {
                     self.set_message(format!("Successfully saved settings to {}", path.display()));
@@ -109,216 +110,217 @@ impl SettingsWindow {
         }
     }
 
-    fn color_harmony(&mut self, ui: &mut Ui) {
+    fn color_harmony(&mut self, app_ctx: &mut AppCtx, ui: &mut Ui) {
         ComboBox::from_label("Color harmony")
-            .selected_text(self.settings.harmony.as_ref())
+            .selected_text(app_ctx.settings.harmony.as_ref())
             .show_ui(ui, |ui| {
                 ui.selectable_value(
-                    &mut self.settings.harmony,
+                    &mut app_ctx.settings.harmony,
                     ColorHarmony::Complementary,
                     ColorHarmony::Complementary.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.harmony,
+                    &mut app_ctx.settings.harmony,
                     ColorHarmony::Triadic,
                     ColorHarmony::Triadic.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.harmony,
+                    &mut app_ctx.settings.harmony,
                     ColorHarmony::Tetradic,
                     ColorHarmony::Tetradic.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.harmony,
+                    &mut app_ctx.settings.harmony,
                     ColorHarmony::Analogous,
                     ColorHarmony::Analogous.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.harmony,
+                    &mut app_ctx.settings.harmony,
                     ColorHarmony::SplitComplementary,
                     ColorHarmony::SplitComplementary.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.harmony,
+                    &mut app_ctx.settings.harmony,
                     ColorHarmony::Square,
                     ColorHarmony::Square.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.harmony,
+                    &mut app_ctx.settings.harmony,
                     ColorHarmony::Monochromatic,
                     ColorHarmony::Monochromatic.as_ref(),
                 );
             });
     }
 
-    fn color_spaces(&mut self, ui: &mut Ui) {
+    fn color_spaces(&mut self, app_ctx: &mut AppCtx, ui: &mut Ui) {
         ui.label("Colors spaces:");
         ui.horizontal(|ui| {
-            ui.checkbox(&mut self.settings.color_spaces.rgb, "RGB");
-            ui.checkbox(&mut self.settings.color_spaces.cmyk, "CMYK");
-            ui.checkbox(&mut self.settings.color_spaces.hsv, "HSV");
-            ui.checkbox(&mut self.settings.color_spaces.hsl, "HSL");
+            ui.checkbox(&mut app_ctx.settings.color_spaces.rgb, "RGB");
+            ui.checkbox(&mut app_ctx.settings.color_spaces.cmyk, "CMYK");
+            ui.checkbox(&mut app_ctx.settings.color_spaces.hsv, "HSV");
+            ui.checkbox(&mut app_ctx.settings.color_spaces.hsl, "HSL");
         });
         ui.add_space(SPACE);
         ui.label("CIE Color spaces:");
         ui.horizontal(|ui| {
-            ui.checkbox(&mut self.settings.color_spaces.luv, "Luv");
-            ui.checkbox(&mut self.settings.color_spaces.lch_uv, "LCH(uv)");
-            ui.checkbox(&mut self.settings.color_spaces.lab, "Lab");
-            ui.checkbox(&mut self.settings.color_spaces.lch_ab, "LCH(ab)");
+            ui.checkbox(&mut app_ctx.settings.color_spaces.luv, "Luv");
+            ui.checkbox(&mut app_ctx.settings.color_spaces.lch_uv, "LCH(uv)");
+            ui.checkbox(&mut app_ctx.settings.color_spaces.lab, "Lab");
+            ui.checkbox(&mut app_ctx.settings.color_spaces.lch_ab, "LCH(ab)");
         });
     }
 
-    fn illuminant(&mut self, ui: &mut Ui) {
+    fn illuminant(&mut self, app_ctx: &mut AppCtx, ui: &mut Ui) {
         ComboBox::from_label("Illuminant")
-            .selected_text(self.settings.illuminant.as_ref())
+            .selected_text(app_ctx.settings.illuminant.as_ref())
             .show_ui(ui, |ui| {
                 ui.selectable_value(
-                    &mut self.settings.illuminant,
+                    &mut app_ctx.settings.illuminant,
                     Illuminant::A,
                     Illuminant::A.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.illuminant,
+                    &mut app_ctx.settings.illuminant,
                     Illuminant::B,
                     Illuminant::B.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.illuminant,
+                    &mut app_ctx.settings.illuminant,
                     Illuminant::C,
                     Illuminant::C.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.illuminant,
+                    &mut app_ctx.settings.illuminant,
                     Illuminant::D50,
                     Illuminant::D50.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.illuminant,
+                    &mut app_ctx.settings.illuminant,
                     Illuminant::D55,
                     Illuminant::D55.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.illuminant,
+                    &mut app_ctx.settings.illuminant,
                     Illuminant::D65,
                     Illuminant::D65.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.illuminant,
+                    &mut app_ctx.settings.illuminant,
                     Illuminant::D75,
                     Illuminant::D75.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.illuminant,
+                    &mut app_ctx.settings.illuminant,
                     Illuminant::E,
                     Illuminant::E.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.illuminant,
+                    &mut app_ctx.settings.illuminant,
                     Illuminant::F2,
                     Illuminant::F2.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.illuminant,
+                    &mut app_ctx.settings.illuminant,
                     Illuminant::F7,
                     Illuminant::F7.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.illuminant,
+                    &mut app_ctx.settings.illuminant,
                     Illuminant::F11,
                     Illuminant::F11.as_ref(),
                 );
             });
     }
 
-    fn chromatic_adaptation_method(&mut self, ui: &mut Ui) {
+    fn chromatic_adaptation_method(&mut self, app_ctx: &mut AppCtx, ui: &mut Ui) {
         ComboBox::from_label("Chromatic adaptation method")
-            .selected_text(self.settings.chromatic_adaptation_method.as_ref())
+            .selected_text(app_ctx.settings.chromatic_adaptation_method.as_ref())
             .show_ui(ui, |ui| {
                 ui.selectable_value(
-                    &mut self.settings.chromatic_adaptation_method,
+                    &mut app_ctx.settings.chromatic_adaptation_method,
                     ChromaticAdaptationMethod::Bradford,
                     ChromaticAdaptationMethod::Bradford.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.chromatic_adaptation_method,
+                    &mut app_ctx.settings.chromatic_adaptation_method,
                     ChromaticAdaptationMethod::VonKries,
                     ChromaticAdaptationMethod::VonKries.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.chromatic_adaptation_method,
+                    &mut app_ctx.settings.chromatic_adaptation_method,
                     ChromaticAdaptationMethod::XYZScaling,
                     ChromaticAdaptationMethod::XYZScaling.as_ref(),
                 );
             });
     }
 
-    fn rgb_working_space(&mut self, ui: &mut Ui) {
+    fn rgb_working_space(&mut self, app_ctx: &mut AppCtx, ui: &mut Ui) {
         ComboBox::from_label("RGB Working Space")
-            .selected_text(self.settings.rgb_working_space.as_ref())
+            .selected_text(app_ctx.settings.rgb_working_space.as_ref())
             .show_ui(ui, |ui| {
                 ui.selectable_value(
-                    &mut self.settings.rgb_working_space,
+                    &mut app_ctx.settings.rgb_working_space,
                     RgbWorkingSpace::Adobe,
                     RgbWorkingSpace::Adobe.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.rgb_working_space,
+                    &mut app_ctx.settings.rgb_working_space,
                     RgbWorkingSpace::Apple,
                     RgbWorkingSpace::Apple.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.rgb_working_space,
+                    &mut app_ctx.settings.rgb_working_space,
                     RgbWorkingSpace::CIE,
                     RgbWorkingSpace::CIE.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.rgb_working_space,
+                    &mut app_ctx.settings.rgb_working_space,
                     RgbWorkingSpace::ECI,
                     RgbWorkingSpace::ECI.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.rgb_working_space,
+                    &mut app_ctx.settings.rgb_working_space,
                     RgbWorkingSpace::NTSC,
                     RgbWorkingSpace::NTSC.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.rgb_working_space,
+                    &mut app_ctx.settings.rgb_working_space,
                     RgbWorkingSpace::PAL,
                     RgbWorkingSpace::PAL.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.rgb_working_space,
+                    &mut app_ctx.settings.rgb_working_space,
                     RgbWorkingSpace::ProPhoto,
                     RgbWorkingSpace::ProPhoto.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.rgb_working_space,
+                    &mut app_ctx.settings.rgb_working_space,
                     RgbWorkingSpace::SRGB,
                     RgbWorkingSpace::SRGB.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings.rgb_working_space,
+                    &mut app_ctx.settings.rgb_working_space,
                     RgbWorkingSpace::WideGamut,
                     RgbWorkingSpace::WideGamut.as_ref(),
                 );
             });
     }
 
-    fn color_formats(&mut self, ui: &mut Ui) {
+    fn color_formats(&mut self, app_ctx: &mut AppCtx, ui: &mut Ui) {
         ComboBox::from_label("Color display format")
-            .selected_text(self.settings.color_display_format.as_ref())
+            .selected_text(app_ctx.settings.color_display_format.as_ref())
             .show_ui(ui, |ui| {
                 color_format_selection_fill(
-                    &mut self.settings.color_display_format,
-                    self.settings.saved_color_formats.keys(),
+                    &mut app_ctx.settings.color_display_format,
+                    app_ctx.settings.saved_color_formats.keys(),
                     ui,
                 );
             });
         ui.add_space(HALF_SPACE);
         ComboBox::from_label("Clipboard format")
             .selected_text(
-                self.settings
+                app_ctx
+                    .settings
                     .color_clipboard_format
                     .as_ref()
                     .map(|f| f.as_ref())
@@ -326,18 +328,18 @@ impl SettingsWindow {
             )
             .show_ui(ui, |ui| {
                 ui.selectable_value(
-                    &mut self.settings.color_clipboard_format,
+                    &mut app_ctx.settings.color_clipboard_format,
                     None,
                     "Same as display",
                 );
                 color_format_selection_fill(
-                    &mut self.settings.color_clipboard_format,
-                    self.settings.saved_color_formats.keys(),
+                    &mut app_ctx.settings.color_clipboard_format,
+                    app_ctx.settings.saved_color_formats.keys(),
                     ui,
                 );
             });
         ui.checkbox(
-            &mut self.settings.auto_copy_picked_color,
+            &mut app_ctx.settings.auto_copy_picked_color,
             "Auto copy picked color",
         );
         ui.add_space(HALF_SPACE);

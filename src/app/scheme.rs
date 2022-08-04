@@ -1,26 +1,25 @@
 use crate::app::ui::layout::HarmonyLayout;
 use crate::app::ui::windows::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::app::ui::DOUBLE_SPACE;
-use crate::app::{App, ColorHarmony};
+use crate::app::{App, ColorHarmony, FrameCtx};
 use crate::color::Gradient;
-use crate::TextureAllocator;
 
 use egui::{vec2, Grid, Slider, Ui};
 use egui::{CollapsingHeader, ComboBox, Window};
 
 impl App {
-    pub fn hues_window(&mut self, ctx: &egui::Context, tex_allocator: &mut TextureAllocator) {
+    pub fn hues_window(&mut self, ctx: &mut FrameCtx<'_>) {
         if self.hues_window.is_open {
-            let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
+            let offset = ctx.egui.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
-            let is_dark_mode = ctx.style().visuals.dark_mode;
+            let is_dark_mode = ctx.egui.style().visuals.dark_mode;
             Window::new("Hues")
                 .frame(windows::default_frame(is_dark_mode))
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .collapsible(false)
                 .vscroll(true)
                 .open(&mut is_open)
-                .show(ctx, |ui| {
+                .show(ctx.egui, |ui| {
                     windows::apply_default_style(ui, is_dark_mode);
                     self.hues_window.sliders(ui);
 
@@ -32,7 +31,7 @@ impl App {
                     );
 
                     hues.iter().for_each(|hue| {
-                        self.color_box_label_side(hue, size, ui, tex_allocator);
+                        self.color_box_label_side(ctx, hue, size, ui);
                     });
                 });
 
@@ -42,19 +41,19 @@ impl App {
         }
     }
 
-    pub fn tints_window(&mut self, ctx: &egui::Context, tex_allocator: &mut TextureAllocator) {
+    pub fn tints_window(&mut self, ctx: &mut FrameCtx<'_>) {
         if self.tints_window.is_open {
-            let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
+            let offset = ctx.egui.style().spacing.slider_width * WINDOW_X_OFFSET;
             let pos = (offset, WINDOW_Y_OFFSET);
             let mut is_open = true;
-            let is_dark_mode = ctx.style().visuals.dark_mode;
+            let is_dark_mode = ctx.egui.style().visuals.dark_mode;
             Window::new("Tints")
                 .frame(windows::default_frame(is_dark_mode))
                 .collapsible(false)
                 .default_pos(pos)
                 .vscroll(true)
                 .open(&mut is_open)
-                .show(ctx, |ui| {
+                .show(ctx.egui, |ui| {
                     windows::apply_default_style(ui, is_dark_mode);
                     self.tints_window.sliders(ui);
 
@@ -65,7 +64,7 @@ impl App {
                         self.tints_window.tint_color_size,
                     );
                     tints.iter().for_each(|tint| {
-                        self.color_box_label_side(tint, size, ui, tex_allocator);
+                        self.color_box_label_side(ctx, tint, size, ui);
                     });
                 });
 
@@ -75,18 +74,18 @@ impl App {
         }
     }
 
-    pub fn shades_window(&mut self, ctx: &egui::Context, tex_allocator: &mut TextureAllocator) {
+    pub fn shades_window(&mut self, ctx: &mut FrameCtx<'_>) {
         if self.shades_window.is_open {
-            let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
+            let offset = ctx.egui.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
-            let is_dark_mode = ctx.style().visuals.dark_mode;
+            let is_dark_mode = ctx.egui.style().visuals.dark_mode;
             Window::new("Shades")
                 .frame(windows::default_frame(is_dark_mode))
                 .collapsible(false)
                 .default_pos((offset, WINDOW_Y_OFFSET))
                 .vscroll(true)
                 .open(&mut is_open)
-                .show(ctx, |ui| {
+                .show(ctx.egui, |ui| {
                     windows::apply_default_style(ui, is_dark_mode);
                     self.shades_window.sliders(ui);
 
@@ -98,7 +97,7 @@ impl App {
                     );
 
                     shades.iter().for_each(|shade| {
-                        self.color_box_label_side(shade, size, ui, tex_allocator);
+                        self.color_box_label_side(ctx, shade, size, ui);
                     });
                 });
 
@@ -108,35 +107,35 @@ impl App {
         }
     }
 
-    fn harmony_layout_combobox(&mut self, ui: &mut Ui) {
+    fn harmony_layout_combobox(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         ComboBox::from_label("Harmony layout")
-            .selected_text(self.settings_window.settings.harmony_layout.as_ref())
+            .selected_text(ctx.app.settings.harmony_layout.as_ref())
             .show_ui(ui, |ui| {
                 ui.selectable_value(
-                    &mut self.settings_window.settings.harmony_layout,
+                    &mut ctx.app.settings.harmony_layout,
                     HarmonyLayout::Square,
                     HarmonyLayout::Square.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings_window.settings.harmony_layout,
+                    &mut ctx.app.settings.harmony_layout,
                     HarmonyLayout::Line,
                     HarmonyLayout::Line.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings_window.settings.harmony_layout,
+                    &mut ctx.app.settings.harmony_layout,
                     HarmonyLayout::Stacked,
                     HarmonyLayout::Stacked.as_ref(),
                 );
                 ui.selectable_value(
-                    &mut self.settings_window.settings.harmony_layout,
+                    &mut ctx.app.settings.harmony_layout,
                     HarmonyLayout::Gradient,
                     HarmonyLayout::Gradient.as_ref(),
                 );
             });
     }
 
-    pub fn harmonies(&mut self, ui: &mut Ui, tex_allocator: &mut TextureAllocator) {
-        let color_size = self.settings_window.settings.harmony_color_size;
+    pub fn harmonies(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
+        let color_size = ctx.app.settings.harmony_color_size;
         CollapsingHeader::new("Harmonies")
             .default_open(true)
             .show(ui, |ui| {
@@ -177,10 +176,10 @@ impl App {
                     ($color:ident, $size:expr, $ui:ident, $display_labels:ident) => {
                         $ui.scope(|ui| {
                             if $display_labels {
-                                self.color_box_label_under(&$color, $size, ui, tex_allocator);
+                                self.color_box_label_under(ctx, &$color, $size, ui);
                             } else {
                                 ui.vertical(|ui| {
-                                    self.color_box_no_label(&$color, $size, ui, tex_allocator);
+                                    self.color_box_no_label(ctx, &$color, $size, ui);
                                 });
                             }
                         });
@@ -191,7 +190,7 @@ impl App {
                 }
 
                 let color = self.picker.current_color;
-                let harmony = &mut self.settings_window.settings.harmony;
+                let harmony = &mut ctx.app.settings.harmony;
                 ComboBox::from_label("Choose a harmony")
                     .selected_text(harmony.as_ref())
                     .show_ui(ui, |ui| {
@@ -231,17 +230,17 @@ impl App {
                             ColorHarmony::Monochromatic.as_ref(),
                         );
                     });
-                self.harmony_layout_combobox(ui);
+                self.harmony_layout_combobox(ctx, ui);
                 ui.add(
                     Slider::new(
-                        &mut self.settings_window.settings.harmony_color_size,
+                        &mut ctx.app.settings.harmony_color_size,
                         20.0..=ui.available_width() / 4.,
                     )
                     .clamp_to_range(true)
                     .text("color size"),
                 );
                 ui.checkbox(
-                    &mut self.settings_window.settings.harmony_display_color_label,
+                    &mut ctx.app.settings.harmony_display_color_label,
                     "Display color labels",
                 );
                 ui.add_space(DOUBLE_SPACE);
@@ -251,7 +250,7 @@ impl App {
                         let display_labels = $display;
                         let dbl_width_third_height = $s1;
                         let dbl_height_third_width = $s2;
-                        match self.settings_window.settings.harmony_layout {
+                        match ctx.app.settings.harmony_layout {
                             HarmonyLayout::Square => {
                                 cb!($c1, dbl_width, ui, display_labels);
                                 ui.end_row();
@@ -278,7 +277,7 @@ impl App {
                             HarmonyLayout::Gradient => {
                                 ui.vertical(|ui| {
                                     let gradient = Gradient::from_colors([$c1, $c2, $c3]);
-                                    self.gradient_box(&gradient, gradient_size, ui, tex_allocator);
+                                    self.gradient_box(ctx, &gradient, gradient_size, ui);
                                 });
                             }
                         }
@@ -288,7 +287,7 @@ impl App {
                         let display_labels = $display;
                         let stacked_size = $stacked_size;
                         let line_size = $line_size;
-                        match self.settings_window.settings.harmony_layout {
+                        match ctx.app.settings.harmony_layout {
                             HarmonyLayout::Square => {
                                 ui.scope(|ui| {
                                     ui.spacing_mut().item_spacing = (0., 0.).into();
@@ -322,18 +321,18 @@ impl App {
                             HarmonyLayout::Gradient => {
                                 ui.vertical(|ui| {
                                     let gradient = Gradient::from_colors([$c1, $c2, $c3, $c4]);
-                                    self.gradient_box(&gradient, gradient_size, ui, tex_allocator);
+                                    self.gradient_box(ctx, &gradient, gradient_size, ui);
                                 });
                             }
                         }
                     }
                 }
-                let display_label = self.settings_window.settings.harmony_display_color_label;
-                match self.settings_window.settings.harmony {
+                let display_label = ctx.app.settings.harmony_display_color_label;
+                match ctx.app.settings.harmony {
                     ColorHarmony::Complementary => {
                         let compl = color.complementary();
                         Grid::new("complementary").spacing((0., 0.)).show(ui, |ui| {
-                            match self.settings_window.settings.harmony_layout {
+                            match ctx.app.settings.harmony_layout {
                                 HarmonyLayout::Square => {
                                     cb!(color, ui,  display_label);
                                     cb!(compl, ui, display_label);
@@ -350,7 +349,7 @@ impl App {
                                 HarmonyLayout::Gradient => {
                                     let gradient = Gradient::from_colors([color, compl]);
                                     ui.vertical(|ui| {
-                                        self.gradient_box(&gradient, gradient_size, ui, tex_allocator);
+                                        self.gradient_box(ctx, &gradient, gradient_size, ui);
                                     });
                                 }
                             }

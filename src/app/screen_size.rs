@@ -1,6 +1,7 @@
 use egui::Rect;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, Deserialize, Serialize, PartialEq)]
 pub enum ScreenSize {
     Phone(f32, f32),
     Tablet(f32, f32),

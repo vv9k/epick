@@ -9,6 +9,16 @@ const APP_ICON_HEIGHT: u32 = 48;
 fn main() {
     let mut opts = NativeOptions::default();
 
+    //pretty_env_logger::init();
+    //let subscriber = tracing_subscriber::fmt()
+    //.with_file(true)
+    //.with_target(true)
+    //.with_line_number(true)
+    //.pretty()
+    //.with_max_level(tracing::Level::TRACE)
+    //.finish();
+    //tracing::subscriber::set_global_default(subscriber).unwrap();
+
     let mut img = ImageReader::new(Cursor::new(APP_ICON_DATA));
     img.set_format(ImageFormat::Png);
     match img
