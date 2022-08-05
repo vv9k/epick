@@ -1,8 +1,9 @@
 use crate::app::{
     window::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
-    AppCtx, {DisplayFmtEnum, Settings},
+    AppCtx,
 };
 use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
+use crate::settings::{DisplayFmtEnum, Settings};
 use crate::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
 
 use egui::{Color32, ComboBox, Ui, Window};

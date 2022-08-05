@@ -10,6 +10,7 @@ use sliders::ColorSliders;
 
 use egui::{color::Hsva, DragValue};
 use egui::{CollapsingHeader, Ui};
+use serde::{Deserialize, Serialize};
 use std::mem;
 
 macro_rules! slider {
@@ -27,7 +28,7 @@ macro_rules! slider {
     };
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ColorPicker {
     pub current_color: Color,
     pub hex_color: String,

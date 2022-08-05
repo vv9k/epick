@@ -1,11 +1,9 @@
-use crate::{
-    app::{App, FrameCtx},
-    save_to_clipboard,
-};
+use crate::context::FrameCtx;
+use crate::save_to_clipboard;
 
 use std::collections::HashMap;
 
-pub type KeyBindingFunc = Box<dyn Fn(&mut App, &mut FrameCtx<'_>) + Send + Sync + 'static>;
+pub type KeyBindingFunc = Box<dyn Fn(&mut FrameCtx<'_>) + Send + Sync + 'static>;
 
 pub struct KeyBinding {
     description: &'static str,
@@ -34,10 +32,6 @@ impl KeyBinding {
 
 pub struct KeyBindings(HashMap<egui::Key, KeyBinding>);
 impl KeyBindings {
-    pub fn new(bindings: HashMap<egui::Key, KeyBinding>) -> Self {
-        Self(bindings)
-    }
-
     pub fn iter(&self) -> impl Iterator<Item = &KeyBinding> {
         self.0.values()
     }
@@ -52,7 +46,7 @@ pub fn default_keybindings() -> KeyBindings {
                     description: "toggle the side panel",
                     str_key: "h",
                     key: egui::Key::H,
-                    binding: Box::new(|_, mut ctx| {
+                    binding: Box::new(|mut ctx| {
                         ctx.app.sidepanel.show = !ctx.app.sidepanel.show;
                     }),
                 },
@@ -63,8 +57,8 @@ pub fn default_keybindings() -> KeyBindings {
                     description: "pick a color from under the cursor",
                     str_key: "p",
                     key: egui::Key::P,
-                    binding: Box::new(|app, ctx| {
-                        app.picker.set_cur_color(ctx.app.cursor_pick_color);
+                    binding: Box::new(|ctx| {
+                        ctx.app.picker.set_cur_color(ctx.app.cursor_pick_color);
                         if ctx.app.settings.auto_copy_picked_color {
                             let color = ctx.app.cursor_pick_color;
                             let _ = save_to_clipboard(ctx.app.clipboard_color(&color));
@@ -78,7 +72,7 @@ pub fn default_keybindings() -> KeyBindings {
                     description: "save a color from under the cursor",
                     str_key: "s",
                     key: egui::Key::S,
-                    binding: Box::new(|_, ctx| {
+                    binding: Box::new(|ctx| {
                         ctx.app
                             .palettes
                             .current_mut()

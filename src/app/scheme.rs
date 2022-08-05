@@ -40,7 +40,7 @@ macro_rules! scheme_window_impl {
                     colors.iter().for_each(|color| {
                         let cb = base_cb.clone().color(*color).build();
                         ui.horizontal(|ui| {
-                            $self.display_color_box(cb, $ctx, ui);
+                            cb.display($ctx, ui);
                         });
                     });
                 });
@@ -60,7 +60,8 @@ impl App {
             ctx,
             hues_window,
             hue_color_size,
-            self.picker
+            ctx.app
+                .picker
                 .current_color
                 .hues(self.hues_window.num_of_hues, self.hues_window.hues_step)
         );
@@ -73,7 +74,8 @@ impl App {
             ctx,
             tints_window,
             tint_color_size,
-            self.picker
+            ctx.app
+                .picker
                 .current_color
                 .tints(self.tints_window.num_of_tints)
         );
@@ -86,7 +88,8 @@ impl App {
             ctx,
             shades_window,
             shade_color_size,
-            self.picker
+            ctx.app
+                .picker
                 .current_color
                 .shades(self.shades_window.num_of_shades)
         );
@@ -165,7 +168,7 @@ impl App {
                                 .hover_help(COLORBOX_PICK_TOOLTIP)
                                 .label($display_labels).build();
                             ui.vertical(|ui| {
-                                self.display_color_box(colorbox, ctx, ui);
+                                colorbox.display(ctx, ui);
                             });
                         });
                     };
@@ -174,7 +177,7 @@ impl App {
                     };
                 }
 
-                let color = self.picker.current_color;
+                let color = ctx.app.picker.current_color;
                 let harmony = &mut ctx.app.settings.harmony;
                 ComboBox::from_label("Choose a harmony")
                     .selected_text(harmony.as_ref())

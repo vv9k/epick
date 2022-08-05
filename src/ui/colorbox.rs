@@ -1,4 +1,10 @@
 use crate::color::Color;
+use crate::context::FrameCtx;
+use crate::render::render_color;
+use crate::save_to_clipboard;
+use crate::ui::color_tooltip;
+
+use egui::Ui;
 
 pub const COLORBOX_PICK_TOOLTIP: &str =
     "Primary click: set current\nMiddle click: save color\nSecondary click: copy color";
@@ -36,6 +42,46 @@ impl ColorBox {
 
     pub fn hover_help(&self) -> Option<&str> {
         self.hover_help.as_deref()
+    }
+
+    pub fn display(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
+        let color = self.color();
+        let display_str = ctx.app.display_color(&color);
+        let format = ctx.app.display_format();
+        let on_hover = color_tooltip(
+            &color,
+            format,
+            ctx.app.settings.rgb_working_space,
+            ctx.app.settings.illuminant,
+            self.hover_help(),
+        );
+        let tex_allocator = &mut ctx.tex_allocator();
+        let resp = render_color(
+            ui,
+            tex_allocator,
+            ctx.tex_manager,
+            self.color().color32(),
+            self.size(),
+            Some(&on_hover),
+            self.border(),
+        );
+        if let Some(resp) = resp {
+            if self.label() {
+                ui.monospace(&display_str);
+            }
+
+            //if resp.clicked() {
+            //self.picker.set_cur_color(color);
+            //}
+
+            if resp.middle_clicked() {
+                ctx.app.add_color(color);
+            }
+
+            if resp.secondary_clicked() {
+                let _ = save_to_clipboard(ctx.app.clipboard_color(&color));
+            }
+        }
     }
 }
 

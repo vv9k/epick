@@ -1,6 +1,8 @@
 use crate::color::{ChromaticAdaptationMethod, Color, Illuminant, RgbWorkingSpace};
 
-#[derive(Debug, Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ColorSliders {
     pub rgb_working_space: RgbWorkingSpace,
     pub illuminant: Illuminant,

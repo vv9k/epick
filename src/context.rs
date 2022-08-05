@@ -1,20 +1,23 @@
 use crate::{
-    app::{
-        load_settings, CentralPanelTab, CursorIcon, DisplayFmtEnum, Settings, DARK_VISUALS,
-        LIGHT_VISUALS,
-    },
+    app::{CentralPanelTab, DARK_VISUALS, LIGHT_VISUALS},
     color::{Color, DisplayFormat, Palettes},
+    color_picker::ColorPicker,
     error::append_global_error,
     render::{TextureAllocator, TextureManager},
     screen_size::ScreenSize,
+    settings,
+    settings::{DisplayFmtEnum, Settings},
 };
-use serde::{Deserialize, Serialize};
 
 use eframe::{CreationContext, Storage};
+use egui::CursorIcon;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AppCtx {
     pub settings: Settings,
+
+    pub picker: ColorPicker,
 
     pub palettes: Palettes,
     pub palettes_tab_display_label: bool,
@@ -53,6 +56,8 @@ impl Default for AppCtx {
         Self {
             settings: Settings::default(),
 
+            picker: ColorPicker::default(),
+
             palettes: Palettes::default(),
             palettes_tab_display_label: false,
 
@@ -79,7 +84,9 @@ impl AppCtx {
     /// Initialize a new context
     pub fn new(context: &CreationContext) -> Self {
         Self {
-            settings: load_settings(context.storage).unwrap_or_default(),
+            settings: settings::load_global(context.storage).unwrap_or_default(),
+
+            picker: ColorPicker::default(),
 
             palettes: Palettes::default(),
             palettes_tab_display_label: false,
@@ -209,12 +216,31 @@ impl AppCtx {
         }
     }
 
+    pub fn add_cur_color(&mut self) {
+        self.add_color(self.picker.current_color)
+    }
+
     /// Replaces cursor icon with `icon`
     pub fn toggle_mouse(&mut self, icon: CursorIcon) {
         self.cursor_icon = if icon == self.cursor_icon {
             CursorIcon::default()
         } else {
             icon
+        }
+    }
+
+    pub fn check_settings_change(&mut self) {
+        if self.settings.chromatic_adaptation_method
+            != self.picker.sliders.chromatic_adaptation_method
+        {
+            self.picker.sliders.chromatic_adaptation_method =
+                self.settings.chromatic_adaptation_method;
+        }
+        if self.settings.rgb_working_space != self.picker.sliders.rgb_working_space {
+            self.picker.new_workspace = Some(self.settings.rgb_working_space);
+            if self.settings.illuminant != self.picker.sliders.illuminant {
+                self.picker.new_illuminant = Some(self.settings.illuminant);
+            }
         }
     }
 }

@@ -211,7 +211,7 @@ impl App {
                                     .on_hover_cursor(CursorIcon::PointingHand)
                                     .clicked()
                                 {
-                                    self.picker.set_cur_color(*color);
+                                    ctx.app.picker.set_cur_color(*color);
                                 }
                                 if ui
                                     .button(icon::COPY)
@@ -220,7 +220,7 @@ impl App {
                                     .clicked()
                                 {
                                     let _ = save_to_clipboard(
-                                        ctx.app.clipboard_color(&self.picker.current_color),
+                                        ctx.app.clipboard_color(&ctx.app.picker.current_color),
                                     );
                                 }
                                 if ui

@@ -1,27 +1,22 @@
 #![allow(dead_code)]
-mod context;
-mod keybinding;
 mod scheme;
-mod settings;
 mod sidepanel;
 pub mod window;
 
 use crate::color::{Color, ColorHarmony, Gradient};
-use crate::color_picker::ColorPicker;
+use crate::context::{AppCtx, FrameCtx};
 use crate::display_picker::{self, DisplayPickerExt};
 use crate::error::{append_global_error, DisplayError, ERROR_STACK};
-use crate::render::{render_color, render_gradient, TextureManager};
+use crate::keybinding::{default_keybindings, KeyBindings};
+use crate::render::{render_gradient, TextureManager};
 use crate::save_to_clipboard;
 use crate::screen_size::ScreenSize;
+use crate::settings;
 use crate::ui::{
-    color_tooltip,
     colorbox::{ColorBox, COLORBOX_DRAG_TOOLTIP, COLORBOX_PICK_TOOLTIP},
     colors::*,
     dark_visuals, drag_source, drop_target, icon, light_visuals, DOUBLE_SPACE, SPACE,
 };
-use context::{AppCtx, FrameCtx};
-use keybinding::{default_keybindings, KeyBindings};
-use settings::{DisplayFmtEnum, Settings};
 use window::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
 
 use eframe::{CreationContext, Storage};
@@ -76,41 +71,6 @@ pub enum CentralPanelTab {
     Palettes,
 }
 
-pub fn load_settings(_storage: Option<&dyn eframe::Storage>) -> Option<Settings> {
-    #[cfg(target_arch = "wasm32")]
-    if let Some(storage) = _storage {
-        if let Some(yaml) = storage.get_string(Settings::STORAGE_KEY) {
-            if let Ok(settings) = Settings::from_yaml_str(&yaml) {
-                return Some(settings);
-            }
-        }
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    if let Some(config_dir) = Settings::dir("epick") {
-        let path = config_dir.join(Settings::FILE_NAME);
-
-        if let Ok(settings) = Settings::load(&path) {
-            return Some(settings);
-        }
-    }
-
-    None
-}
-
-pub fn save_settings(settings: &Settings, _storage: &mut dyn Storage) {
-    #[cfg(target_arch = "wasm32")]
-    if let Ok(yaml) = settings.as_yaml_str() {
-        _storage.set_string(Settings::STORAGE_KEY, yaml);
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    if let Some(dir) = Settings::dir("epick") {
-        if !dir.exists() {
-            let _ = std::fs::create_dir_all(&dir);
-        }
-        let _ = settings.save(dir.join(Settings::FILE_NAME));
-    }
-}
-
 pub struct App {
     pub display_errors: Vec<DisplayError>,
 
@@ -120,8 +80,6 @@ pub struct App {
     pub hues_window: HuesWindow,
     pub tints_window: TintsWindow,
     pub shades_window: ShadesWindow,
-
-    pub picker: ColorPicker,
 
     pub display_picker: Option<Rc<dyn DisplayPickerExt>>,
     #[cfg(target_os = "linux")]
@@ -151,7 +109,7 @@ impl eframe::App for App {
                 ctx.set_styles(screen_size);
             }
 
-            self.check_settings_change(&mut ctx);
+            ctx.app.check_settings_change();
 
             self.top_panel(&mut ctx);
 
@@ -165,7 +123,7 @@ impl eframe::App for App {
 
             frame.set_window_size(ctx.egui.used_size());
 
-            self.picker.check_for_change();
+            ctx.app.picker.check_for_change();
 
             #[cfg(not(target_arch = "wasm32"))]
             // populate display errors from the global error stack
@@ -202,14 +160,14 @@ impl eframe::App for App {
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
 
-            ctx.app.current_selected_color = self.picker.current_color;
+            ctx.app.current_selected_color = ctx.app.picker.current_color;
         }
     }
 
     fn save(&mut self, storage: &mut dyn Storage) {
         if let Some(ctx) = CONTEXT.get().and_then(|ctx| ctx.read().ok()) {
             ctx.save_palettes(storage);
-            save_settings(&ctx.settings, storage);
+            settings::save_global(&ctx.settings, storage);
         }
         storage.flush();
     }
@@ -232,8 +190,6 @@ impl App {
             hues_window: HuesWindow::default(),
             tints_window: TintsWindow::default(),
             shades_window: ShadesWindow::default(),
-
-            picker: ColorPicker::default(),
 
             display_picker: crate::display_picker::init_display_picker(),
             #[cfg(target_os = "linux")]
@@ -280,39 +236,20 @@ impl App {
         app
     }
 
-    fn check_settings_change(&mut self, ctx: &mut FrameCtx<'_>) {
-        if ctx.app.settings.chromatic_adaptation_method
-            != self.picker.sliders.chromatic_adaptation_method
-        {
-            self.picker.sliders.chromatic_adaptation_method =
-                ctx.app.settings.chromatic_adaptation_method;
-        }
-        if ctx.app.settings.rgb_working_space != self.picker.sliders.rgb_working_space {
-            self.picker.new_workspace = Some(ctx.app.settings.rgb_working_space);
-        }
-        if ctx.app.settings.illuminant != self.picker.sliders.illuminant {
-            self.picker.new_illuminant = Some(ctx.app.settings.illuminant);
-        }
-    }
-
     fn check_keys_pressed(&mut self, ctx: &mut FrameCtx) {
         for kb in KEYBINDINGS.iter() {
             if ctx.egui.input().key_pressed(kb.key()) {
                 let f = kb.binding();
-                f(self, ctx)
+                f(ctx)
             }
         }
     }
 
-    fn add_cur_color(&self, ctx: &mut FrameCtx<'_>) {
-        ctx.app.add_color(self.picker.current_color)
-    }
-
-    fn hex_input(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
+    fn hex_input(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         CollapsingHeader::new("Text input").show(ui, |ui| {
             ui.label("Enter a hex color: ");
             ui.horizontal(|ui| {
-                let resp = ui.text_edit_singleline(&mut self.picker.hex_color);
+                let resp = ui.text_edit_singleline(&mut ctx.app.picker.hex_color);
                 if (resp.lost_focus() && ui.input().key_pressed(egui::Key::Enter))
                     || ui
                         .button(icon::PLAY)
@@ -320,12 +257,12 @@ impl App {
                         .on_hover_cursor(CursorIcon::PointingHand)
                         .clicked()
                 {
-                    if self.picker.hex_color.len() < 6 {
+                    if ctx.app.picker.hex_color.len() < 6 {
                         append_global_error("Enter a color first (ex. ab12ff #1200ff)".to_owned());
                     } else if let Some(color) =
-                        Color::from_hex(self.picker.hex_color.trim_start_matches('#'))
+                        Color::from_hex(ctx.app.picker.hex_color.trim_start_matches('#'))
                     {
-                        self.picker.set_cur_color(color);
+                        ctx.app.picker.set_cur_color(color);
                     } else {
                         append_global_error("The entered hex color is not valid".to_owned());
                     }
@@ -336,50 +273,10 @@ impl App {
                     .on_hover_cursor(CursorIcon::Copy)
                     .clicked()
                 {
-                    self.add_cur_color(ctx)
+                    ctx.app.add_cur_color()
                 }
             });
         });
-    }
-
-    fn display_color_box(&mut self, color_box: ColorBox, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
-        let color = color_box.color();
-        let display_str = ctx.app.display_color(&color);
-        let format = ctx.app.display_format();
-        let on_hover = color_tooltip(
-            &color,
-            format,
-            ctx.app.settings.rgb_working_space,
-            ctx.app.settings.illuminant,
-            color_box.hover_help(),
-        );
-        let tex_allocator = &mut ctx.tex_allocator();
-        let resp = render_color(
-            ui,
-            tex_allocator,
-            ctx.tex_manager,
-            color_box.color().color32(),
-            color_box.size(),
-            Some(&on_hover),
-            color_box.border(),
-        );
-        if let Some(resp) = resp {
-            if color_box.label() {
-                ui.monospace(&display_str);
-            }
-
-            if resp.clicked() {
-                self.picker.set_cur_color(color);
-            }
-
-            if resp.middle_clicked() {
-                ctx.app.add_color(color);
-            }
-
-            if resp.secondary_clicked() {
-                let _ = save_to_clipboard(ctx.app.clipboard_color(&color));
-            }
-        }
     }
 
     fn gradient_box(
@@ -530,7 +427,7 @@ impl App {
         self.settings_window.custom_formats_window.display(
             &mut ctx.app.settings,
             ctx.egui,
-            self.picker.current_color,
+            ctx.app.picker.current_color,
         );
         if let Err(e) = self.export_window.display(ctx.egui) {
             append_global_error(e);
@@ -629,7 +526,7 @@ impl App {
                                         .hover_help(COLORBOX_DRAG_TOOLTIP)
                                         .build();
                                     ui.vertical(|ui| {
-                                        self.display_color_box(cb, ctx, ui);
+                                        cb.display(ctx, ui);
                                     });
                                 });
                                 if ui.memory().is_being_dragged(color_id) {
@@ -699,7 +596,7 @@ impl App {
                 .clicked()
             {
                 if let Err(e) =
-                    save_to_clipboard(ctx.app.clipboard_color(&self.picker.current_color))
+                    save_to_clipboard(ctx.app.clipboard_color(&ctx.app.picker.current_color))
                 {
                     append_global_error(format!("Failed to save color to clipboard - {}", e));
                 }
@@ -710,18 +607,18 @@ impl App {
                 .on_hover_cursor(CursorIcon::Copy)
                 .clicked()
             {
-                self.add_cur_color(ctx);
+                ctx.app.add_cur_color();
             }
         });
         let cb = ColorBox::builder()
             .size((25., 25.))
-            .color(self.picker.current_color)
+            .color(ctx.app.picker.current_color)
             .label(true)
             .hover_help(COLORBOX_PICK_TOOLTIP)
             .border(true)
             .build();
         ui.horizontal(|ui| {
-            self.display_color_box(cb, ctx, ui);
+            cb.display(ctx, ui);
         });
 
         self.handle_display_picker(ctx, ui);
@@ -744,28 +641,28 @@ impl App {
     fn sliders(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         ui.vertical(|ui| {
             if ctx.app.settings.color_spaces.rgb {
-                self.picker.rgb_sliders(ui);
+                ctx.app.picker.rgb_sliders(ui);
             }
             if ctx.app.settings.color_spaces.cmyk {
-                self.picker.cmyk_sliders(ui);
+                ctx.app.picker.cmyk_sliders(ui);
             }
             if ctx.app.settings.color_spaces.hsv {
-                self.picker.hsv_sliders(ui);
+                ctx.app.picker.hsv_sliders(ui);
             }
             if ctx.app.settings.color_spaces.hsl {
-                self.picker.hsl_sliders(ui);
+                ctx.app.picker.hsl_sliders(ui);
             }
             if ctx.app.settings.color_spaces.luv {
-                self.picker.luv_sliders(ui);
+                ctx.app.picker.luv_sliders(ui);
             }
             if ctx.app.settings.color_spaces.lch_uv {
-                self.picker.lch_uv_sliders(ui);
+                ctx.app.picker.lch_uv_sliders(ui);
             }
             if ctx.app.settings.color_spaces.lab {
-                self.picker.lab_sliders(ui);
+                ctx.app.picker.lab_sliders(ui);
             }
             if ctx.app.settings.color_spaces.lch_ab {
-                self.picker.lch_ab_sliders(ui);
+                ctx.app.picker.lch_ab_sliders(ui);
             }
         });
     }
@@ -787,7 +684,7 @@ impl App {
                     .border(true)
                     .build();
                 ui.horizontal(|ui| {
-                    self.display_color_box(cb, ctx, ui);
+                    cb.display(ctx, ui);
                 });
             }
         };

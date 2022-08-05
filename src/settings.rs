@@ -1,13 +1,49 @@
 use crate::color::{
     ChromaticAdaptationMethod, ColorHarmony, DisplayFormat, Illuminant, RgbWorkingSpace,
 };
-
 use crate::ui::layout::HarmonyLayout;
+
 use anyhow::{Context, Result};
+use eframe::Storage;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+
+pub fn load_global(_storage: Option<&dyn eframe::Storage>) -> Option<Settings> {
+    #[cfg(target_arch = "wasm32")]
+    if let Some(storage) = _storage {
+        if let Some(yaml) = storage.get_string(Settings::STORAGE_KEY) {
+            if let Ok(settings) = Settings::from_yaml_str(&yaml) {
+                return Some(settings);
+            }
+        }
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    if let Some(config_dir) = Settings::dir("epick") {
+        let path = config_dir.join(Settings::FILE_NAME);
+
+        if let Ok(settings) = Settings::load(&path) {
+            return Some(settings);
+        }
+    }
+
+    None
+}
+
+pub fn save_global(settings: &Settings, _storage: &mut dyn Storage) {
+    #[cfg(target_arch = "wasm32")]
+    if let Ok(yaml) = settings.as_yaml_str() {
+        _storage.set_string(Settings::STORAGE_KEY, yaml);
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    if let Some(dir) = Settings::dir("epick") {
+        if !dir.exists() {
+            let _ = std::fs::create_dir_all(&dir);
+        }
+        let _ = settings.save(dir.join(Settings::FILE_NAME));
+    }
+}
 
 fn enabled() -> bool {
     true
@@ -227,7 +263,7 @@ impl DisplayFmtEnum {
 
 #[cfg(test)]
 mod tests {
-    use crate::app::settings::{Settings, DEFAULT_COLOR_SIZE};
+    use crate::settings::{Settings, DEFAULT_COLOR_SIZE};
     use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
     use crate::math::eq_f32;
     use crate::ui::layout::HarmonyLayout;
