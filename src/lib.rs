@@ -10,6 +10,7 @@ mod render;
 mod screen_size;
 mod settings;
 mod ui;
+mod zoom_picker;
 
 pub use app::App as Epick;
 
