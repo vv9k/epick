@@ -1,13 +1,17 @@
 use crate::color::Gradient;
+
 use egui::color::Color32;
 use egui::{
     pos2, ColorImage, CursorIcon, ImageButton, ImageData, Rect, Response, TextureId, Ui, Vec2,
 };
 use std::collections::HashMap;
+use std::sync::Arc;
+
+pub type TextureAllocator = Option<Arc<egui::mutex::RwLock<epaint::TextureManager>>>;
 
 pub fn render_color(
     ui: &mut Ui,
-    tex_allocator: &mut crate::TextureAllocator,
+    tex_allocator: &mut TextureAllocator,
     tex_mngr: &mut TextureManager,
     color: Color32,
     size: Vec2,
@@ -28,7 +32,7 @@ pub fn render_color(
 
 pub fn render_gradient(
     ui: &mut Ui,
-    tex_allocator: &mut crate::TextureAllocator,
+    tex_allocator: &mut TextureAllocator,
     tex_mngr: &mut TextureManager,
     gradient: &Gradient,
     size: Vec2,

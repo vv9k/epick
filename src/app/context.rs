@@ -5,8 +5,8 @@ use crate::{
     },
     color::{Color, DisplayFormat, Palettes},
     error::append_global_error,
+    render::TextureAllocator,
     screen_size::ScreenSize,
-    TextureAllocator,
 };
 use serde::{Deserialize, Serialize};
 

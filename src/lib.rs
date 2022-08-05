@@ -14,7 +14,6 @@ use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
 
 use std::sync::Arc;
-pub type TextureAllocator = Option<Arc<egui::mutex::RwLock<epaint::TextureManager>>>;
 
 fn save_to_clipboard(text: String) -> Result<(), Box<dyn std::error::Error>> {
     let mut ctx: ClipboardContext = ClipboardProvider::new()?;
