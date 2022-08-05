@@ -263,9 +263,9 @@ impl DisplayFmtEnum {
 
 #[cfg(test)]
 mod tests {
-    use crate::settings::{Settings, DEFAULT_COLOR_SIZE};
     use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
     use crate::math::eq_f32;
+    use crate::settings::{Settings, DEFAULT_COLOR_SIZE};
     use crate::ui::layout::HarmonyLayout;
     use std::fs;
 
