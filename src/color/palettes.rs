@@ -1,6 +1,6 @@
 use crate::color::NamedPalette;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -143,6 +143,14 @@ impl Palettes {
         serde_json::from_slice(&data).context("failed to deserialize saved colors file")
     }
 
+    pub fn load_from_storage(storage: &dyn eframe::Storage) -> Result<Self> {
+        if let Some(json) = storage.get_string(Self::STORAGE_KEY) {
+            Self::from_json_str(&json)
+        } else {
+            Err(anyhow!("palettes not found in storage"))
+        }
+    }
+
     pub fn from_json_str(json: &str) -> Result<Self> {
         serde_json::from_str(json).context("failed to deserialize saved colors from json")
     }
@@ -156,6 +164,13 @@ impl Palettes {
         let mut data = Vec::with_capacity(128);
         serde_json::to_writer(&mut data, &self).context("failed to serialize saved colors")?;
         fs::write(path, &data).context("failed to write saved colors to a file")
+    }
+
+    pub fn save_to_storage(&self, storage: &mut dyn eframe::Storage) -> Result<()> {
+        self.as_json_str().map(|json| {
+            storage.set_string(Palettes::STORAGE_KEY, json);
+            ()
+        })
     }
 
     /// Returns system directory where saved colors should be placed joined by the `name` parameter.

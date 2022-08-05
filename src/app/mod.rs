@@ -158,9 +158,16 @@ impl eframe::App for App {
 
             self.picker.check_for_change();
 
+            #[cfg(not(target_arch = "wasm32"))]
             // populate display errors from the global error stack
             if let Ok(mut stack) = ERROR_STACK.try_lock() {
                 while let Some(error) = stack.errors.pop_front() {
+                    self.display_errors.push(error);
+                }
+            }
+            #[cfg(target_arch = "wasm32")]
+            unsafe {
+                while let Some(error) = ERROR_STACK.errors.pop_front() {
                     self.display_errors.push(error);
                 }
             }
@@ -298,16 +305,17 @@ impl App {
         if ctx.app.settings.cache_colors {
             #[cfg(target_arch = "wasm32")]
             if let Some(storage) = _storage {
-                if let Some(yaml) = storage.get_string(Palettes::STORAGE_KEY) {
-                    if let Ok(palettes) = Palettes::from_yaml_str(&yaml) {
-                        ctx.app.palettes = palettes;
-                    }
+                match Palettes::load_from_storage(storage) {
+                    Ok(palettes) => ctx.app.palettes = palettes,
+                    Err(_) => {} //Err(e) => append_global_error(format!("failed to load palettes, {e:?}")),
                 }
             }
+
             #[cfg(not(target_arch = "wasm32"))]
             if let Some(path) = Palettes::dir("epick") {
-                if let Ok(palettes) = Palettes::load(path.join(Palettes::FILE_NAME)) {
-                    ctx.app.palettes = palettes;
+                match Palettes::load(path.join(Palettes::FILE_NAME)) {
+                    Ok(palettes) => ctx.app.palettes = palettes,
+                    Err(e) => append_global_error(format!("failed to load palettes, {e:?}")),
                 }
             }
         }
@@ -316,8 +324,8 @@ impl App {
     fn save_colors(&self, ctx: &AppCtx, _storage: &mut dyn Storage) {
         #[cfg(target_arch = "wasm32")]
         if ctx.settings.cache_colors {
-            if let Ok(yaml) = ctx.palettes.as_yaml_str() {
-                _storage.set_string(Palettes::STORAGE_KEY, yaml);
+            if let Err(e) = ctx.palettes.save_to_storage(_storage) {
+                append_global_error(format!("failed to save palettes, {e:?}"));
             }
         }
         #[cfg(not(target_arch = "wasm32"))]
@@ -325,7 +333,9 @@ impl App {
             if !dir.exists() {
                 let _ = std::fs::create_dir_all(&dir);
             }
-            let _ = ctx.palettes.save(dir.join(Palettes::FILE_NAME));
+            if let Err(e) = ctx.palettes.save(dir.join(Palettes::FILE_NAME)) {
+                append_global_error(format!("failed to save palettes, {e:?}"));
+            }
         }
     }
 
