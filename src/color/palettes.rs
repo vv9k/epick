@@ -169,7 +169,6 @@ impl Palettes {
     pub fn save_to_storage(&self, storage: &mut dyn eframe::Storage) -> Result<()> {
         self.as_json_str().map(|json| {
             storage.set_string(Palettes::STORAGE_KEY, json);
-            ()
         })
     }
 
