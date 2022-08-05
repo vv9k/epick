@@ -162,6 +162,7 @@ impl App {
                             let colorbox = ColorBox::builder()
                                 .color($color)
                                 .size($size)
+                                .hover_help(COLORBOX_PICK_TOOLTIP)
                                 .label($display_labels).build();
                             ui.vertical(|ui| {
                                 self.display_color_box(colorbox, ctx, ui);
