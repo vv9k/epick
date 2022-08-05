@@ -67,7 +67,7 @@ pub fn default_keybindings() -> KeyBindings {
                         app.picker.set_cur_color(ctx.app.cursor_pick_color);
                         if ctx.app.settings.auto_copy_picked_color {
                             let color = ctx.app.cursor_pick_color;
-                            let _ = save_to_clipboard(app.clipboard_color(ctx, &color));
+                            let _ = save_to_clipboard(ctx.app.clipboard_color(&color));
                         }
                     }),
                 },

@@ -188,7 +188,7 @@ impl App {
         let display_strings: Vec<_> = current_palette
             .palette
             .iter()
-            .map(|c| self.display_color(ctx, c))
+            .map(|c| ctx.app.display_color(c))
             .collect();
         let max_len = display_strings
             .iter()
@@ -220,7 +220,7 @@ impl App {
                                     .clicked()
                                 {
                                     let _ = save_to_clipboard(
-                                        self.clipboard_color(ctx, &self.picker.current_color),
+                                        ctx.app.clipboard_color(&self.picker.current_color),
                                     );
                                 }
                                 if ui

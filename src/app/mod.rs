@@ -6,8 +6,7 @@ mod settings;
 mod sidepanel;
 pub mod window;
 
-use crate::color::Palettes;
-use crate::color::{Color, ColorHarmony, DisplayFormat, Gradient};
+use crate::color::{Color, ColorHarmony, Gradient};
 use crate::color_picker::ColorPicker;
 use crate::display_picker::{self, DisplayPickerExt};
 use crate::error::{append_global_error, DisplayError, ERROR_STACK};
@@ -139,7 +138,7 @@ impl eframe::App for App {
 
             let screen_size = ScreenSize::from(ctx.egui.available_rect());
             if ctx.app.screen_size != screen_size {
-                self.set_styles(&mut ctx, screen_size);
+                ctx.set_styles(screen_size);
             }
 
             self.check_settings_change(&mut ctx);
@@ -199,7 +198,7 @@ impl eframe::App for App {
 
     fn save(&mut self, storage: &mut dyn Storage) {
         if let Some(ctx) = CONTEXT.get().and_then(|ctx| ctx.read().ok()) {
-            self.save_colors(&ctx, storage);
+            ctx.save_palettes(storage);
             save_settings(&ctx.settings, storage);
         }
         storage.flush();
@@ -239,12 +238,12 @@ impl App {
 
         let mut ctx = FrameCtx::new(&mut app_ctx, &context.egui_ctx);
 
-        app.load_colors(&mut ctx, context.storage);
+        ctx.app.load_palettes(context.storage);
 
         if prefer_dark {
-            app.set_dark_theme(&mut ctx);
+            ctx.set_dark_theme();
         } else {
-            app.set_light_theme(&mut ctx);
+            ctx.set_light_theme();
         }
 
         let mut fonts = egui::FontDefinitions::default();
@@ -265,78 +264,6 @@ impl App {
         CONTEXT.try_insert(RwLock::new(app_ctx)).unwrap();
 
         app
-    }
-
-    fn set_dark_theme(&self, ctx: &mut FrameCtx<'_>) {
-        ctx.app.settings.is_dark_mode = true;
-        ctx.egui.set_visuals(DARK_VISUALS.clone());
-    }
-
-    fn set_light_theme(&self, ctx: &mut FrameCtx<'_>) {
-        ctx.app.settings.is_dark_mode = false;
-        ctx.egui.set_visuals(LIGHT_VISUALS.clone());
-    }
-
-    fn set_theme(&self, ctx: &mut FrameCtx<'_>) {
-        if ctx.is_dark_mode() {
-            self.set_light_theme(ctx);
-        } else {
-            self.set_dark_theme(ctx);
-        }
-    }
-
-    fn set_styles(&self, ctx: &mut FrameCtx<'_>, screen_size: ScreenSize) {
-        ctx.app.screen_size = screen_size;
-
-        let slider_size = match screen_size {
-            ScreenSize::Phone(w, _) => w * 0.5,
-            ScreenSize::Desktop(w, _) if w > 1500. => w * 0.2,
-            ScreenSize::Tablet(w, _) | ScreenSize::Laptop(w, _) | ScreenSize::Desktop(w, _) => {
-                w * 0.35
-            }
-        };
-
-        let mut style = (*ctx.egui.style()).clone();
-        style.spacing.slider_width = slider_size / 2.;
-        ctx.egui.set_style(style);
-    }
-
-    fn load_colors(&self, ctx: &mut FrameCtx, _storage: Option<&dyn Storage>) {
-        if ctx.app.settings.cache_colors {
-            #[cfg(target_arch = "wasm32")]
-            if let Some(storage) = _storage {
-                match Palettes::load_from_storage(storage) {
-                    Ok(palettes) => ctx.app.palettes = palettes,
-                    Err(_) => {} //Err(e) => append_global_error(format!("failed to load palettes, {e:?}")),
-                }
-            }
-
-            #[cfg(not(target_arch = "wasm32"))]
-            if let Some(path) = Palettes::dir("epick") {
-                match Palettes::load(path.join(Palettes::FILE_NAME)) {
-                    Ok(palettes) => ctx.app.palettes = palettes,
-                    Err(e) => append_global_error(format!("failed to load palettes, {e:?}")),
-                }
-            }
-        }
-    }
-
-    fn save_colors(&self, ctx: &AppCtx, _storage: &mut dyn Storage) {
-        #[cfg(target_arch = "wasm32")]
-        if ctx.settings.cache_colors {
-            if let Err(e) = ctx.palettes.save_to_storage(_storage) {
-                append_global_error(format!("failed to save palettes, {e:?}"));
-            }
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        if let Some(dir) = Palettes::dir("epick") {
-            if !dir.exists() {
-                let _ = std::fs::create_dir_all(&dir);
-            }
-            if let Err(e) = ctx.palettes.save(dir.join(Palettes::FILE_NAME)) {
-                append_global_error(format!("failed to save palettes, {e:?}"));
-            }
-        }
     }
 
     fn check_settings_change(&mut self, ctx: &mut FrameCtx<'_>) {
@@ -363,17 +290,8 @@ impl App {
         }
     }
 
-    fn add_color(&self, ctx: &mut FrameCtx<'_>, color: Color) {
-        if !ctx.app.palettes.current_mut().palette.add(color) {
-            let color_str = self.display_color(ctx, &color);
-            append_global_error(format!("Color {} already saved!", color_str));
-        } else {
-            ctx.app.sidepanel.show = true;
-        }
-    }
-
     fn add_cur_color(&self, ctx: &mut FrameCtx<'_>) {
-        self.add_color(ctx, self.picker.current_color)
+        ctx.app.add_color(self.picker.current_color)
     }
 
     fn hex_input(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
@@ -410,67 +328,10 @@ impl App {
         });
     }
 
-    fn display_format<'fmt>(&self, ctx: &'fmt FrameCtx<'_>) -> DisplayFormat<'fmt> {
-        match ctx.app.settings.color_display_format {
-            DisplayFmtEnum::Hex => DisplayFormat::Hex,
-            DisplayFmtEnum::HexUppercase => DisplayFormat::HexUpercase,
-            DisplayFmtEnum::CssRgb => DisplayFormat::CssRgb,
-            DisplayFmtEnum::CssHsl => DisplayFormat::CssHsl {
-                degree_symbol: true,
-            },
-            DisplayFmtEnum::Custom(ref name) => {
-                if ctx.app.settings.saved_color_formats.get(name).is_some() {
-                    DisplayFormat::Custom(&ctx.app.settings.saved_color_formats[name])
-                } else {
-                    append_global_error(format!("Custom color format `{name}` not found"));
-                    DisplayFmtEnum::default_display_format()
-                }
-            }
-        }
-    }
-
-    fn display_color(&self, ctx: &mut FrameCtx<'_>, color: &Color) -> String {
-        color.display(
-            self.display_format(ctx),
-            ctx.app.settings.rgb_working_space,
-            ctx.app.settings.illuminant,
-        )
-    }
-
-    fn clipboard_color(&self, ctx: &mut FrameCtx<'_>, color: &Color) -> String {
-        let format = match ctx
-            .app
-            .settings
-            .color_clipboard_format
-            .as_ref()
-            .unwrap_or(&ctx.app.settings.color_display_format)
-        {
-            DisplayFmtEnum::Hex => DisplayFormat::Hex,
-            DisplayFmtEnum::HexUppercase => DisplayFormat::HexUpercase,
-            DisplayFmtEnum::CssRgb => DisplayFormat::CssRgb,
-            DisplayFmtEnum::CssHsl => DisplayFormat::CssHsl {
-                degree_symbol: false,
-            },
-            DisplayFmtEnum::Custom(name) => {
-                if ctx.app.settings.saved_color_formats.get(name).is_some() {
-                    DisplayFormat::Custom(&ctx.app.settings.saved_color_formats[name])
-                } else {
-                    append_global_error(format!("Custom color format `{name}` not found"));
-                    DisplayFmtEnum::default_display_format()
-                }
-            }
-        };
-        color.display(
-            format,
-            ctx.app.settings.rgb_working_space,
-            ctx.app.settings.illuminant,
-        )
-    }
-
     fn display_color_box(&mut self, color_box: ColorBox, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
         let color = color_box.color();
-        let display_str = self.display_color(ctx, &color);
-        let format = self.display_format(ctx);
+        let display_str = ctx.app.display_color(&color);
+        let format = ctx.app.display_format();
         let on_hover = color_tooltip(
             &color,
             format,
@@ -498,11 +359,11 @@ impl App {
             }
 
             if resp.middle_clicked() {
-                self.add_color(ctx, color);
+                ctx.app.add_color(color);
             }
 
             if resp.secondary_clicked() {
-                let _ = save_to_clipboard(self.clipboard_color(ctx, &color));
+                let _ = save_to_clipboard(ctx.app.clipboard_color(&color));
             }
         }
     }
@@ -646,7 +507,7 @@ impl App {
             .on_hover_cursor(CursorIcon::PointingHand)
             .clicked()
         {
-            self.set_theme(ctx);
+            ctx.set_theme();
         }
     }
 
@@ -824,7 +685,7 @@ impl App {
                 .clicked()
             {
                 if let Err(e) =
-                    save_to_clipboard(self.clipboard_color(ctx, &self.picker.current_color))
+                    save_to_clipboard(ctx.app.clipboard_color(&self.picker.current_color))
                 {
                     append_global_error(format!("Failed to save color to clipboard - {}", e));
                 }
@@ -918,18 +779,10 @@ impl App {
         };
     }
 
-    fn toggle_mouse(&mut self, ctx: &mut FrameCtx<'_>, icon: CursorIcon) {
-        ctx.app.cursor_icon = if icon == ctx.app.cursor_icon {
-            CursorIcon::default()
-        } else {
-            icon
-        }
-    }
-
     #[cfg(any(target_os = "linux", windows))]
     fn display_zoom_window(&mut self, ctx: &mut FrameCtx<'_>, picker: &Rc<dyn DisplayPickerExt>) {
         if self.picker_window.is_none() {
-            self.toggle_mouse(ctx, CursorIcon::Crosshair);
+            ctx.app.toggle_mouse(CursorIcon::Crosshair);
             let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
 
             #[cfg(target_os = "linux")]
