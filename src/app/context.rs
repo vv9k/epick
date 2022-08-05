@@ -21,21 +21,30 @@ pub struct AppCtx {
 
     pub screen_size: ScreenSize,
     pub cursor_icon: CursorIcon,
+    /// Color under cursor
     pub cursor_pick_color: Color,
+    /// Currently selected color in the picker
     pub current_selected_color: Color,
     pub central_panel_tab: CentralPanelTab,
 
     pub sidepanel: SidePanelData,
 
+    /// Is the zoom window currently dragged
     pub zoom_window_dragged: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SidePanelData {
+    /// Is the side panel visible
     pub show: bool,
+    /// If true palette name is currently being edited
     pub edit_palette_name: bool,
+    /// When triggering palette name edit this is used to
+    /// switch focus to the textedit
     pub trigger_edit_focus: bool,
+    /// Width of the button toolbar on the sidebar
     pub box_width: f32,
+    /// Size of the whole Sidebar response
     pub response_size: egui::Vec2,
 }
 
@@ -66,6 +75,8 @@ impl Default for AppCtx {
 }
 impl AppCtx {
     pub const KEY: &'static str = "app-global-ctx";
+
+    /// Initialize a new context
     pub fn new(context: &CreationContext) -> Self {
         Self {
             settings: load_settings(context.storage).unwrap_or_default(),
@@ -88,6 +99,8 @@ impl AppCtx {
             zoom_window_dragged: false,
         }
     }
+
+    /// Current color display format
     pub fn display_format(&self) -> DisplayFormat {
         match self.settings.color_display_format {
             DisplayFmtEnum::Hex => DisplayFormat::Hex,
@@ -107,6 +120,7 @@ impl AppCtx {
         }
     }
 
+    /// Format a color as a string using display color format from settings
     pub fn display_color(&self, color: &Color) -> String {
         color.display(
             self.display_format(),
@@ -115,6 +129,7 @@ impl AppCtx {
         )
     }
 
+    /// Format a color as a string using clipboard color format from settings
     pub fn clipboard_color(&self, color: &Color) -> String {
         let format = match self
             .settings
@@ -144,6 +159,7 @@ impl AppCtx {
         )
     }
 
+    /// Load palettes from appropriate location based on the target arch
     pub fn load_palettes(&mut self, _storage: Option<&dyn Storage>) {
         if self.settings.cache_colors {
             #[cfg(target_arch = "wasm32")]
@@ -164,6 +180,7 @@ impl AppCtx {
         }
     }
 
+    /// Save palettes to appropriate location based on the target arch
     pub fn save_palettes(&self, _storage: &mut dyn Storage) {
         #[cfg(target_arch = "wasm32")]
         if self.settings.cache_colors {
@@ -182,6 +199,7 @@ impl AppCtx {
         }
     }
 
+    /// Adds a color to the currently selected palette
     pub fn add_color(&mut self, color: Color) {
         if !self.palettes.current_mut().palette.add(color) {
             let color_str = self.display_color(&color);
@@ -191,6 +209,7 @@ impl AppCtx {
         }
     }
 
+    /// Replaces cursor icon with `icon`
     pub fn toggle_mouse(&mut self, icon: CursorIcon) {
         self.cursor_icon = if icon == self.cursor_icon {
             CursorIcon::default()

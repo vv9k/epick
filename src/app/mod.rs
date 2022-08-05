@@ -110,10 +110,8 @@ pub fn save_settings(settings: &Settings, _storage: &mut dyn Storage) {
 }
 
 pub struct App {
-    pub picker: ColorPicker,
     pub texture_manager: TextureManager,
-    pub display_picker: Option<Rc<dyn DisplayPickerExt>>,
-    pub error_message: Option<String>,
+    pub display_errors: Vec<DisplayError>,
 
     pub settings_window: SettingsWindow,
     pub export_window: ExportWindow,
@@ -122,12 +120,13 @@ pub struct App {
     pub tints_window: TintsWindow,
     pub shades_window: ShadesWindow,
 
+    pub picker: ColorPicker,
+
+    pub display_picker: Option<Rc<dyn DisplayPickerExt>>,
     #[cfg(target_os = "linux")]
     pub picker_window: Option<(xproto::Window, xproto::Gcontext)>,
     #[cfg(windows)]
     pub picker_window: Option<HWND>,
-
-    pub display_errors: Vec<DisplayError>,
 }
 
 impl eframe::App for App {
@@ -214,10 +213,8 @@ impl App {
         let mut app_ctx = AppCtx::new(context);
 
         let app = Box::new(Self {
-            picker: ColorPicker::default(),
             texture_manager: TextureManager::default(),
-            display_picker: crate::display_picker::init_display_picker(),
-            error_message: None,
+            display_errors: Default::default(),
 
             settings_window: SettingsWindow::default(),
             export_window: ExportWindow::default(),
@@ -226,8 +223,9 @@ impl App {
             tints_window: TintsWindow::default(),
             shades_window: ShadesWindow::default(),
 
-            display_errors: Default::default(),
+            picker: ColorPicker::default(),
 
+            display_picker: crate::display_picker::init_display_picker(),
             #[cfg(target_os = "linux")]
             picker_window: None,
             #[cfg(windows)]
