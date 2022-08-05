@@ -5,7 +5,7 @@ use crate::{
     },
     color::{Color, DisplayFormat, Palettes},
     error::append_global_error,
-    render::TextureAllocator,
+    render::{TextureAllocator, TextureManager},
     screen_size::ScreenSize,
 };
 use serde::{Deserialize, Serialize};
@@ -222,13 +222,10 @@ impl AppCtx {
 pub struct FrameCtx<'frame> {
     pub app: &'frame mut AppCtx,
     pub egui: &'frame egui::Context,
+    pub tex_manager: &'frame mut TextureManager,
 }
 
 impl<'frame> FrameCtx<'frame> {
-    pub fn new(app: &'frame mut AppCtx, egui: &'frame egui::Context) -> Self {
-        Self { app, egui }
-    }
-
     pub fn tex_allocator(&self) -> TextureAllocator {
         Some(self.egui.tex_manager())
     }

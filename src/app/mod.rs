@@ -29,7 +29,7 @@ use egui::{
     color::Color32, style::Margin, vec2, Button, CollapsingHeader, CursorIcon, Id, Label, Layout,
     Rgba, RichText, ScrollArea, Ui, Vec2, Visuals,
 };
-use once_cell::sync::OnceCell;
+use once_cell::sync::{Lazy, OnceCell};
 use serde::{Deserialize, Serialize};
 use std::rc::Rc;
 use std::sync::RwLock;
@@ -67,6 +67,8 @@ lazy_static::lazy_static! {
 }
 
 static CONTEXT: OnceCell<RwLock<AppCtx>> = OnceCell::new();
+static TEXTURE_MANAGER: Lazy<RwLock<TextureManager>> =
+    Lazy::new(|| RwLock::new(TextureManager::default()));
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 pub enum CentralPanelTab {
@@ -110,7 +112,6 @@ pub fn save_settings(settings: &Settings, _storage: &mut dyn Storage) {
 }
 
 pub struct App {
-    pub texture_manager: TextureManager,
     pub display_errors: Vec<DisplayError>,
 
     pub settings_window: SettingsWindow,
@@ -132,7 +133,17 @@ pub struct App {
 impl eframe::App for App {
     fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         if let Some(mut app_ctx) = CONTEXT.get().and_then(|ctx| ctx.write().ok()) {
-            let mut ctx = FrameCtx::new(&mut app_ctx, ctx);
+            let res = TEXTURE_MANAGER.try_write();
+            if res.is_err() {
+                append_global_error(res.unwrap_err());
+                return;
+            }
+            let mut tex_manager = res.unwrap();
+            let mut ctx = FrameCtx {
+                app: &mut app_ctx,
+                egui: ctx,
+                tex_manager: &mut tex_manager,
+            };
             ctx.egui.output().cursor_icon = ctx.app.cursor_icon;
 
             let screen_size = ScreenSize::from(ctx.egui.available_rect());
@@ -213,7 +224,6 @@ impl App {
         let mut app_ctx = AppCtx::new(context);
 
         let app = Box::new(Self {
-            texture_manager: TextureManager::default(),
             display_errors: Default::default(),
 
             settings_window: SettingsWindow::default(),
@@ -234,14 +244,20 @@ impl App {
 
         let prefer_dark = context.integration_info.prefer_dark_mode.unwrap_or(true);
 
-        let mut ctx = FrameCtx::new(&mut app_ctx, &context.egui_ctx);
+        if let Ok(mut tex_manager) = TEXTURE_MANAGER.write() {
+            let mut ctx = FrameCtx {
+                app: &mut app_ctx,
+                egui: &context.egui_ctx,
+                tex_manager: &mut tex_manager,
+            };
 
-        ctx.app.load_palettes(context.storage);
+            ctx.app.load_palettes(context.storage);
 
-        if prefer_dark {
-            ctx.set_dark_theme();
-        } else {
-            ctx.set_light_theme();
+            if prefer_dark {
+                ctx.set_dark_theme();
+            } else {
+                ctx.set_light_theme();
+            }
         }
 
         let mut fonts = egui::FontDefinitions::default();
@@ -341,7 +357,7 @@ impl App {
         let resp = render_color(
             ui,
             tex_allocator,
-            &mut self.texture_manager,
+            ctx.tex_manager,
             color_box.color().color32(),
             color_box.size(),
             Some(&on_hover),
@@ -378,7 +394,7 @@ impl App {
         let _ = render_gradient(
             ui,
             tex_allocator,
-            &mut self.texture_manager,
+            ctx.tex_manager,
             gradient,
             size,
             None,

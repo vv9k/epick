@@ -245,7 +245,7 @@ impl App {
                                     render_color(
                                         ui,
                                         tex_allocator,
-                                        &mut self.texture_manager,
+                                        ctx.tex_manager,
                                         color.color32(),
                                         size,
                                         Some(&help),
