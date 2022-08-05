@@ -30,6 +30,7 @@ pub struct SidePanelData {
     pub edit_palette_name: bool,
     pub trigger_edit_focus: bool,
     pub box_width: f32,
+    pub response_size: egui::Vec2,
 }
 
 impl Default for AppCtx {
@@ -50,6 +51,7 @@ impl Default for AppCtx {
                 edit_palette_name: false,
                 trigger_edit_focus: false,
                 box_width: 0.,
+                response_size: (0., 0.).into(),
             },
 
             zoom_window_dragged: false,
@@ -74,6 +76,7 @@ impl AppCtx {
                 edit_palette_name: false,
                 trigger_edit_focus: false,
                 box_width: 0.,
+                response_size: (0., 0.).into(),
             },
 
             zoom_window_dragged: false,

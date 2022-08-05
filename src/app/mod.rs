@@ -674,7 +674,13 @@ impl App {
             } else {
                 *L_BG_2
             },
-            inner_margin: Margin::symmetric(10., 5.),
+
+            inner_margin: Margin {
+                left: 10.,
+                top: 5.,
+                right: 0.,
+                bottom: 0.,
+            },
             ..Default::default()
         };
         egui::CentralPanel::default()
@@ -852,6 +858,11 @@ impl App {
                 self.harmonies(ctx, ui);
                 self.sliders(ctx, ui);
                 self.hex_input(ctx, ui);
+                let mut available_space = ui.available_size_before_wrap();
+                if ctx.app.sidepanel.show {
+                    available_space.x -= ctx.app.sidepanel.response_size.x;
+                }
+                ui.allocate_space(available_space);
             });
     }
 

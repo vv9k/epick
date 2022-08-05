@@ -40,7 +40,6 @@ impl ErrorStack {
 #[cfg(not(target_arch = "wasm32"))]
 pub static ERROR_STACK: Lazy<Mutex<ErrorStack>> = Lazy::new(|| Mutex::new(ErrorStack::default()));
 #[cfg(target_arch = "wasm32")]
-// Safety: only accessing this from one thread
 pub static mut ERROR_STACK: Lazy<ErrorStack> = Lazy::new(|| ErrorStack::default());
 
 pub fn append_global_error(error: impl std::fmt::Display) {
@@ -49,7 +48,6 @@ pub fn append_global_error(error: impl std::fmt::Display) {
         stack.push(error.to_string());
     }
     #[cfg(target_arch = "wasm32")]
-    // Safety: wasm32 is singlethreaded
     unsafe {
         ERROR_STACK.push(error.to_string());
     }

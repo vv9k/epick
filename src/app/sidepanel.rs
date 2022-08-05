@@ -24,7 +24,7 @@ impl App {
             ..Default::default()
         };
 
-        egui::SidePanel::right("colors")
+        let resp = egui::SidePanel::right("colors")
             .frame(frame)
             .resizable(false)
             .max_width(ctx.app.sidepanel.box_width * 1.2)
@@ -34,6 +34,7 @@ impl App {
                     self.side_ui(ctx, ui);
                 })
             });
+        ctx.app.sidepanel.response_size = resp.response.rect.size();
     }
 
     fn side_ui(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {

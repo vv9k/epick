@@ -6,6 +6,7 @@
 - Disable keybindings when entering text
 - Add new central panel tab where all palettes are displayed
 - Remove borders from color boxes
+- Fix scrollbar position in picker ui
 
 # 0.7.0
 - Fix invisible circle on 2D HSV slider
