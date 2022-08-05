@@ -644,7 +644,6 @@ dependencies = [
  "egui",
  "epaint",
  "image",
- "lazy_static",
  "native-dialog",
  "nom",
  "objc",

@@ -33,35 +33,46 @@ pub mod icon {
     pub static APPLY: &str = "\u{2714}";
 }
 
+#[allow(dead_code)]
 pub mod colors {
     use egui::{Color32, Rgba};
-    use lazy_static::lazy_static;
-    lazy_static! {
-        pub static ref D_BG_00: Color32 = Color32::from_rgb(0x11, 0x16, 0x1b);
-        pub static ref D_BG_0: Color32 = Color32::from_rgb(0x16, 0x1c, 0x23);
-        pub static ref D_BG_1: Color32 = Color32::from_rgb(0x23, 0x2d, 0x38);
-        pub static ref D_BG_2: Color32 = Color32::from_rgb(0x31, 0x3f, 0x4e);
-        pub static ref D_BG_3: Color32 = Color32::from_rgb(0x41, 0x53, 0x67);
-        pub static ref D_FG_0: Color32 = Color32::from_rgb(0xe5, 0xde, 0xd6);
-        pub static ref D_BG_00_TRANSPARENT: Color32 = Rgba::from(*D_BG_00).multiply(0.96).into();
-        pub static ref D_BG_0_TRANSPARENT: Color32 = Rgba::from(*D_BG_0).multiply(0.96).into();
-        pub static ref D_BG_1_TRANSPARENT: Color32 = Rgba::from(*D_BG_1).multiply(0.96).into();
-        pub static ref D_BG_2_TRANSPARENT: Color32 = Rgba::from(*D_BG_2).multiply(0.96).into();
-        pub static ref D_BG_3_TRANSPARENT: Color32 = Rgba::from(*D_BG_3).multiply(0.96).into();
-        pub static ref L_BG_0: Color32 = Color32::from_rgb(0xbf, 0xbf, 0xbf);
-        pub static ref L_BG_1: Color32 = Color32::from_rgb(0xd4, 0xd3, 0xd4);
-        pub static ref L_BG_2: Color32 = Color32::from_rgb(0xd9, 0xd9, 0xd9);
-        pub static ref L_BG_3: Color32 = Color32::from_rgb(0xea, 0xea, 0xea);
-        pub static ref L_BG_4: Color32 = Color32::from_rgb(0xf9, 0xf9, 0xf9);
-        pub static ref L_BG_5: Color32 = Color32::from_rgb(0xff, 0xff, 0xff);
-        pub static ref L_BG_0_TRANSPARENT: Color32 = Rgba::from(*L_BG_0).multiply(0.86).into();
-        pub static ref L_BG_1_TRANSPARENT: Color32 = Rgba::from(*L_BG_1).multiply(0.86).into();
-        pub static ref L_BG_2_TRANSPARENT: Color32 = Rgba::from(*L_BG_2).multiply(0.86).into();
-        pub static ref L_BG_3_TRANSPARENT: Color32 = Rgba::from(*L_BG_3).multiply(0.86).into();
-        pub static ref L_BG_4_TRANSPARENT: Color32 = Rgba::from(*L_BG_4).multiply(0.86).into();
-        pub static ref L_BG_5_TRANSPARENT: Color32 = Rgba::from(*L_BG_5).multiply(0.86).into();
-        pub static ref L_FG_0: Color32 = *D_BG_0;
-    }
+    use once_cell::sync::Lazy;
+
+    pub static D_BG_00: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0x11, 0x16, 0x1b));
+    pub static D_BG_0: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0x16, 0x1c, 0x23));
+    pub static D_BG_1: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0x23, 0x2d, 0x38));
+    pub static D_BG_2: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0x31, 0x3f, 0x4e));
+    pub static D_BG_3: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0x41, 0x53, 0x67));
+    pub static D_FG_0: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0xe5, 0xde, 0xd6));
+    pub static D_BG_00_TRANSPARENT: Lazy<Color32> =
+        Lazy::new(|| Rgba::from(*D_BG_00).multiply(0.96).into());
+    pub static D_BG_0_TRANSPARENT: Lazy<Color32> =
+        Lazy::new(|| Rgba::from(*D_BG_0).multiply(0.96).into());
+    pub static D_BG_1_TRANSPARENT: Lazy<Color32> =
+        Lazy::new(|| Rgba::from(*D_BG_1).multiply(0.96).into());
+    pub static D_BG_2_TRANSPARENT: Lazy<Color32> =
+        Lazy::new(|| Rgba::from(*D_BG_2).multiply(0.96).into());
+    pub static D_BG_3_TRANSPARENT: Lazy<Color32> =
+        Lazy::new(|| Rgba::from(*D_BG_3).multiply(0.96).into());
+    pub static L_BG_0: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0xbf, 0xbf, 0xbf));
+    pub static L_BG_1: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0xd4, 0xd3, 0xd4));
+    pub static L_BG_2: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0xd9, 0xd9, 0xd9));
+    pub static L_BG_3: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0xea, 0xea, 0xea));
+    pub static L_BG_4: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0xf9, 0xf9, 0xf9));
+    pub static L_BG_5: Lazy<Color32> = Lazy::new(|| Color32::from_rgb(0xff, 0xff, 0xff));
+    pub static L_BG_0_TRANSPARENT: Lazy<Color32> =
+        Lazy::new(|| Rgba::from(*L_BG_0).multiply(0.86).into());
+    pub static L_BG_1_TRANSPARENT: Lazy<Color32> =
+        Lazy::new(|| Rgba::from(*L_BG_1).multiply(0.86).into());
+    pub static L_BG_2_TRANSPARENT: Lazy<Color32> =
+        Lazy::new(|| Rgba::from(*L_BG_2).multiply(0.86).into());
+    pub static L_BG_3_TRANSPARENT: Lazy<Color32> =
+        Lazy::new(|| Rgba::from(*L_BG_3).multiply(0.86).into());
+    pub static L_BG_4_TRANSPARENT: Lazy<Color32> =
+        Lazy::new(|| Rgba::from(*L_BG_4).multiply(0.86).into());
+    pub static L_BG_5_TRANSPARENT: Lazy<Color32> =
+        Lazy::new(|| Rgba::from(*L_BG_5).multiply(0.86).into());
+    pub static L_FG_0: Lazy<Color32> = Lazy::new(|| *D_BG_0);
 }
 use colors::*;
 use epaint::Shadow;

@@ -30,19 +30,13 @@ use std::sync::RwLock;
 use std::time::Duration;
 
 static ADD_DESCR: &str = "Add this color to saved colors";
+static ERROR_DISPLAY_DURATION: Duration = Duration::new(20, 0);
 
-const ERROR_DISPLAY_DURATION: Duration = Duration::new(20, 0);
-
-//####################################################################################################
-
-lazy_static::lazy_static! {
-    pub static ref KEYBINDINGS: KeyBindings = default_keybindings();
-    pub static ref LIGHT_VISUALS: Visuals = light_visuals();
-    pub static ref DARK_VISUALS: Visuals = dark_visuals();
-}
-
-static CONTEXT: OnceCell<RwLock<AppCtx>> = OnceCell::new();
-static TEXTURE_MANAGER: Lazy<RwLock<TextureManager>> =
+pub static KEYBINDINGS: Lazy<KeyBindings> = Lazy::new(default_keybindings);
+pub static LIGHT_VISUALS: Lazy<Visuals> = Lazy::new(light_visuals);
+pub static DARK_VISUALS: Lazy<Visuals> = Lazy::new(dark_visuals);
+pub static CONTEXT: OnceCell<RwLock<AppCtx>> = OnceCell::new();
+pub static TEXTURE_MANAGER: Lazy<RwLock<TextureManager>> =
     Lazy::new(|| RwLock::new(TextureManager::default()));
 
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
@@ -68,8 +62,8 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &eframe::egui::Context, frame: &mut eframe::Frame) {
         if let Some(mut app_ctx) = CONTEXT.get().and_then(|ctx| ctx.write().ok()) {
             let res = TEXTURE_MANAGER.try_write();
-            if res.is_err() {
-                append_global_error(res.unwrap_err());
+            if let Err(e) = &res {
+                append_global_error(e);
                 return;
             }
             let mut tex_manager = res.unwrap();
