@@ -17,6 +17,7 @@ pub const DOUBLE_SPACE: f32 = SPACE * 2.;
 pub const HALF_SPACE: f32 = SPACE / 2.;
 
 pub mod icon {
+    #![allow(dead_code)]
     pub static ADD: &str = "\u{2795}";
     pub static COPY: &str = "\u{1F3F7}";
     pub static ZOOM_PICKER: &str = "\u{1F489}";

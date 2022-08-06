@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 use crate::context::FrameCtx;
 use crate::display_picker::{self, DisplayPickerExt};
 use crate::error::append_global_error;
@@ -14,19 +15,29 @@ use x11rb::protocol::xproto;
 
 #[cfg(windows)]
 use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
-
+#[cfg(any(target_os = "linux", windows))]
 static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";
+#[cfg(any(target_os = "linux", windows))]
 const ZOOM_SCALE: f32 = 10.;
+#[cfg(any(target_os = "linux", windows))]
 const ZOOM_WIN_WIDTH: u16 = 160;
+#[cfg(any(target_os = "linux", windows))]
 const ZOOM_WIN_HEIGHT: u16 = 160;
+#[cfg(any(target_os = "linux", windows))]
 const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
+#[cfg(any(target_os = "linux", windows))]
 const ZOOM_IMAGE_HEIGHT: u16 = ZOOM_WIN_HEIGHT / ZOOM_SCALE as u16;
+#[cfg(any(target_os = "linux", windows))]
 const ZOOM_WIN_OFFSET: i32 = 50;
+#[cfg(any(target_os = "linux", windows))]
 const ZOOM_WIN_POINTER_DIAMETER: u16 = 10;
 #[cfg(windows)]
 const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
+#[cfg(any(target_os = "linux", windows))]
 const ZOOM_WIN_BORDER_WIDTH: u32 = 2;
+#[cfg(any(target_os = "linux", windows))]
 const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
+#[cfg(any(target_os = "linux", windows))]
 const ZOOM_IMAGE_Y_OFFSET: i32 = ((ZOOM_WIN_HEIGHT / 2) as f32 / ZOOM_SCALE) as i32;
 
 pub struct ZoomPicker {
@@ -55,7 +66,6 @@ impl ZoomPicker {
                 ctx.app.cursor_pick_color = color;
                 ui.horizontal(|ui| {
                     ui.label("Color at cursor: ");
-                    #[cfg(any(windows, target_os = "linux"))]
                     self.zoom_picker_impl(ctx, ui, picker);
                 });
                 let cb = ColorBox::builder()
@@ -242,5 +252,5 @@ impl ZoomPicker {
     }
 
     #[cfg(not(any(target_os = "linux", windows)))]
-    fn zoom_picker_impl(&mut self, _: &mut Ui, _: Rc<dyn DisplayPickerExt>) {}
+    fn zoom_picker_impl(&mut self, _: &mut FrameCtx<'_>, _: &mut Ui, _: Rc<dyn DisplayPickerExt>) {}
 }
