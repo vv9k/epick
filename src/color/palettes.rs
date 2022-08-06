@@ -136,6 +136,10 @@ impl Palettes {
         self.remove_pos(self.current_idx);
     }
 
+    pub fn swap(&mut self, a: usize, b: usize) {
+        self.palettes.swap(a, b)
+    }
+
     /// Loads the saved colors from the specified file located at `path`. The file is expected to
     /// be a valid json file.
     pub fn load(path: impl AsRef<Path>) -> Result<Self> {
