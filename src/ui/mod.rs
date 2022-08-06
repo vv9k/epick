@@ -78,6 +78,12 @@ pub mod colors {
 use colors::*;
 use epaint::Shadow;
 
+#[derive(Default, Debug)]
+pub struct DragInfo {
+    pub is_drop_target: bool,
+    pub is_drag_source: bool,
+}
+
 pub fn drag_source(ui: &mut Ui, id: Id, body: impl FnOnce(&mut Ui)) {
     let is_being_dragged = ui.memory().is_being_dragged(id);
 
