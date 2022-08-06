@@ -20,6 +20,7 @@ pub struct AppCtx {
     pub picker: ColorPicker,
 
     pub palettes: Palettes,
+    pub palettes_tab_color_size: f32,
     pub palettes_tab_display_label: bool,
 
     pub screen_size: ScreenSize,
@@ -59,6 +60,7 @@ impl Default for AppCtx {
             picker: ColorPicker::default(),
 
             palettes: Palettes::default(),
+            palettes_tab_color_size: 50.,
             palettes_tab_display_label: false,
 
             screen_size: ScreenSize::Desktop(0., 0.),
@@ -89,7 +91,9 @@ impl AppCtx {
             picker: ColorPicker::default(),
 
             palettes: Palettes::default(),
+            palettes_tab_color_size: 50.,
             palettes_tab_display_label: false,
+
             screen_size: ScreenSize::Desktop(0., 0.),
             cursor_icon: CursorIcon::default(),
             cursor_pick_color: Color::black(),

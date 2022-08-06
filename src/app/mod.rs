@@ -437,6 +437,11 @@ impl App {
                     "Display color labels",
                 );
             });
+            ui.add(
+                egui::Slider::new(&mut ctx.app.palettes_tab_color_size, 25.0..=100.)
+                    .clamp_to_range(true)
+                    .text("color size"),
+            );
 
             for palette in ctx
                 .app
@@ -486,7 +491,10 @@ impl App {
                                 let color_id = Id::new(&palette.name).with(i);
                                 drag_source(ui, color_id, |ui| {
                                     let cb = ColorBox::builder()
-                                        .size((50., 50.))
+                                        .size((
+                                            ctx.app.palettes_tab_color_size,
+                                            ctx.app.palettes_tab_color_size,
+                                        ))
                                         .color(*color)
                                         .label(ctx.app.palettes_tab_display_label)
                                         .hover_help(COLORBOX_DRAG_TOOLTIP)
