@@ -1,4 +1,4 @@
-#
+# 0.8.0
 - Add an extra black border to the zoom picker window on Linux so that the window is visible on both black and white backgrounds
 - Remove sleep when zoom window is dragged so that the movement in smoother
 - Fix side panel width when no colors are added

@@ -2,7 +2,7 @@
 metadata:
   name: epick
   arch: x86_64
-  version: 0.7.0
+  version: 0.8.0
   description: Color picker for creating harmonic color palettes
   license: GPL-3.0
   source: https://github.com/vv9k/$RECIPE/archive/refs/tags/$RECIPE_VERSION.tar.gz
