@@ -2,7 +2,7 @@ use crate::math::Matrix3;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum ChromaticAdaptationMethod {
     Bradford,
     VonKries,

@@ -4,7 +4,7 @@ use crate::math::{Matrix1x3, Matrix3};
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Copy, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[allow(clippy::upper_case_acronyms)]
 pub enum RgbWorkingSpace {
     Adobe,

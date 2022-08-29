@@ -75,7 +75,7 @@ fn default_color_size() -> f32 {
     DEFAULT_COLOR_SIZE
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub struct ColorSpaceSettings {
     #[serde(default = "enabled")]
     #[serde(skip_serializing_if = "is_true")]
@@ -222,7 +222,7 @@ impl Settings {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub enum DisplayFmtEnum {
     #[serde(rename = "hex")]
     Hex,

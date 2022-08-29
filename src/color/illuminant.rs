@@ -2,7 +2,7 @@ use crate::color::Xyz;
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, PartialEq, Copy, Clone, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Eq, Copy, Clone, Deserialize, Serialize)]
 pub enum Illuminant {
     A,
     B,

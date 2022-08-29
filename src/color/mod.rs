@@ -77,7 +77,7 @@ pub fn parse_hex(color: &str) -> Option<(u8, u8, u8)> {
 
 //################################################################################
 
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ColorHarmony {
     Complementary,
@@ -112,7 +112,7 @@ impl Default for ColorHarmony {
 
 //################################################################################
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum DisplayFormat<'fmt> {
     #[serde(rename = "hex")]
     Hex,

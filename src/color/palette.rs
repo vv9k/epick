@@ -97,7 +97,7 @@ impl std::iter::FromIterator<Color> for Palette {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum PaletteFormat {
     Gimp,
     Text,
