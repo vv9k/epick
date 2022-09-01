@@ -29,10 +29,10 @@ once_cell = "1"
 x11rb = { version = "0.9", features = ["image", "cursor", "resource_manager"] }
 
 [target.'cfg(windows)'.dependencies]
-windows = "0.21"
+windows = "0.32"
 
 [target.'cfg(windows)'.build-dependencies]
-windows = "0.21"
+windows = "0.32"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 native-dialog = "0.6"
