@@ -1,3 +1,6 @@
+# 0.8.1
+- Update dependencies to mitigate security issues
+
 # 0.8.0
 - Add an extra black border to the zoom picker window on Linux so that the window is visible on both black and white backgrounds
 - Remove sleep when zoom window is dragged so that the movement in smoother
