@@ -14,12 +14,14 @@ mod zoom_picker;
 
 pub use app::App as Epick;
 
-use clipboard::ClipboardContext;
-use clipboard::ClipboardProvider;
+use anyhow::{Context, Error};
+use arboard::Clipboard;
 
-fn save_to_clipboard(text: String) -> Result<(), Box<dyn std::error::Error>> {
-    let mut ctx: ClipboardContext = ClipboardProvider::new()?;
-    ctx.set_contents(text)
+fn save_to_clipboard(text: String) -> Result<(), Error> {
+    let mut clipboard = Clipboard::new()?;
+    clipboard
+        .set_text(text)
+        .context("failed to save to clipboard")
 }
 
 #[cfg(target_arch = "wasm32")]

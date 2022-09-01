@@ -11,7 +11,7 @@ crate-type = ["cdylib", "rlib"]
 eframe = { version = "0.18", features = ["persistence"] }
 egui = { version = "0.18", features = ["tracing"] }
 epaint = "0.18"
-clipboard = "0.5"
+arboard = "2"
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9"
