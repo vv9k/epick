@@ -1,28 +1,31 @@
 #![cfg(windows)]
 
-windows::include_bindings!();
-
-use std::ptr::{null, null_mut};
+use std::ptr::null;
 
 use crate::color::Color;
 use crate::display_picker::DisplayPicker;
-use anyhow::{Error, Result};
+use anyhow::{Context, Error, Result};
 use egui::Color32;
-use Windows::Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, POINT, PWSTR, WPARAM};
-use Windows::Win32::Graphics::Gdi::{
-    BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, GetDC, GetPixel, Rectangle,
-    ReleaseDC, SelectObject, SetStretchBltMode, StretchBlt, UpdateWindow, CLR_INVALID,
-    COLORONCOLOR, HBITMAP, HDC, SRCCOPY,
-};
-use Windows::Win32::System::LibraryLoader::GetModuleHandleW;
-use Windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DefWindowProcW, DestroyWindow, GetCursorPos, GetDesktopWindow, MoveWindow,
-    RegisterClassExW, ShowWindow, WNDCLASSEXW,
+use windows::{
+    core::PCWSTR,
+    Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, POINT, WPARAM},
+    Win32::Graphics::Gdi::{
+        BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, GetDC, GetPixel, Rectangle,
+        ReleaseDC, SelectObject, SetStretchBltMode, StretchBlt, UpdateWindow, CLR_INVALID,
+        COLORONCOLOR, HBITMAP, HDC, SRCCOPY,
+    },
+    Win32::System::LibraryLoader::GetModuleHandleW,
+    Win32::UI::WindowsAndMessaging::{
+        CreateWindowExW, DefWindowProcW, DestroyWindow, GetCursorPos, GetDesktopWindow, MoveWindow,
+        RegisterClassExW, ShowWindow, WNDCLASSEXW,
+    },
 };
 
-pub use Windows::Win32::Foundation::HWND;
-pub use Windows::Win32::UI::WindowsAndMessaging::{
-    SHOW_WINDOW_CMD, SW_SHOWDEFAULT, WINDOW_EX_STYLE, WINDOW_STYLE, WS_BORDER, WS_POPUP,
+pub use windows::{
+    Win32::Foundation::HWND,
+    Win32::UI::WindowsAndMessaging::{
+        SHOW_WINDOW_CMD, SW_SHOWDEFAULT, WINDOW_EX_STYLE, WINDOW_STYLE, WS_BORDER, WS_POPUP,
+    },
 };
 
 macro_rules! handle_winapi_call {
@@ -102,11 +105,13 @@ pub struct WinConn {
 }
 
 impl WinConn {
-    pub fn new() -> Self {
-        WinConn {
+    pub fn new() -> Result<Self> {
+        Ok(WinConn {
             device_context: unsafe { GetDC(None) },
-            hinstance: unsafe { GetModuleHandleW(PWSTR(null_mut())) },
-        }
+            hinstance: unsafe {
+                GetModuleHandleW(PCWSTR::null()).context("failed to get module handle")?
+            },
+        })
     }
 
     pub fn get_cursor_pos(&self) -> Result<POINT> {
@@ -121,7 +126,7 @@ impl WinConn {
     }
 
     pub fn get_pixel(&self, pos: POINT) -> Result<u32> {
-        let color = unsafe { GetPixel(&self.device_context, pos.x, pos.y) };
+        let color = unsafe { GetPixel(self.device_context, pos.x, pos.y) };
         if color == CLR_INVALID {
             return Err(Error::msg("failed to get pixel"));
         }
@@ -164,25 +169,25 @@ impl DisplayPickerExt for WinConn {
         height: i32,
         style: WINDOW_STYLE,
     ) -> Result<HWND> {
-        let mut class_name = class_name.encode_utf16().collect::<Vec<_>>();
+        let class_name = class_name.encode_utf16().collect::<Vec<_>>();
 
         let mut class = WNDCLASSEXW {
             cbSize: std::mem::size_of::<WNDCLASSEXW>() as u32,
             ..Default::default()
         };
-        class.lpszClassName = PWSTR(class_name.as_mut_ptr());
+        class.lpszClassName = PCWSTR::from_raw(class_name.as_ptr());
         class.hInstance = self.hinstance;
         class.lpfnWndProc = Some(wnd_proc);
 
-        let mut window_name = window_name.encode_utf16().collect::<Vec<_>>();
+        let window_name = window_name.encode_utf16().collect::<Vec<_>>();
 
         unsafe { RegisterClassExW(&class as *const WNDCLASSEXW) };
 
         unsafe {
             Ok(CreateWindowExW(
                 WINDOW_EX_STYLE(0),
-                PWSTR(class_name.as_mut_ptr()),
-                PWSTR(window_name.as_mut_ptr()),
+                PCWSTR::from_raw(class_name.as_ptr()),
+                PCWSTR::from_raw(window_name.as_ptr()),
                 style,
                 x,
                 y,

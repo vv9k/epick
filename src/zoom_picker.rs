@@ -15,6 +15,13 @@ use x11rb::protocol::xproto;
 
 #[cfg(windows)]
 use crate::display_picker::windows::{HWND, SW_SHOWDEFAULT, WS_BORDER, WS_POPUP};
+
+#[cfg(any(target_os = "linux"))]
+const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
+#[cfg(any(target_os = "linux"))]
+const ZOOM_IMAGE_HEIGHT: u16 = ZOOM_WIN_HEIGHT / ZOOM_SCALE as u16;
+#[cfg(any(target_os = "linux"))]
+const ZOOM_WIN_BORDER_WIDTH: u32 = 2;
 #[cfg(any(target_os = "linux", windows))]
 static CURSOR_PICKER_WINDOW_NAME: &str = "epick - cursor picker";
 #[cfg(any(target_os = "linux", windows))]
@@ -24,17 +31,11 @@ const ZOOM_WIN_WIDTH: u16 = 160;
 #[cfg(any(target_os = "linux", windows))]
 const ZOOM_WIN_HEIGHT: u16 = 160;
 #[cfg(any(target_os = "linux", windows))]
-const ZOOM_IMAGE_WIDTH: u16 = ZOOM_WIN_WIDTH / ZOOM_SCALE as u16;
-#[cfg(any(target_os = "linux", windows))]
-const ZOOM_IMAGE_HEIGHT: u16 = ZOOM_WIN_HEIGHT / ZOOM_SCALE as u16;
-#[cfg(any(target_os = "linux", windows))]
 const ZOOM_WIN_OFFSET: i32 = 50;
 #[cfg(any(target_os = "linux", windows))]
 const ZOOM_WIN_POINTER_DIAMETER: u16 = 10;
 #[cfg(windows)]
 const ZOOM_WIN_POINTER_RADIUS: u16 = ZOOM_WIN_POINTER_DIAMETER / 2;
-#[cfg(any(target_os = "linux", windows))]
-const ZOOM_WIN_BORDER_WIDTH: u32 = 2;
 #[cfg(any(target_os = "linux", windows))]
 const ZOOM_IMAGE_X_OFFSET: i32 = ((ZOOM_WIN_WIDTH / 2) as f32 / ZOOM_SCALE) as i32;
 #[cfg(any(target_os = "linux", windows))]
@@ -105,8 +106,8 @@ impl ZoomPicker {
             if let Ok(window) = picker.spawn_window(
                 "EPICK_DIALOG",
                 CURSOR_PICKER_WINDOW_NAME,
-                (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET),
-                (cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET),
+                cursor_pos.0 - ZOOM_IMAGE_X_OFFSET,
+                cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET,
                 ZOOM_WIN_WIDTH as i32,
                 ZOOM_WIN_HEIGHT as i32,
                 WS_POPUP | WS_BORDER,

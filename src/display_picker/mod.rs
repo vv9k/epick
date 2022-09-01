@@ -32,7 +32,7 @@ pub fn init_display_picker() -> Option<Rc<dyn DisplayPickerExt>> {
         .ok()
         .map(|conn| Rc::new(conn) as Rc<dyn DisplayPickerExt>);
     #[cfg(windows)]
-    return Some(Rc::new(windows::WinConn::new()) as Rc<dyn DisplayPickerExt>);
+    return Some(Rc::new(windows::WinConn::new().ok()?) as Rc<dyn DisplayPickerExt>);
     #[cfg(target_os = "macos")]
     return Some(Rc::new(macos::MacConn) as Rc<dyn DisplayPickerExt>);
     #[cfg(not(any(windows, target_os = "linux", target_os = "macos")))]
