@@ -51,8 +51,12 @@ clippy:
 
 
 .PHONY: clean
-clean:
-	@rm -rf target/* docs/$(PROJECT)_bg.wasm docs/$(PROJECT).js
+clean: clean_web
+	@rm -rf target/*
+
+.PHONY: clean_web
+clean_web:
+	@rm -rf docs/$(PROJECT)_bg.wasm docs/$(PROJECT).js
 
 
 ./target/debug/$(PROJECT):
