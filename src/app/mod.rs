@@ -434,32 +434,29 @@ impl App {
         let mut top_padding = 0.;
         let mut err_idx = 0;
         self.display_errors.retain(|e| {
-            if let Ok(elapsed) = e.timestamp().elapsed() {
-                if elapsed >= ERROR_DISPLAY_DURATION {
-                    false
-                } else {
-                    if let Some(rsp) = egui::Window::new("Error")
-                        .collapsible(false)
-                        .id(Id::new(format!("err_ntf_{err_idx}")))
-                        .anchor(
-                            egui::Align2::RIGHT_TOP,
-                            (-ctx.app.sidepanel.box_width - 25., top_padding),
-                        )
-                        .hscroll(true)
-                        .fixed_size((ctx.app.sidepanel.box_width, 50.))
-                        .show(ui.ctx(), |ui| {
-                            let label = Label::new(RichText::new(e.message()).color(Color32::RED))
-                                .wrap(true);
-                            ui.add(label);
-                        })
-                    {
-                        top_padding += rsp.response.rect.height() + 6.;
-                        err_idx += 1;
-                    };
-                    true
-                }
-            } else {
+            let elapsed = e.timestamp().elapsed();
+            if elapsed >= ERROR_DISPLAY_DURATION {
                 false
+            } else {
+                if let Some(rsp) = egui::Window::new("Error")
+                    .collapsible(false)
+                    .id(Id::new(format!("err_ntf_{err_idx}")))
+                    .anchor(
+                        egui::Align2::RIGHT_TOP,
+                        (-ctx.app.sidepanel.box_width - 25., top_padding),
+                    )
+                    .hscroll(true)
+                    .fixed_size((ctx.app.sidepanel.box_width, 50.))
+                    .show(ui.ctx(), |ui| {
+                        let label =
+                            Label::new(RichText::new(e.message()).color(Color32::RED)).wrap(true);
+                        ui.add(label);
+                    })
+                {
+                    top_padding += rsp.response.rect.height() + 6.;
+                    err_idx += 1;
+                };
+                true
             }
         });
         ui.horizontal(|ui| {
