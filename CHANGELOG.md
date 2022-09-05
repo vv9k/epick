@@ -1,3 +1,6 @@
+# 0.8.2
+- Fixed wasm build
+
 # 0.8.1
 - Update dependencies to mitigate security issues
 
