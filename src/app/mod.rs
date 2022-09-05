@@ -28,10 +28,9 @@ use egui::{
 use once_cell::sync::{Lazy, OnceCell};
 use serde::{Deserialize, Serialize};
 use std::sync::RwLock;
-use std::time::Duration;
 
 static ADD_DESCR: &str = "Add this color to saved colors";
-static ERROR_DISPLAY_DURATION: Duration = Duration::new(20, 0);
+static ERROR_DISPLAY_DURATION: u64 = 20;
 
 pub static KEYBINDINGS: Lazy<KeyBindings> = Lazy::new(default_keybindings);
 pub static LIGHT_VISUALS: Lazy<Visuals> = Lazy::new(light_visuals);
@@ -434,7 +433,7 @@ impl App {
         let mut top_padding = 0.;
         let mut err_idx = 0;
         self.display_errors.retain(|e| {
-            let elapsed = e.timestamp().elapsed();
+            let elapsed = crate::elapsed(e.timestamp());
             if elapsed >= ERROR_DISPLAY_DURATION {
                 false
             } else {

@@ -618,7 +618,7 @@ dependencies = [
 
 [[package]]
 name = "epick"
-version = "0.8.1"
+version = "0.8.2"
 dependencies = [
  "anyhow",
  "arboard",
@@ -628,6 +628,7 @@ dependencies = [
  "egui",
  "epaint",
  "image 0.24.3",
+ "js-sys",
  "native-dialog",
  "nom",
  "objc",

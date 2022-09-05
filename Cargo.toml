@@ -34,6 +34,9 @@ windows = { version = "0.39", features = ["Win32_Foundation", "Win32_Graphics_Gd
 native-dialog = "0.6"
 arboard = "2"
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = "0.3"
+
 [target.'cfg(target_os = "macos")'.dependencies]
 objc = {version = "0.2", features = ["exception"]}
 core-graphics = {version = "0.22"}

@@ -1,20 +1,20 @@
+use crate::get_timestamp;
 use once_cell::sync::Lazy;
 use std::collections::VecDeque;
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::Mutex;
-use std::time::Instant;
 
 #[derive(Debug)]
 pub struct DisplayError {
     message: String,
-    timestamp: Instant,
+    timestamp: u64,
 }
 
 impl DisplayError {
     pub fn new(message: impl Into<String>) -> Self {
         Self {
             message: message.into(),
-            timestamp: Instant::now(),
+            timestamp: get_timestamp(),
         }
     }
 
@@ -22,8 +22,8 @@ impl DisplayError {
         &self.message
     }
 
-    pub fn timestamp(&self) -> &Instant {
-        &self.timestamp
+    pub fn timestamp(&self) -> u64 {
+        self.timestamp
     }
 }
 
