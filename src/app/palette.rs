@@ -30,9 +30,6 @@ impl App {
 
             let current = ctx.app.palettes.current_idx();
             for (i, palette) in ctx.app.palettes.clone().iter().enumerate() {
-                if palette.palette.is_empty() {
-                    continue;
-                }
                 let active = current == i;
                 let resp = self.display_palette(palette, active, ctx, ui);
                 if ctx.egui.memory().is_anything_being_dragged() {
@@ -70,9 +67,6 @@ impl App {
                 drag_source(ui, palette_id, |ui| {
                     if ui.memory().is_being_dragged(palette_id) {
                         is_drag_source = true;
-                    }
-                    if palette.palette.is_empty() {
-                        return;
                     }
                     let mut label = RichText::new(&palette.name);
                     if active {
