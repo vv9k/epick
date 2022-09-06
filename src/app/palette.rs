@@ -28,11 +28,13 @@ impl App {
             let mut palette_src_row = None;
             let mut palette_dst_row = None;
 
+            let current = ctx.app.palettes.current_idx();
             for (i, palette) in ctx.app.palettes.clone().iter().enumerate() {
                 if palette.palette.is_empty() {
                     continue;
                 }
-                let resp = self.display_palette(palette, ctx, ui);
+                let active = current == i;
+                let resp = self.display_palette(palette, active, ctx, ui);
                 if ctx.egui.memory().is_anything_being_dragged() {
                     if resp.inner.is_drag_source {
                         palette_src_row = Some(i);
@@ -45,6 +47,7 @@ impl App {
                 if let Some(dst_row) = palette_dst_row {
                     if ui.input().pointer.any_released() {
                         ctx.app.palettes.swap(src_row, dst_row);
+                        ctx.app.palettes.move_to_idx(dst_row);
                     }
                 }
             }
@@ -54,6 +57,7 @@ impl App {
     fn display_palette(
         &mut self,
         palette: &NamedPalette,
+        active: bool,
         ctx: &mut FrameCtx<'_>,
         ui: &mut Ui,
     ) -> egui::InnerResponse<DragInfo> {
@@ -70,7 +74,10 @@ impl App {
                     if palette.palette.is_empty() {
                         return;
                     }
-                    let label = RichText::new(&palette.name).heading();
+                    let mut label = RichText::new(&palette.name);
+                    if active {
+                        label = label.strong().heading();
+                    }
                     ui.vertical(|ui| {
                         ui.add(Label::new(label));
                         self.display_palette_colors(palette, ctx, ui);
@@ -98,6 +105,14 @@ impl App {
         ui: &mut Ui,
     ) -> egui::InnerResponse<()> {
         ui.vertical(|ui| {
+            if ui
+                .button(icon::PLAY)
+                .on_hover_text("Use this palette")
+                .on_hover_cursor(CursorIcon::PointingHand)
+                .clicked()
+            {
+                ctx.app.palettes.move_to_name(&palette.name);
+            }
             if ui
                 .button(icon::EXPORT)
                 .on_hover_text("Export")
