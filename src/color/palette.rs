@@ -29,7 +29,7 @@ impl Palette {
         if !self
             .0
             .iter()
-            .any(|clr| clr.as_rgb_triplet() == color.as_rgb_triplet())
+            .any(|clr| clr.as_rgb_triplet_scaled() == color.as_rgb_triplet_scaled())
         {
             self.0.push(color);
             return true;
@@ -41,7 +41,7 @@ impl Palette {
         if !self
             .0
             .iter()
-            .any(|clr| clr.as_rgb_triplet() == color.as_rgb_triplet())
+            .any(|clr| clr.as_rgb_triplet_scaled() == color.as_rgb_triplet_scaled())
         {
             self.0.insert(i, color);
         }
@@ -50,7 +50,7 @@ impl Palette {
     pub fn remove(&mut self, color: &Color) -> Option<Color> {
         self.0
             .iter()
-            .position(|clr| clr.as_rgb_triplet() == color.as_rgb_triplet())
+            .position(|clr| clr.as_rgb_triplet_scaled() == color.as_rgb_triplet_scaled())
             .map(|i| self.0.remove(i))
     }
 
