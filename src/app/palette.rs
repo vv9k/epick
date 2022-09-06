@@ -25,6 +25,16 @@ impl App {
                     .clamp_to_range(true)
                     .text("color size"),
             );
+            ui.horizontal(|ui| {
+                if ui
+                    .button(icon::ADD)
+                    .on_hover_text("Add a new palette")
+                    .clicked()
+                {
+                    ctx.app.palettes.append_empty();
+                }
+            });
+            ui.add_space(SPACE);
             let mut palette_src_row = None;
             let mut palette_dst_row = None;
 
