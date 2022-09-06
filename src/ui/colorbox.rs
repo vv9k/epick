@@ -70,9 +70,9 @@ impl ColorBox {
                 ui.monospace(&display_str);
             }
 
-            //if resp.clicked() {
-            //self.picker.set_cur_color(color);
-            //}
+            if resp.clicked() {
+                ctx.app.picker.set_cur_color(color);
+            }
 
             if resp.middle_clicked() {
                 ctx.app.add_color(color);

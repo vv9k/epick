@@ -1,5 +1,6 @@
 #
 - Change button layout in palette view
+- Bring back ability to select color by primary clicking it
 
 # 0.8.2
 - Fixed wasm build
