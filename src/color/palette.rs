@@ -26,7 +26,11 @@ impl Palette {
         self.0.iter()
     }
     pub fn add(&mut self, color: Color) -> bool {
-        if !self.0.iter().any(|clr| clr == &color) {
+        if !self
+            .0
+            .iter()
+            .any(|clr| clr.as_rgb_triplet() == color.as_rgb_triplet())
+        {
             self.0.push(color);
             return true;
         }
@@ -34,7 +38,11 @@ impl Palette {
     }
 
     pub fn insert(&mut self, i: usize, color: Color) {
-        if !self.0.contains(&color) {
+        if !self
+            .0
+            .iter()
+            .any(|clr| clr.as_rgb_triplet() == color.as_rgb_triplet())
+        {
             self.0.insert(i, color);
         }
     }
@@ -42,7 +50,7 @@ impl Palette {
     pub fn remove(&mut self, color: &Color) -> Option<Color> {
         self.0
             .iter()
-            .position(|col| col == color)
+            .position(|clr| clr.as_rgb_triplet() == color.as_rgb_triplet())
             .map(|i| self.0.remove(i))
     }
 
