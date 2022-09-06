@@ -106,8 +106,8 @@ impl App {
                 .on_hover_cursor(CursorIcon::PointingHand)
                 .clicked()
             {
-                self.export_window.show = true;
-                self.export_window.export_palette = Some(ctx.app.palettes.current().clone());
+                self.windows.export.show = true;
+                self.windows.export.export_palette = Some(ctx.app.palettes.current().clone());
             }
             if ui
                 .button(icon::COPY)

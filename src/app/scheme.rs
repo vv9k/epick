@@ -16,7 +16,7 @@ use egui::{CollapsingHeader, ComboBox, Window};
 
 macro_rules! scheme_window_impl {
     ($title:literal, $self:ident, $ctx:ident, $win:ident, $size_field:ident, $colors:expr) => {{
-        if $self.$win.is_open {
+        if $self.windows.$win.is_open {
             let offset = $ctx.egui.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut is_open = true;
             let is_dark_mode = $ctx.egui.style().visuals.dark_mode;
@@ -28,10 +28,13 @@ macro_rules! scheme_window_impl {
                 .open(&mut is_open)
                 .show($ctx.egui, |ui| {
                     window::apply_default_style(ui, is_dark_mode);
-                    $self.$win.sliders(ui);
+                    $self.windows.$win.sliders(ui);
 
                     let colors = $colors;
-                    let size = vec2($self.$win.$size_field, $self.$win.$size_field);
+                    let size = vec2(
+                        $self.windows.$win.$size_field,
+                        $self.windows.$win.$size_field,
+                    );
 
                     let base_cb = ColorBox::builder()
                         .hover_help(COLORBOX_PICK_TOOLTIP)
@@ -46,7 +49,7 @@ macro_rules! scheme_window_impl {
                 });
 
             if !is_open {
-                $self.$win.is_open = false;
+                $self.windows.$win.is_open = false;
             }
         }
     }};
@@ -58,12 +61,12 @@ impl App {
             "Hues",
             self,
             ctx,
-            hues_window,
+            hues,
             hue_color_size,
             ctx.app
                 .picker
                 .current_color
-                .hues(self.hues_window.num_of_hues, self.hues_window.hues_step)
+                .hues(self.windows.hues.num_of_hues, self.windows.hues.hues_step)
         );
     }
 
@@ -72,12 +75,12 @@ impl App {
             "Tints",
             self,
             ctx,
-            tints_window,
+            tints,
             tint_color_size,
             ctx.app
                 .picker
                 .current_color
-                .tints(self.tints_window.num_of_tints)
+                .tints(self.windows.tints.num_of_tints)
         );
     }
 
@@ -86,12 +89,12 @@ impl App {
             "Shades",
             self,
             ctx,
-            shades_window,
+            shades,
             shade_color_size,
             ctx.app
                 .picker
                 .current_color
-                .shades(self.shades_window.num_of_shades)
+                .shades(self.windows.shades.num_of_shades)
         );
     }
 

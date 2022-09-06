@@ -123,8 +123,8 @@ impl App {
                 .on_hover_cursor(CursorIcon::PointingHand)
                 .clicked()
             {
-                self.export_window.show = true;
-                self.export_window.export_palette = Some(palette.clone());
+                self.windows.export.show = true;
+                self.windows.export.export_palette = Some(palette.clone());
             }
             if ui
                 .button(icon::COPY)

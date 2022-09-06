@@ -45,16 +45,19 @@ pub enum CentralPanelTab {
     Palettes,
 }
 
+#[derive(Default)]
+pub struct Windows {
+    pub settings: SettingsWindow,
+    pub export: ExportWindow,
+    pub help: HelpWindow,
+    pub hues: HuesWindow,
+    pub tints: TintsWindow,
+    pub shades: ShadesWindow,
+}
+
 pub struct App {
     pub display_errors: Vec<DisplayError>,
-
-    pub settings_window: SettingsWindow,
-    pub export_window: ExportWindow,
-    pub help_window: HelpWindow,
-    pub hues_window: HuesWindow,
-    pub tints_window: TintsWindow,
-    pub shades_window: ShadesWindow,
-
+    pub windows: Windows,
     pub zoom_picker: ZoomPicker,
 }
 
@@ -153,14 +156,7 @@ impl App {
 
         let app = Box::new(Self {
             display_errors: Default::default(),
-
-            settings_window: SettingsWindow::default(),
-            export_window: ExportWindow::default(),
-            help_window: HelpWindow::default(),
-            hues_window: HuesWindow::default(),
-            tints_window: TintsWindow::default(),
-            shades_window: ShadesWindow::default(),
-
+            windows: Windows::default(),
             zoom_picker: ZoomPicker::default(),
         });
 
@@ -325,21 +321,21 @@ impl App {
 
             add_button_if!(
                 "hues",
-                self.hues_window.is_open,
-                { self.hues_window.is_open = false },
-                { self.hues_window.is_open = true }
+                self.windows.hues.is_open,
+                { self.windows.hues.is_open = false },
+                { self.windows.hues.is_open = true }
             );
             add_button_if!(
                 "shades",
-                self.shades_window.is_open,
-                { self.shades_window.is_open = false },
-                { self.shades_window.is_open = true }
+                self.windows.hues.is_open,
+                { self.windows.hues.is_open = false },
+                { self.windows.hues.is_open = true }
             );
             add_button_if!(
                 "tints",
-                self.tints_window.is_open,
-                { self.tints_window.is_open = false },
-                { self.tints_window.is_open = true }
+                self.windows.hues.is_open,
+                { self.windows.hues.is_open = false },
+                { self.windows.hues.is_open = true }
             );
 
             ui.with_layout(Layout::right_to_left(), |ui| {
@@ -349,7 +345,7 @@ impl App {
                     .on_hover_cursor(CursorIcon::Help)
                     .clicked()
                 {
-                    self.help_window.toggle_window();
+                    self.windows.help.toggle_window();
                 }
                 if ui
                     .button(icon::EXPAND)
@@ -365,7 +361,7 @@ impl App {
                     .on_hover_cursor(CursorIcon::PointingHand)
                     .clicked()
                 {
-                    self.settings_window.show = true;
+                    self.windows.settings.show = true;
                 }
                 self.dark_light_switch(ctx, ui);
             });
@@ -389,20 +385,20 @@ impl App {
     }
 
     fn display_windows(&mut self, ctx: &mut FrameCtx<'_>) {
-        self.settings_window.display(ctx.app, ctx.egui);
-        self.settings_window.custom_formats_window.display(
+        self.windows.settings.display(ctx.app, ctx.egui);
+        self.windows.settings.custom_formats_window.display(
             &mut ctx.app.settings,
             ctx.egui,
             ctx.app.picker.current_color,
         );
-        if let Err(e) = self.export_window.display(ctx.egui) {
+        if let Err(e) = self.windows.export.display(ctx.egui) {
             append_global_error(e);
         }
 
         self.shades_window(ctx);
         self.tints_window(ctx);
         self.hues_window(ctx);
-        self.help_window.display(ctx.egui);
+        self.windows.help.display(ctx.egui);
     }
 
     fn central_panel(&mut self, ctx: &mut FrameCtx<'_>) {
