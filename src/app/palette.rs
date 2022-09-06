@@ -61,16 +61,22 @@ impl App {
         let mut is_drop_target = false;
         let mut resp = drop_target(ui, true, |ui| {
             let palette_id = egui::Id::new(&palette.name);
-            drag_source(ui, palette_id, |ui| {
-                if ui.memory().is_being_dragged(palette_id) {
-                    is_drag_source = true;
-                }
-                if palette.palette.is_empty() {
-                    return;
-                }
+            ui.horizontal(|ui| {
                 self.display_palette_buttons(palette, ctx, ui);
-                self.display_palette_colors(palette, ctx, ui);
-                ui.add_space(SPACE);
+                drag_source(ui, palette_id, |ui| {
+                    if ui.memory().is_being_dragged(palette_id) {
+                        is_drag_source = true;
+                    }
+                    if palette.palette.is_empty() {
+                        return;
+                    }
+                    let label = RichText::new(&palette.name).heading();
+                    ui.vertical(|ui| {
+                        ui.add(Label::new(label));
+                        self.display_palette_colors(palette, ctx, ui);
+                        ui.add_space(SPACE);
+                    });
+                });
             });
             DragInfo::default()
         });
@@ -91,9 +97,7 @@ impl App {
         ctx: &mut FrameCtx<'_>,
         ui: &mut Ui,
     ) -> egui::InnerResponse<()> {
-        let label = RichText::new(&palette.name).heading();
-        ui.horizontal(|ui| {
-            ui.add(Label::new(label));
+        ui.vertical(|ui| {
             if ui
                 .button(icon::EXPORT)
                 .on_hover_text("Export")

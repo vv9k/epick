@@ -1,3 +1,6 @@
+#
+- Change button layout in palette view
+
 # 0.8.2
 - Fixed wasm build
 
