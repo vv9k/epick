@@ -1,5 +1,6 @@
 use crate::app::window::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
 use crate::color::{NamedPalette, PaletteFormat};
+use crate::context::FrameCtx;
 
 use anyhow::Result;
 use egui::color::Color32;
@@ -36,16 +37,16 @@ impl Default for ExportWindow {
 }
 
 impl ExportWindow {
-    pub fn display(&mut self, ctx: &egui::Context) -> Result<()> {
+    pub fn display(&mut self, ctx: &FrameCtx) -> Result<()> {
         if self.show {
-            let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
+            let offset = ctx.egui.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut show = true;
-            let is_dark_mode = ctx.style().visuals.dark_mode;
+            let is_dark_mode = ctx.egui.style().visuals.dark_mode;
             Window::new("export")
                 .frame(window::default_frame(is_dark_mode))
                 .open(&mut show)
                 .default_pos((offset, WINDOW_Y_OFFSET))
-                .show(ctx, |ui| {
+                .show(ctx.egui, |ui| {
                     window::apply_default_style(ui, is_dark_mode);
                     ui.vertical(|ui| {
                         ui.horizontal(|ui| {
