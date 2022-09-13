@@ -16,6 +16,7 @@ mod working_space;
 mod xyy;
 mod xyz;
 
+pub use format::CustomPaletteFormat;
 pub use gradient::Gradient;
 pub use palette::{NamedPalette, Palette, PaletteFormat};
 pub use palettes::Palettes;
@@ -113,7 +114,7 @@ impl Default for ColorHarmony {
 //################################################################################
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub enum DisplayFormat<'fmt> {
+pub enum ColorDisplayFormat<'fmt> {
     #[serde(rename = "hex")]
     Hex,
     #[serde(rename = "hex-uppercase")]
@@ -127,9 +128,9 @@ pub enum DisplayFormat<'fmt> {
     Custom(&'fmt str),
 }
 
-impl<'fmt> DisplayFormat<'fmt> {
+impl<'fmt> ColorDisplayFormat<'fmt> {
     pub fn no_degree(self) -> Self {
-        use DisplayFormat::*;
+        use ColorDisplayFormat::*;
         match self {
             CssHsl { .. } => CssHsl {
                 degree_symbol: false,
@@ -223,16 +224,16 @@ impl Color {
 
     pub fn display(
         &self,
-        format: DisplayFormat,
+        format: ColorDisplayFormat,
         ws: RgbWorkingSpace,
         illuminant: Illuminant,
     ) -> String {
         match format {
-            DisplayFormat::Hex => self.as_hex(),
-            DisplayFormat::HexUpercase => self.as_hex().to_uppercase(),
-            DisplayFormat::CssRgb => self.as_css_rgb(),
-            DisplayFormat::CssHsl { degree_symbol } => self.as_css_hsl(degree_symbol),
-            DisplayFormat::Custom(fmt) => {
+            ColorDisplayFormat::Hex => self.as_hex(),
+            ColorDisplayFormat::HexUpercase => self.as_hex().to_uppercase(),
+            ColorDisplayFormat::CssRgb => self.as_css_rgb(),
+            ColorDisplayFormat::CssHsl { degree_symbol } => self.as_css_hsl(degree_symbol),
+            ColorDisplayFormat::Custom(fmt) => {
                 if let Ok(fmt) = ColorFormat::parse(fmt) {
                     fmt.format_color(self, ws, illuminant)
                 } else {

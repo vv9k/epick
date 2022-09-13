@@ -3,7 +3,7 @@ pub mod layout;
 pub mod slider_1d;
 pub mod slider_2d;
 
-use crate::color::{Color, DisplayFormat, Illuminant, RgbWorkingSpace};
+use crate::color::{Color, ColorDisplayFormat, Illuminant, RgbWorkingSpace};
 
 use egui::{
     color,
@@ -162,7 +162,7 @@ pub fn drop_target<R>(
 
 pub fn color_tooltip(
     color: &Color,
-    display_format: DisplayFormat,
+    display_format: ColorDisplayFormat,
     ws: RgbWorkingSpace,
     illuminant: Illuminant,
     text: Option<&str>,

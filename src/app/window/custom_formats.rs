@@ -1,8 +1,8 @@
 use egui::{Button, Key, TextBuffer, TextEdit, Window};
 
 use crate::{
-    app::settings::{DisplayFmtEnum, Settings},
-    color::{Color, DisplayFormat},
+    app::settings::{ColorDisplayFmtEnum, Settings},
+    color::{Color, ColorDisplayFormat},
     ui::icon,
 };
 
@@ -66,16 +66,16 @@ impl CustomFormatsWindow {
 
                             if !retain {
                                 // Check if format is used by current display format
-                                let is_in_use = matches!(&settings.color_display_format, DisplayFmtEnum::Custom(fmt) if fmt == k);
+                                let is_in_use = matches!(&settings.color_display_format, ColorDisplayFmtEnum::Custom(fmt) if fmt == k);
                                 if is_in_use {
-                                    settings.color_display_format = DisplayFmtEnum::default();
+                                    settings.color_display_format = ColorDisplayFmtEnum::default();
                                 }
 
                                 // Check if format is used by current clipboard format
-                                let is_in_use = matches!(&settings.color_clipboard_format, Some(DisplayFmtEnum::Custom(fmt)) if fmt == k);
+                                let is_in_use = matches!(&settings.color_clipboard_format, Some(ColorDisplayFmtEnum::Custom(fmt)) if fmt == k);
                                 if is_in_use {
                                     settings.color_clipboard_format =
-                                        Some(DisplayFmtEnum::default());
+                                        Some(ColorDisplayFmtEnum::default());
                                 }
                             }
 
@@ -119,7 +119,7 @@ impl CustomFormatsWindow {
                 if !self.highlighted_key.is_empty() {
                     ui.heading("Preview");
                     let preview_string = preview_color.display(
-                        DisplayFormat::Custom(&settings.saved_color_formats[&self.highlighted_key]),
+                        ColorDisplayFormat::Custom(&settings.saved_color_formats[&self.highlighted_key]),
                         settings.rgb_working_space,
                         settings.illuminant,
                     );

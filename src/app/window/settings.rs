@@ -3,7 +3,7 @@ use crate::app::{
     AppCtx,
 };
 use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
-use crate::settings::{DisplayFmtEnum, Settings};
+use crate::settings::{ColorDisplayFmtEnum, Settings};
 use crate::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
 
 use egui::{Color32, ComboBox, Ui, Window};
@@ -347,41 +347,44 @@ impl SettingsWindow {
         if ui.button("Custom formats …").clicked() {
             self.custom_formats_window.show = true;
         }
+        //if ui.button("Palette formats …").clicked() {
+        //self.palette_formats_window.show = true;
+        //}
     }
 }
 
 /// Fill the values for a color format selection.
 ///
 /// Used to fill both the display and clipboard format selections.
-fn color_format_selection_fill<'a, T: From<DisplayFmtEnum> + PartialEq>(
+fn color_format_selection_fill<'a, T: From<ColorDisplayFmtEnum> + PartialEq>(
     fmt_ref: &mut T,
     customs: impl IntoIterator<Item = &'a String>,
     ui: &mut Ui,
 ) {
     ui.selectable_value(
         fmt_ref,
-        DisplayFmtEnum::Hex.into(),
-        DisplayFmtEnum::Hex.as_ref(),
+        ColorDisplayFmtEnum::Hex.into(),
+        ColorDisplayFmtEnum::Hex.as_ref(),
     );
     ui.selectable_value(
         fmt_ref,
-        DisplayFmtEnum::HexUppercase.into(),
-        DisplayFmtEnum::HexUppercase.as_ref(),
+        ColorDisplayFmtEnum::HexUppercase.into(),
+        ColorDisplayFmtEnum::HexUppercase.as_ref(),
     );
     ui.selectable_value(
         fmt_ref,
-        DisplayFmtEnum::CssRgb.into(),
-        DisplayFmtEnum::CssRgb.as_ref(),
+        ColorDisplayFmtEnum::CssRgb.into(),
+        ColorDisplayFmtEnum::CssRgb.as_ref(),
     );
     ui.selectable_value(
         fmt_ref,
-        DisplayFmtEnum::CssHsl.into(),
-        DisplayFmtEnum::CssHsl.as_ref(),
+        ColorDisplayFmtEnum::CssHsl.into(),
+        ColorDisplayFmtEnum::CssHsl.as_ref(),
     );
     for custom in customs {
         ui.selectable_value(
             fmt_ref,
-            DisplayFmtEnum::Custom(custom.clone()).into(),
+            ColorDisplayFmtEnum::Custom(custom.clone()).into(),
             format!("*{}", custom),
         );
     }
