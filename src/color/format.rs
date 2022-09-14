@@ -1,5 +1,6 @@
 use crate::color::{
-    xyY, CIEColor, Cmyk, Color, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, RgbWorkingSpace, Xyz,
+    xyY, CIEColor, Cmyk, Color, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, Palette,
+    RgbWorkingSpace, Xyz,
 };
 
 use anyhow::{Error, Result};
@@ -17,10 +18,35 @@ use nom::{
     sequence::{delimited, preceded},
     Err, IResult, Parser,
 };
+use serde::{Deserialize, Serialize};
 use std::collections::LinkedList;
 use std::num::ParseIntError;
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct CustomPaletteFormat {
+    pub prefix: String,
+    pub entry_format: String,
+    pub suffix: String,
+}
+
+impl CustomPaletteFormat {
+    pub fn format_palette(
+        &self,
+        palette: &Palette,
+        ws: RgbWorkingSpace,
+        illuminant: Illuminant,
+    ) -> Result<String> {
+        let mut s = self.prefix.clone();
+        let entry_format = ColorFormat::parse(&self.entry_format)?;
+        palette.iter().for_each(|entry| {
+            s.push_str(&entry_format.format_color(entry, ws, illuminant));
+        });
+        s.push_str(&self.suffix);
+        Ok(s)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct ColorFormat<'a>(Vec<FormatToken<'a>>);
 
 impl<'a> ColorFormat<'a> {
@@ -190,19 +216,19 @@ impl FromExternalError<&str, ParseIntError> for ColorParseError<&str> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum FormatToken<'a> {
     Color(ColorField),
     Text(&'a str),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ColorField {
     symbol: ColorSymbol,
     digit_format: Option<DigitFormat>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum DigitFormat {
     Hex,
     UppercaseHex,
@@ -321,7 +347,7 @@ impl Default for DigitFormat {
 
 #[rustfmt::skip]
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum ColorSymbol {
     Red,
     Green,

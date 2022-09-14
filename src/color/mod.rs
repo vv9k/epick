@@ -142,6 +142,31 @@ impl<'fmt> ColorDisplayFormat<'fmt> {
 
 //################################################################################
 
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+pub enum PaletteDisplayFormat {
+    Gimp,
+    HexList,
+    Custom(String, CustomPaletteFormat),
+}
+
+impl Default for PaletteDisplayFormat {
+    fn default() -> Self {
+        Self::HexList
+    }
+}
+
+impl AsRef<str> for PaletteDisplayFormat {
+    fn as_ref(&self) -> &str {
+        match self {
+            PaletteDisplayFormat::Gimp => "gimp",
+            PaletteDisplayFormat::HexList => "hex list",
+            PaletteDisplayFormat::Custom(name, _) => &name,
+        }
+    }
+}
+
+//################################################################################
+
 pub trait CIEColor {
     fn to_rgb(self, ws: RgbWorkingSpace) -> Rgb;
     fn from_rgb(rgb: Rgb, ws: RgbWorkingSpace) -> Self;

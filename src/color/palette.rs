@@ -1,4 +1,4 @@
-use crate::color::Color;
+use crate::color::{Color, Illuminant, PaletteDisplayFormat, RgbWorkingSpace};
 
 use serde::{Deserialize, Serialize};
 use std::fmt::Write as _;
@@ -14,6 +14,23 @@ impl Default for NamedPalette {
         Self {
             name: "palette".into(),
             palette: Palette::default(),
+        }
+    }
+}
+
+impl NamedPalette {
+    pub fn display(
+        &self,
+        format: &PaletteDisplayFormat,
+        ws: RgbWorkingSpace,
+        illuminant: Illuminant,
+    ) -> String {
+        match format {
+            PaletteDisplayFormat::Gimp => self.palette.as_gimp_palette(&self.name),
+            PaletteDisplayFormat::HexList => self.palette.as_hex_list(),
+            PaletteDisplayFormat::Custom(_, fmt) => fmt
+                .format_palette(&self.palette, ws, illuminant)
+                .unwrap_or_default(),
         }
     }
 }
