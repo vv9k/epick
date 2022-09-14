@@ -122,7 +122,7 @@ impl std::iter::FromIterator<Color> for Palette {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 pub enum PaletteFormat {
     Gimp,
     HexList,
@@ -140,7 +140,7 @@ impl AsRef<str> for PaletteFormat {
         match self {
             PaletteFormat::Gimp => "GIMP (gpl)",
             PaletteFormat::HexList => "Hex list",
-            PaletteFormat::Custom(name, _) => &name,
+            PaletteFormat::Custom(name, _) => name,
         }
     }
 }

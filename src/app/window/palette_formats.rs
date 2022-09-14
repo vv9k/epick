@@ -33,7 +33,7 @@ impl PaletteFormatsWindow {
                     ComboBox::new("palette_format_combobox", "")
                         .selected_text(&current.0)
                         .show_ui(ui, |ui| {
-                            for (name, _) in &ctx.app.settings.saved_palette_formats {
+                            for name in ctx.app.settings.saved_palette_formats.keys() {
                                 ui.selectable_value(&mut current.0, name.clone(), name);
                             }
                         });
@@ -82,7 +82,6 @@ impl PaletteFormatsWindow {
                     {
                         ctx.app.settings.palette_clipboard_format =
                             PaletteFormat::Custom(current.0.clone(), current.1.clone());
-                        return;
                     }
                 });
                 let (name_before_edit, format_before_edit) = current.clone();

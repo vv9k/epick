@@ -22,7 +22,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::LinkedList;
 use std::num::ParseIntError;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CustomPaletteFormat {
     pub prefix: String,
     pub entry_format: String,
