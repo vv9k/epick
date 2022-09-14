@@ -1,6 +1,7 @@
 #
 - Change button layout in palette view
 - Bring back ability to select color by primary clicking it
+- Add a way to define custom palette formats and use them to copy palettes to clipboard.
 
 # 0.8.2
 - Fixed wasm build
