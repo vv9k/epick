@@ -1,6 +1,7 @@
 mod custom_formats;
 mod export;
 mod help;
+mod palette_formats;
 mod settings;
 
 use crate::ui::colors::*;
@@ -10,6 +11,7 @@ use egui::{style::Margin, Frame, Rounding, Slider, Stroke, Ui};
 use epaint::Shadow;
 pub use export::ExportWindow;
 pub use help::HelpWindow;
+pub use palette_formats::PaletteFormatsWindow;
 pub use settings::SettingsWindow;
 
 pub const WINDOW_X_OFFSET: f32 = 10.;

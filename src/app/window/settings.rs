@@ -14,7 +14,7 @@ use egui::CursorIcon;
 #[cfg(not(target_arch = "wasm32"))]
 use std::fs;
 
-use crate::app::window::CustomFormatsWindow;
+use crate::app::window::{CustomFormatsWindow, PaletteFormatsWindow};
 
 #[derive(Debug, Default)]
 pub struct SettingsWindow {
@@ -24,6 +24,7 @@ pub struct SettingsWindow {
     selected_display_fmt: String,
     selected_clipboard_fmt: String,
     pub custom_formats_window: CustomFormatsWindow,
+    pub palette_formats_window: PaletteFormatsWindow,
 }
 
 impl SettingsWindow {
@@ -347,9 +348,9 @@ impl SettingsWindow {
         if ui.button("Custom formats …").clicked() {
             self.custom_formats_window.show = true;
         }
-        //if ui.button("Palette formats …").clicked() {
-        //self.palette_formats_window.show = true;
-        //}
+        if ui.button("Palette formats …").clicked() {
+            self.palette_formats_window.show = true;
+        }
     }
 }
 
