@@ -1,0 +1,15 @@
+name: 'Lint'
+description: 'Reports lints to improve code quality and checks code formatting'
+inputs: {}
+outputs: {}
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Rust
+      uses: hecrj/setup-rust-action@v1
+      with:
+        components: clippy,rustfmt
+    - uses: actions/checkout@v2
+    - name: Lint
+      run: make lint
+      shell: bash

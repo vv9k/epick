@@ -6,15 +6,11 @@ runs:
   using: 'composite'
   steps:
     - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
+    - name: Set up Rust
+      uses: hecrj/setup-rust-action@v1
     - name: Install dependencies
       run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev || true
       shell: bash
     - name: Run tests
-      uses: actions-rs/cargo@v1
-      with:
-        command: test
+      run: make test
+      shell: bash
