@@ -368,12 +368,14 @@ impl SettingsWindow {
             "Auto copy picked color",
         );
         ui.add_space(HALF_SPACE);
-        if ui.button("Color formats …").clicked() {
-            self.custom_formats_window.show = true;
-        }
-        if ui.button("Palette formats …").clicked() {
-            self.palette_formats_window.show = true;
-        }
+        ui.horizontal(|ui| {
+            if ui.button("Color formats …").clicked() {
+                self.custom_formats_window.show = true;
+            }
+            if ui.button("Palette formats …").clicked() {
+                self.palette_formats_window.show = true;
+            }
+        });
     }
 }
 
