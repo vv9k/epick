@@ -132,7 +132,11 @@ impl App {
                 .on_hover_cursor(CursorIcon::Alias)
                 .clicked()
             {
-                let _ = save_to_clipboard(palette.palette.as_hex_list());
+                let _ = save_to_clipboard(palette.display(
+                    &ctx.app.settings.palette_clipboard_format,
+                    ctx.app.settings.rgb_working_space,
+                    ctx.app.settings.illuminant,
+                ));
             }
             if ui
                 .button(icon::DELETE)

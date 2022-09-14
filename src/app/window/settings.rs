@@ -2,7 +2,9 @@ use crate::app::{
     window::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
     AppCtx,
 };
-use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
+use crate::color::{
+    ChromaticAdaptationMethod, ColorHarmony, Illuminant, PaletteDisplayFormat, RgbWorkingSpace,
+};
 use crate::settings::{ColorDisplayFmtEnum, Settings};
 use crate::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
 
@@ -319,7 +321,7 @@ impl SettingsWindow {
                 );
             });
         ui.add_space(HALF_SPACE);
-        ComboBox::from_label("Clipboard format")
+        ComboBox::from_label("Color clipboard format")
             .selected_text(
                 app_ctx
                     .settings
@@ -339,6 +341,27 @@ impl SettingsWindow {
                     app_ctx.settings.saved_color_formats.keys(),
                     ui,
                 );
+            });
+        ComboBox::from_label("Palette clipboard format")
+            .selected_text(app_ctx.settings.palette_clipboard_format.as_ref())
+            .show_ui(ui, |ui| {
+                ui.selectable_value(
+                    &mut app_ctx.settings.palette_clipboard_format,
+                    PaletteDisplayFormat::Gimp,
+                    PaletteDisplayFormat::Gimp.as_ref(),
+                );
+                ui.selectable_value(
+                    &mut app_ctx.settings.palette_clipboard_format,
+                    PaletteDisplayFormat::HexList,
+                    PaletteDisplayFormat::HexList.as_ref(),
+                );
+                for (name, fmt) in app_ctx.settings.saved_palette_formats.clone() {
+                    ui.selectable_value(
+                        &mut app_ctx.settings.palette_clipboard_format,
+                        PaletteDisplayFormat::Custom(name.clone(), fmt),
+                        name,
+                    );
+                }
             });
         ui.checkbox(
             &mut app_ctx.settings.auto_copy_picked_color,
