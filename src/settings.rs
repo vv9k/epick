@@ -125,6 +125,7 @@ pub struct Settings {
     pub color_display_format: ColorDisplayFmtEnum,
     #[serde(default)]
     pub color_clipboard_format: Option<ColorDisplayFmtEnum>,
+    #[serde(default)]
     pub palette_clipboard_format: PaletteFormat,
     #[serde(default)]
     #[serde(skip_serializing_if = "HashMap::is_empty")]
@@ -281,6 +282,7 @@ mod tests {
         let tmp = tempdir::TempDir::new("settings-test").unwrap();
         let settings_str = r#"color_display_format: !custom rgb
 color_clipboard_format: null
+palette_clipboard_format: HexList
 saved_color_formats:
   rgb: '{r} {g} {b}'
 color_spaces:

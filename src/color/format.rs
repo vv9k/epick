@@ -627,7 +627,7 @@ mod tests {
     }
     macro_rules! test_case {
         ($input:literal, $want:expr) => {
-            let parsed = ColorFormat::parse($input).unwrap();
+            let parsed = CustomColorFormat::parse($input).unwrap();
             assert_eq!(parsed, $want);
         };
     }
@@ -636,7 +636,7 @@ mod tests {
     fn formats_custom_color_string() {
         macro_rules! test_case {
             ($fmt:literal => $want:literal, $color:expr) => {
-                let color_format = ColorFormat::parse($fmt).unwrap();
+                let color_format = CustomColorFormat::parse($fmt).unwrap();
                 let color = $color;
                 let formatted =
                     color_format.format_color(&color, RgbWorkingSpace::SRGB, Illuminant::D65);
