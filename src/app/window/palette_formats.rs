@@ -65,6 +65,15 @@ impl PaletteFormatsWindow {
                         .clicked()
                     {
                         ctx.app.settings.saved_palette_formats.remove(&current.name);
+                        if let PaletteFormat::Custom(n, _) =
+                            &ctx.app.settings.palette_clipboard_format
+                        {
+                            if n == &current.name {
+                                ctx.app.settings.palette_clipboard_format =
+                                    PaletteFormat::default();
+                            }
+                        }
+                        self.current_format = None;
                         return;
                     }
                     if ui
