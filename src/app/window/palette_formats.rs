@@ -140,6 +140,14 @@ impl PaletteFormatsWindow {
                         .settings
                         .saved_palette_formats
                         .remove(&name_before_edit);
+
+                    if ctx.app.settings.palette_clipboard_format
+                        == PaletteFormat::Custom(name_before_edit, format_before_edit)
+                    {
+                        ctx.app.settings.palette_clipboard_format =
+                            PaletteFormat::Custom(current.0.clone(), current.1.clone())
+                    }
+
                     ctx.app
                         .settings
                         .saved_palette_formats
