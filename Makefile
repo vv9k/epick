@@ -49,6 +49,8 @@ clippy:
 	@rustup component add clippy
 	cargo clippy --all-targets --all-features -- -D clippy::all
 
+.PHONY: lint
+lint: fmt clippy
 
 .PHONY: clean
 clean: clean_web
