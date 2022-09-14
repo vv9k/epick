@@ -1,5 +1,6 @@
 use crate::color::{
-    ChromaticAdaptationMethod, ColorDisplayFormat, ColorHarmony, Illuminant, RgbWorkingSpace,
+    ChromaticAdaptationMethod, ColorDisplayFormat, ColorHarmony, CustomPaletteFormat, Illuminant,
+    PaletteDisplayFormat, RgbWorkingSpace,
 };
 use crate::ui::layout::HarmonyLayout;
 
@@ -124,9 +125,13 @@ pub struct Settings {
     pub color_display_format: ColorDisplayFmtEnum,
     #[serde(default)]
     pub color_clipboard_format: Option<ColorDisplayFmtEnum>,
+    pub palette_clipboard_format: PaletteDisplayFormat,
     #[serde(default)]
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     pub saved_color_formats: HashMap<String, String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    pub saved_palette_formats: HashMap<String, CustomPaletteFormat>,
     #[serde(default)]
     pub color_spaces: ColorSpaceSettings,
     #[serde(default)]
@@ -165,7 +170,9 @@ impl Default for Settings {
         Self {
             color_display_format: ColorDisplayFmtEnum::default(),
             color_clipboard_format: None,
+            palette_clipboard_format: PaletteDisplayFormat::default(),
             saved_color_formats: HashMap::default(),
+            saved_palette_formats: HashMap::default(),
             color_spaces: ColorSpaceSettings::default(),
             rgb_working_space: ws,
             chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
