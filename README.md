@@ -39,9 +39,7 @@ To build without `make` checkout the build instructions in the `Makefile`
 
 ## Demo
 
-The gif might be outdated, to checkout the latest build of master branch head over to the [web demo](https://vv9k.github.io/epick).
-
-![Demo GIF](https://github.com/vv9k/epick/blob/master/assets/epick.gif)
+To checkout the latest build of master branch head over to the [web demo](https://vv9k.github.io/epick).
 
 ## Keyboard shortcuts
 
