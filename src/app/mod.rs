@@ -327,15 +327,15 @@ impl App {
             );
             add_button_if!(
                 "shades",
-                self.windows.hues.is_open,
-                { self.windows.hues.is_open = false },
-                { self.windows.hues.is_open = true }
+                self.windows.shades.is_open,
+                { self.windows.shades.is_open = false },
+                { self.windows.shades.is_open = true }
             );
             add_button_if!(
                 "tints",
-                self.windows.hues.is_open,
-                { self.windows.hues.is_open = false },
-                { self.windows.hues.is_open = true }
+                self.windows.tints.is_open,
+                { self.windows.tints.is_open = false },
+                { self.windows.tints.is_open = true }
             );
 
             ui.with_layout(Layout::right_to_left(), |ui| {
