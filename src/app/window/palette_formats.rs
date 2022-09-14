@@ -6,10 +6,16 @@ use crate::{
     ui::{icon, SPACE},
 };
 
+#[derive(Default, Clone, Debug)]
+struct NamedPaletteFormat {
+    pub name: String,
+    pub format: CustomPaletteFormat,
+}
+
 #[derive(Default, Debug)]
 pub struct PaletteFormatsWindow {
     pub show: bool,
-    pub current_format: Option<(String, CustomPaletteFormat)>,
+    current_format: Option<NamedPaletteFormat>,
 }
 impl PaletteFormatsWindow {
     pub(crate) fn display(&mut self, ctx: &mut FrameCtx<'_>) {
@@ -24,26 +30,32 @@ impl PaletteFormatsWindow {
                         .saved_palette_formats
                         .iter()
                         .next()
-                        .map(|(name, fmt)| (name.clone(), fmt.clone()))
+                        .map(|(name, fmt)| NamedPaletteFormat {
+                            name: name.clone(),
+                            format: fmt.clone(),
+                        })
                         .unwrap_or_default()
                 };
 
                 ui.horizontal(|ui| {
-                    let name_before_selection = current.0.clone();
+                    let name_before_selection = current.name.clone();
                     ComboBox::new("palette_format_combobox", "")
-                        .selected_text(&current.0)
+                        .selected_text(&current.name)
                         .show_ui(ui, |ui| {
                             for name in ctx.app.settings.saved_palette_formats.keys() {
-                                ui.selectable_value(&mut current.0, name.clone(), name);
+                                ui.selectable_value(&mut current.name, name.clone(), name);
                             }
                         });
-                    if name_before_selection != current.0 {
+                    if name_before_selection != current.name {
                         self.current_format = ctx
                             .app
                             .settings
                             .saved_palette_formats
-                            .get(&current.0)
-                            .map(|fmt| (current.0.clone(), fmt.clone()));
+                            .get(&current.name)
+                            .map(|fmt| NamedPaletteFormat {
+                                name: current.name.clone(),
+                                format: fmt.clone(),
+                            });
                         current = self.current_format.clone().unwrap_or_default();
                     }
 
@@ -52,7 +64,7 @@ impl PaletteFormatsWindow {
                         .on_hover_text("Delete this format")
                         .clicked()
                     {
-                        ctx.app.settings.saved_palette_formats.remove(&current.0);
+                        ctx.app.settings.saved_palette_formats.remove(&current.name);
                         return;
                     }
                     if ui
@@ -72,7 +84,10 @@ impl PaletteFormatsWindow {
                             .settings
                             .saved_palette_formats
                             .get(&name)
-                            .map(|fmt| (name, fmt.clone()));
+                            .map(|fmt| NamedPaletteFormat {
+                                name,
+                                format: fmt.clone(),
+                            });
                         return;
                     }
                     if ui
@@ -81,40 +96,43 @@ impl PaletteFormatsWindow {
                         .clicked()
                     {
                         ctx.app.settings.palette_clipboard_format =
-                            PaletteFormat::Custom(current.0.clone(), current.1.clone());
+                            PaletteFormat::Custom(current.name.clone(), current.format.clone());
                     }
                 });
-                let (name_before_edit, format_before_edit) = current.clone();
+                let NamedPaletteFormat {
+                    name: name_before_edit,
+                    format: format_before_edit,
+                } = current.clone();
 
                 ui.add_space(SPACE);
                 egui::Grid::new("palette_format_edit_grid")
                     .num_columns(2)
                     .show(ui, |ui| {
                         ui.label("Name: ");
-                        ui.text_edit_singleline(&mut current.0);
+                        ui.text_edit_singleline(&mut current.name);
                         ui.end_row();
 
                         ui.label("Prefix: ");
-                        egui::TextEdit::multiline(&mut current.1.prefix)
+                        egui::TextEdit::multiline(&mut current.format.prefix)
                             .desired_rows(1)
                             .show(ui);
                         ui.end_row();
 
                         ui.label("Color format: ");
-                        egui::TextEdit::multiline(&mut current.1.entry_format)
+                        egui::TextEdit::multiline(&mut current.format.entry_format)
                             .desired_rows(1)
                             .show(ui);
                         ui.end_row();
 
                         ui.label("Suffix: ");
-                        egui::TextEdit::multiline(&mut current.1.suffix)
+                        egui::TextEdit::multiline(&mut current.format.suffix)
                             .desired_rows(1)
                             .show(ui);
                         ui.end_row();
                     });
 
                 let mut preview = current
-                    .1
+                    .format
                     .format_palette(
                         &ctx.app.palettes.current().palette,
                         ctx.app.settings.rgb_working_space,
@@ -134,7 +152,7 @@ impl PaletteFormatsWindow {
                     let _ = crate::save_to_clipboard(preview);
                 }
 
-                if name_before_edit != current.0 || format_before_edit != current.1 {
+                if name_before_edit != current.name || format_before_edit != current.format {
                     ctx.app
                         .settings
                         .saved_palette_formats
@@ -144,19 +162,22 @@ impl PaletteFormatsWindow {
                         == PaletteFormat::Custom(name_before_edit, format_before_edit)
                     {
                         ctx.app.settings.palette_clipboard_format =
-                            PaletteFormat::Custom(current.0.clone(), current.1.clone())
+                            PaletteFormat::Custom(current.name.clone(), current.format.clone())
                     }
 
                     ctx.app
                         .settings
                         .saved_palette_formats
-                        .insert(current.0.clone(), current.1);
+                        .insert(current.name.clone(), current.format);
                     self.current_format = ctx
                         .app
                         .settings
                         .saved_palette_formats
-                        .get(&current.0)
-                        .map(|fmt| (current.0, fmt.clone()));
+                        .get(&current.name)
+                        .map(|fmt| NamedPaletteFormat {
+                            name: current.name,
+                            format: fmt.clone(),
+                        });
                 }
             });
     }
