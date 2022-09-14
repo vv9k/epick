@@ -1,4 +1,4 @@
-use crate::color::{Color, Illuminant, PaletteDisplayFormat, RgbWorkingSpace};
+use crate::color::{Color, CustomPaletteFormat, Illuminant, RgbWorkingSpace};
 
 use serde::{Deserialize, Serialize};
 use std::fmt::Write as _;
@@ -21,14 +21,14 @@ impl Default for NamedPalette {
 impl NamedPalette {
     pub fn display(
         &self,
-        format: &PaletteDisplayFormat,
+        format: &PaletteFormat,
         ws: RgbWorkingSpace,
         illuminant: Illuminant,
     ) -> String {
         match format {
-            PaletteDisplayFormat::Gimp => self.palette.as_gimp_palette(&self.name),
-            PaletteDisplayFormat::HexList => self.palette.as_hex_list(),
-            PaletteDisplayFormat::Custom(_, fmt) => fmt
+            PaletteFormat::Gimp => self.palette.as_gimp_palette(&self.name),
+            PaletteFormat::HexList => self.palette.as_hex_list(),
+            PaletteFormat::Custom(_, fmt) => fmt
                 .format_palette(&self.palette, ws, illuminant)
                 .unwrap_or_default(),
         }
@@ -122,18 +122,16 @@ impl std::iter::FromIterator<Color> for Palette {
     }
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum PaletteFormat {
     Gimp,
-    Text,
+    HexList,
+    Custom(String, CustomPaletteFormat),
 }
 
-impl PaletteFormat {
-    pub fn extension(&self) -> &str {
-        match self {
-            PaletteFormat::Gimp => "gpl",
-            PaletteFormat::Text => "txt",
-        }
+impl Default for PaletteFormat {
+    fn default() -> Self {
+        Self::HexList
     }
 }
 
@@ -141,7 +139,17 @@ impl AsRef<str> for PaletteFormat {
     fn as_ref(&self) -> &str {
         match self {
             PaletteFormat::Gimp => "GIMP (gpl)",
-            PaletteFormat::Text => "Hex list (txt)",
+            PaletteFormat::HexList => "Hex list",
+            PaletteFormat::Custom(name, _) => &name,
+        }
+    }
+}
+
+impl PaletteFormat {
+    pub fn extension(&self) -> &str {
+        match self {
+            PaletteFormat::Gimp => "gpl",
+            _ => "txt",
         }
     }
 }

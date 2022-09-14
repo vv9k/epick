@@ -37,7 +37,7 @@ impl CustomPaletteFormat {
         illuminant: Illuminant,
     ) -> Result<String> {
         let mut s = self.prefix.clone();
-        let entry_format = ColorFormat::parse(&self.entry_format)?;
+        let entry_format = CustomColorFormat::parse(&self.entry_format)?;
         palette.iter().for_each(|entry| {
             s.push_str(&entry_format.format_color(entry, ws, illuminant));
         });
@@ -47,10 +47,10 @@ impl CustomPaletteFormat {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct ColorFormat<'a>(Vec<FormatToken<'a>>);
+pub struct CustomColorFormat<'a>(Vec<FormatToken<'a>>);
 
-impl<'a> ColorFormat<'a> {
-    pub fn parse(text: &'a str) -> Result<ColorFormat<'a>> {
+impl<'a> CustomColorFormat<'a> {
+    pub fn parse(text: &'a str) -> Result<CustomColorFormat<'a>> {
         match parse_color_format(text).map(|(_, fmt)| fmt) {
             Ok(fmt) => Ok(fmt),
             Err(e) => Err(Error::msg(format!("failed to parse color format - {}", e))),
@@ -187,7 +187,7 @@ impl<'a> ColorFormat<'a> {
     }
 }
 
-impl<'a> From<Vec<FormatToken<'a>>> for ColorFormat<'a> {
+impl<'a> From<Vec<FormatToken<'a>>> for CustomColorFormat<'a> {
     fn from(vec: Vec<FormatToken<'a>>) -> Self {
         Self(vec)
     }
@@ -595,13 +595,15 @@ fn parse_format_token(i: &str) -> IResult<&str, FormatToken, ColorParseError<&st
     ))(i)
 }
 
-fn parse_color_format(i: &str) -> IResult<&str, ColorFormat, ColorParseError<&str>> {
-    map(many0(parse_format_token), ColorFormat)(i)
+fn parse_color_format(i: &str) -> IResult<&str, CustomColorFormat, ColorParseError<&str>> {
+    map(many0(parse_format_token), CustomColorFormat)(i)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::color::format::{ColorField, ColorFormat, ColorSymbol, DigitFormat, FormatToken};
+    use crate::color::format::{
+        ColorField, ColorSymbol, CustomColorFormat, DigitFormat, FormatToken,
+    };
     use crate::color::{Color, Illuminant, Rgb, RgbWorkingSpace};
     macro_rules! field {
         ($sym:tt) => {

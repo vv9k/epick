@@ -25,7 +25,7 @@ impl Default for ExportWindow {
     fn default() -> Self {
         Self {
             show: false,
-            format: PaletteFormat::Gimp,
+            format: PaletteFormat::default(),
             export_status: Ok("".to_string()),
             path: env::current_dir()
                 .map(|d| d.to_string_lossy().to_string())
@@ -60,8 +60,8 @@ impl ExportWindow {
                                     );
                                     ui.selectable_value(
                                         &mut self.format,
-                                        PaletteFormat::Text,
-                                        PaletteFormat::Text.as_ref(),
+                                        PaletteFormat::HexList,
+                                        PaletteFormat::HexList.as_ref(),
                                     );
                                 });
                         });
@@ -119,12 +119,11 @@ impl ExportWindow {
                                 .on_hover_cursor(CursorIcon::PointingHand)
                                 .clicked()
                             {
-                                let generated_palette = match self.format {
-                                    PaletteFormat::Gimp => {
-                                        palette.palette.as_gimp_palette(&palette.name)
-                                    }
-                                    PaletteFormat::Text => palette.palette.as_hex_list(),
-                                };
+                                let generated_palette = palette.display(
+                                    &self.format,
+                                    ctx.app.settings.rgb_working_space,
+                                    ctx.app.settings.illuminant,
+                                );
                                 let p = PathBuf::from(&self.path);
                                 let filename =
                                     format!("{}.{}", &palette.name, self.format.extension());

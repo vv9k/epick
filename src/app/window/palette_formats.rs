@@ -1,7 +1,7 @@
 use egui::{ComboBox, Window};
 
 use crate::{
-    color::{CustomPaletteFormat, PaletteDisplayFormat},
+    color::{CustomPaletteFormat, PaletteFormat},
     context::FrameCtx,
     ui::{icon, SPACE},
 };
@@ -81,7 +81,7 @@ impl PaletteFormatsWindow {
                         .clicked()
                     {
                         ctx.app.settings.palette_clipboard_format =
-                            PaletteDisplayFormat::Custom(current.0.clone(), current.1.clone());
+                            PaletteFormat::Custom(current.0.clone(), current.1.clone());
                         return;
                     }
                 });

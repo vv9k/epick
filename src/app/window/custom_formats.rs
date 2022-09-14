@@ -2,7 +2,7 @@ use egui::{Button, Key, TextBuffer, TextEdit, Window};
 
 use crate::{
     app::settings::{ColorDisplayFmtEnum, Settings},
-    color::{Color, ColorDisplayFormat},
+    color::{Color, ColorFormat},
     ui::icon,
 };
 
@@ -119,7 +119,7 @@ impl CustomFormatsWindow {
                 if !self.highlighted_key.is_empty() {
                     ui.heading("Preview");
                     let preview_string = preview_color.display(
-                        ColorDisplayFormat::Custom(&settings.saved_color_formats[&self.highlighted_key]),
+                        ColorFormat::Custom(&settings.saved_color_formats[&self.highlighted_key]),
                         settings.rgb_working_space,
                         settings.illuminant,
                     );

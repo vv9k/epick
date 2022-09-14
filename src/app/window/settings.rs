@@ -3,7 +3,7 @@ use crate::app::{
     AppCtx,
 };
 use crate::color::{
-    ChromaticAdaptationMethod, ColorHarmony, Illuminant, PaletteDisplayFormat, RgbWorkingSpace,
+    ChromaticAdaptationMethod, ColorHarmony, Illuminant, PaletteFormat, RgbWorkingSpace,
 };
 use crate::settings::{ColorDisplayFmtEnum, Settings};
 use crate::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
@@ -347,18 +347,18 @@ impl SettingsWindow {
             .show_ui(ui, |ui| {
                 ui.selectable_value(
                     &mut app_ctx.settings.palette_clipboard_format,
-                    PaletteDisplayFormat::Gimp,
-                    PaletteDisplayFormat::Gimp.as_ref(),
+                    PaletteFormat::Gimp,
+                    PaletteFormat::Gimp.as_ref(),
                 );
                 ui.selectable_value(
                     &mut app_ctx.settings.palette_clipboard_format,
-                    PaletteDisplayFormat::HexList,
-                    PaletteDisplayFormat::HexList.as_ref(),
+                    PaletteFormat::HexList,
+                    PaletteFormat::HexList.as_ref(),
                 );
                 for (name, fmt) in app_ctx.settings.saved_palette_formats.clone() {
                     ui.selectable_value(
                         &mut app_ctx.settings.palette_clipboard_format,
-                        PaletteDisplayFormat::Custom(name.clone(), fmt),
+                        PaletteFormat::Custom(name.clone(), fmt),
                         name,
                     );
                 }
@@ -368,7 +368,7 @@ impl SettingsWindow {
             "Auto copy picked color",
         );
         ui.add_space(HALF_SPACE);
-        if ui.button("Custom formats …").clicked() {
+        if ui.button("Color formats …").clicked() {
             self.custom_formats_window.show = true;
         }
         if ui.button("Palette formats …").clicked() {

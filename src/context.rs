@@ -1,6 +1,6 @@
 use crate::{
     app::{CentralPanelTab, DARK_VISUALS, LIGHT_VISUALS},
-    color::{Color, ColorDisplayFormat, Palettes},
+    color::{Color, ColorFormat, Palettes},
     color_picker::ColorPicker,
     error::append_global_error,
     render::{TextureAllocator, TextureManager},
@@ -112,17 +112,17 @@ impl AppCtx {
     }
 
     /// Current color display format
-    pub fn display_format(&self) -> ColorDisplayFormat {
+    pub fn display_format(&self) -> ColorFormat {
         match self.settings.color_display_format {
-            ColorDisplayFmtEnum::Hex => ColorDisplayFormat::Hex,
-            ColorDisplayFmtEnum::HexUppercase => ColorDisplayFormat::HexUpercase,
-            ColorDisplayFmtEnum::CssRgb => ColorDisplayFormat::CssRgb,
-            ColorDisplayFmtEnum::CssHsl => ColorDisplayFormat::CssHsl {
+            ColorDisplayFmtEnum::Hex => ColorFormat::Hex,
+            ColorDisplayFmtEnum::HexUppercase => ColorFormat::HexUpercase,
+            ColorDisplayFmtEnum::CssRgb => ColorFormat::CssRgb,
+            ColorDisplayFmtEnum::CssHsl => ColorFormat::CssHsl {
                 degree_symbol: true,
             },
             ColorDisplayFmtEnum::Custom(ref name) => {
                 if self.settings.saved_color_formats.get(name).is_some() {
-                    ColorDisplayFormat::Custom(&self.settings.saved_color_formats[name])
+                    ColorFormat::Custom(&self.settings.saved_color_formats[name])
                 } else {
                     append_global_error(format!("Custom color format `{name}` not found"));
                     ColorDisplayFmtEnum::default_display_format()
@@ -148,15 +148,15 @@ impl AppCtx {
             .as_ref()
             .unwrap_or(&self.settings.color_display_format)
         {
-            ColorDisplayFmtEnum::Hex => ColorDisplayFormat::Hex,
-            ColorDisplayFmtEnum::HexUppercase => ColorDisplayFormat::HexUpercase,
-            ColorDisplayFmtEnum::CssRgb => ColorDisplayFormat::CssRgb,
-            ColorDisplayFmtEnum::CssHsl => ColorDisplayFormat::CssHsl {
+            ColorDisplayFmtEnum::Hex => ColorFormat::Hex,
+            ColorDisplayFmtEnum::HexUppercase => ColorFormat::HexUpercase,
+            ColorDisplayFmtEnum::CssRgb => ColorFormat::CssRgb,
+            ColorDisplayFmtEnum::CssHsl => ColorFormat::CssHsl {
                 degree_symbol: false,
             },
             ColorDisplayFmtEnum::Custom(name) => {
                 if self.settings.saved_color_formats.get(name).is_some() {
-                    ColorDisplayFormat::Custom(&self.settings.saved_color_formats[name])
+                    ColorFormat::Custom(&self.settings.saved_color_formats[name])
                 } else {
                     append_global_error(format!("Custom color format `{name}` not found"));
                     ColorDisplayFmtEnum::default_display_format()
