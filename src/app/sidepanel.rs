@@ -115,7 +115,11 @@ impl App {
                 .on_hover_cursor(CursorIcon::Alias)
                 .clicked()
             {
-                let _ = save_to_clipboard(ctx.app.palettes.current().palette.as_hex_list());
+                let _ = save_to_clipboard(ctx.app.palettes.current().display(
+                    &ctx.app.settings.palette_clipboard_format,
+                    ctx.app.settings.rgb_working_space,
+                    ctx.app.settings.illuminant,
+                ));
             }
             #[allow(clippy::collapsible_if)]
             if ui

@@ -1,5 +1,6 @@
 use crate::color::{
-    ChromaticAdaptationMethod, ColorHarmony, DisplayFormat, Illuminant, RgbWorkingSpace,
+    ChromaticAdaptationMethod, ColorFormat, ColorHarmony, CustomPaletteFormat, Illuminant,
+    PaletteFormat, RgbWorkingSpace,
 };
 use crate::ui::layout::HarmonyLayout;
 
@@ -121,12 +122,17 @@ impl Default for ColorSpaceSettings {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Settings {
     #[serde(default)]
-    pub color_display_format: DisplayFmtEnum,
+    pub color_display_format: ColorDisplayFmtEnum,
     #[serde(default)]
-    pub color_clipboard_format: Option<DisplayFmtEnum>,
+    pub color_clipboard_format: Option<ColorDisplayFmtEnum>,
+    #[serde(default)]
+    pub palette_clipboard_format: PaletteFormat,
     #[serde(default)]
     #[serde(skip_serializing_if = "HashMap::is_empty")]
     pub saved_color_formats: HashMap<String, String>,
+    #[serde(default)]
+    #[serde(skip_serializing_if = "HashMap::is_empty")]
+    pub saved_palette_formats: HashMap<String, CustomPaletteFormat>,
     #[serde(default)]
     pub color_spaces: ColorSpaceSettings,
     #[serde(default)]
@@ -163,9 +169,11 @@ impl Default for Settings {
     fn default() -> Self {
         let ws = RgbWorkingSpace::default();
         Self {
-            color_display_format: DisplayFmtEnum::default(),
+            color_display_format: ColorDisplayFmtEnum::default(),
             color_clipboard_format: None,
+            palette_clipboard_format: PaletteFormat::default(),
             saved_color_formats: HashMap::default(),
+            saved_palette_formats: HashMap::default(),
             color_spaces: ColorSpaceSettings::default(),
             rgb_working_space: ws,
             chromatic_adaptation_method: ChromaticAdaptationMethod::default(),
@@ -223,7 +231,7 @@ impl Settings {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize, Serialize)]
-pub enum DisplayFmtEnum {
+pub enum ColorDisplayFmtEnum {
     #[serde(rename = "hex")]
     Hex,
     #[serde(rename = "hex-uppercase")]
@@ -236,15 +244,15 @@ pub enum DisplayFmtEnum {
     Custom(String),
 }
 
-impl Default for DisplayFmtEnum {
+impl Default for ColorDisplayFmtEnum {
     fn default() -> Self {
-        DisplayFmtEnum::Hex
+        ColorDisplayFmtEnum::Hex
     }
 }
 
-impl AsRef<str> for DisplayFmtEnum {
+impl AsRef<str> for ColorDisplayFmtEnum {
     fn as_ref(&self) -> &str {
-        use DisplayFmtEnum::*;
+        use ColorDisplayFmtEnum::*;
         match &self {
             Hex => "hex",
             HexUppercase => "hex uppercase",
@@ -255,9 +263,9 @@ impl AsRef<str> for DisplayFmtEnum {
     }
 }
 
-impl DisplayFmtEnum {
-    pub fn default_display_format() -> DisplayFormat<'static> {
-        DisplayFormat::Hex
+impl ColorDisplayFmtEnum {
+    pub fn default_display_format() -> ColorFormat<'static> {
+        ColorFormat::Hex
     }
 }
 
@@ -274,6 +282,7 @@ mod tests {
         let tmp = tempdir::TempDir::new("settings-test").unwrap();
         let settings_str = r#"color_display_format: !custom rgb
 color_clipboard_format: null
+palette_clipboard_format: HexList
 saved_color_formats:
   rgb: '{r} {g} {b}'
 color_spaces:

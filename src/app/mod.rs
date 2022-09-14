@@ -391,7 +391,8 @@ impl App {
             ctx.egui,
             ctx.app.picker.current_color,
         );
-        if let Err(e) = self.windows.export.display(ctx.egui) {
+        self.windows.settings.palette_formats_window.display(ctx);
+        if let Err(e) = self.windows.export.display(ctx) {
             append_global_error(e);
         }
 

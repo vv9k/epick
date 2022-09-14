@@ -16,6 +16,7 @@ mod working_space;
 mod xyy;
 mod xyz;
 
+pub use format::CustomPaletteFormat;
 pub use gradient::Gradient;
 pub use palette::{NamedPalette, Palette, PaletteFormat};
 pub use palettes::Palettes;
@@ -34,7 +35,7 @@ pub use working_space::RgbWorkingSpace;
 pub use xyy::xyY;
 pub use xyz::Xyz;
 
-use crate::color::format::ColorFormat;
+use crate::color::format::CustomColorFormat;
 use egui::color::{Color32, Hsva, HsvaGamma, Rgba};
 use serde::{Deserialize, Serialize};
 
@@ -113,7 +114,7 @@ impl Default for ColorHarmony {
 //################################################################################
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
-pub enum DisplayFormat<'fmt> {
+pub enum ColorFormat<'fmt> {
     #[serde(rename = "hex")]
     Hex,
     #[serde(rename = "hex-uppercase")]
@@ -127,9 +128,9 @@ pub enum DisplayFormat<'fmt> {
     Custom(&'fmt str),
 }
 
-impl<'fmt> DisplayFormat<'fmt> {
+impl<'fmt> ColorFormat<'fmt> {
     pub fn no_degree(self) -> Self {
-        use DisplayFormat::*;
+        use ColorFormat::*;
         match self {
             CssHsl { .. } => CssHsl {
                 degree_symbol: false,
@@ -223,17 +224,17 @@ impl Color {
 
     pub fn display(
         &self,
-        format: DisplayFormat,
+        format: ColorFormat,
         ws: RgbWorkingSpace,
         illuminant: Illuminant,
     ) -> String {
         match format {
-            DisplayFormat::Hex => self.as_hex(),
-            DisplayFormat::HexUpercase => self.as_hex().to_uppercase(),
-            DisplayFormat::CssRgb => self.as_css_rgb(),
-            DisplayFormat::CssHsl { degree_symbol } => self.as_css_hsl(degree_symbol),
-            DisplayFormat::Custom(fmt) => {
-                if let Ok(fmt) = ColorFormat::parse(fmt) {
+            ColorFormat::Hex => self.as_hex(),
+            ColorFormat::HexUpercase => self.as_hex().to_uppercase(),
+            ColorFormat::CssRgb => self.as_css_rgb(),
+            ColorFormat::CssHsl { degree_symbol } => self.as_css_hsl(degree_symbol),
+            ColorFormat::Custom(fmt) => {
+                if let Ok(fmt) = CustomColorFormat::parse(fmt) {
                     fmt.format_color(self, ws, illuminant)
                 } else {
                     self.as_hex()

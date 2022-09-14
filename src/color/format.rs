@@ -1,5 +1,6 @@
 use crate::color::{
-    xyY, CIEColor, Cmyk, Color, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, RgbWorkingSpace, Xyz,
+    xyY, CIEColor, Cmyk, Color, Hsl, Hsv, Illuminant, Lab, LchAB, LchUV, Luv, Palette,
+    RgbWorkingSpace, Xyz,
 };
 
 use anyhow::{Error, Result};
@@ -17,14 +18,39 @@ use nom::{
     sequence::{delimited, preceded},
     Err, IResult, Parser,
 };
+use serde::{Deserialize, Serialize};
 use std::collections::LinkedList;
 use std::num::ParseIntError;
 
-#[derive(Debug, PartialEq)]
-pub struct ColorFormat<'a>(Vec<FormatToken<'a>>);
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CustomPaletteFormat {
+    pub prefix: String,
+    pub entry_format: String,
+    pub suffix: String,
+}
 
-impl<'a> ColorFormat<'a> {
-    pub fn parse(text: &'a str) -> Result<ColorFormat<'a>> {
+impl CustomPaletteFormat {
+    pub fn format_palette(
+        &self,
+        palette: &Palette,
+        ws: RgbWorkingSpace,
+        illuminant: Illuminant,
+    ) -> Result<String> {
+        let mut s = self.prefix.clone();
+        let entry_format = CustomColorFormat::parse(&self.entry_format)?;
+        palette.iter().for_each(|entry| {
+            s.push_str(&entry_format.format_color(entry, ws, illuminant));
+        });
+        s.push_str(&self.suffix);
+        Ok(s)
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct CustomColorFormat<'a>(Vec<FormatToken<'a>>);
+
+impl<'a> CustomColorFormat<'a> {
+    pub fn parse(text: &'a str) -> Result<CustomColorFormat<'a>> {
         match parse_color_format(text).map(|(_, fmt)| fmt) {
             Ok(fmt) => Ok(fmt),
             Err(e) => Err(Error::msg(format!("failed to parse color format - {}", e))),
@@ -161,7 +187,7 @@ impl<'a> ColorFormat<'a> {
     }
 }
 
-impl<'a> From<Vec<FormatToken<'a>>> for ColorFormat<'a> {
+impl<'a> From<Vec<FormatToken<'a>>> for CustomColorFormat<'a> {
     fn from(vec: Vec<FormatToken<'a>>) -> Self {
         Self(vec)
     }
@@ -190,19 +216,19 @@ impl FromExternalError<&str, ParseIntError> for ColorParseError<&str> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum FormatToken<'a> {
     Color(ColorField),
     Text(&'a str),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ColorField {
     symbol: ColorSymbol,
     digit_format: Option<DigitFormat>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum DigitFormat {
     Hex,
     UppercaseHex,
@@ -321,7 +347,7 @@ impl Default for DigitFormat {
 
 #[rustfmt::skip]
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum ColorSymbol {
     Red,
     Green,
@@ -569,13 +595,15 @@ fn parse_format_token(i: &str) -> IResult<&str, FormatToken, ColorParseError<&st
     ))(i)
 }
 
-fn parse_color_format(i: &str) -> IResult<&str, ColorFormat, ColorParseError<&str>> {
-    map(many0(parse_format_token), ColorFormat)(i)
+fn parse_color_format(i: &str) -> IResult<&str, CustomColorFormat, ColorParseError<&str>> {
+    map(many0(parse_format_token), CustomColorFormat)(i)
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::color::format::{ColorField, ColorFormat, ColorSymbol, DigitFormat, FormatToken};
+    use crate::color::format::{
+        ColorField, ColorSymbol, CustomColorFormat, DigitFormat, FormatToken,
+    };
     use crate::color::{Color, Illuminant, Rgb, RgbWorkingSpace};
     macro_rules! field {
         ($sym:tt) => {
@@ -599,7 +627,7 @@ mod tests {
     }
     macro_rules! test_case {
         ($input:literal, $want:expr) => {
-            let parsed = ColorFormat::parse($input).unwrap();
+            let parsed = CustomColorFormat::parse($input).unwrap();
             assert_eq!(parsed, $want);
         };
     }
@@ -608,7 +636,7 @@ mod tests {
     fn formats_custom_color_string() {
         macro_rules! test_case {
             ($fmt:literal => $want:literal, $color:expr) => {
-                let color_format = ColorFormat::parse($fmt).unwrap();
+                let color_format = CustomColorFormat::parse($fmt).unwrap();
                 let color = $color;
                 let formatted =
                     color_format.format_color(&color, RgbWorkingSpace::SRGB, Illuminant::D65);

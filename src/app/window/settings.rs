@@ -2,8 +2,10 @@ use crate::app::{
     window::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
     AppCtx,
 };
-use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
-use crate::settings::{DisplayFmtEnum, Settings};
+use crate::color::{
+    ChromaticAdaptationMethod, ColorHarmony, Illuminant, PaletteFormat, RgbWorkingSpace,
+};
+use crate::settings::{ColorDisplayFmtEnum, Settings};
 use crate::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
 
 use egui::{Color32, ComboBox, Ui, Window};
@@ -14,7 +16,7 @@ use egui::CursorIcon;
 #[cfg(not(target_arch = "wasm32"))]
 use std::fs;
 
-use crate::app::window::CustomFormatsWindow;
+use crate::app::window::{CustomFormatsWindow, PaletteFormatsWindow};
 
 #[derive(Debug, Default)]
 pub struct SettingsWindow {
@@ -24,6 +26,7 @@ pub struct SettingsWindow {
     selected_display_fmt: String,
     selected_clipboard_fmt: String,
     pub custom_formats_window: CustomFormatsWindow,
+    pub palette_formats_window: PaletteFormatsWindow,
 }
 
 impl SettingsWindow {
@@ -318,7 +321,7 @@ impl SettingsWindow {
                 );
             });
         ui.add_space(HALF_SPACE);
-        ComboBox::from_label("Clipboard format")
+        ComboBox::from_label("Color clipboard format")
             .selected_text(
                 app_ctx
                     .settings
@@ -339,49 +342,75 @@ impl SettingsWindow {
                     ui,
                 );
             });
+        ComboBox::from_label("Palette clipboard format")
+            .selected_text(app_ctx.settings.palette_clipboard_format.as_ref())
+            .show_ui(ui, |ui| {
+                ui.selectable_value(
+                    &mut app_ctx.settings.palette_clipboard_format,
+                    PaletteFormat::Gimp,
+                    PaletteFormat::Gimp.as_ref(),
+                );
+                ui.selectable_value(
+                    &mut app_ctx.settings.palette_clipboard_format,
+                    PaletteFormat::HexList,
+                    PaletteFormat::HexList.as_ref(),
+                );
+                for (name, fmt) in app_ctx.settings.saved_palette_formats.clone() {
+                    ui.selectable_value(
+                        &mut app_ctx.settings.palette_clipboard_format,
+                        PaletteFormat::Custom(name.clone(), fmt),
+                        name,
+                    );
+                }
+            });
         ui.checkbox(
             &mut app_ctx.settings.auto_copy_picked_color,
             "Auto copy picked color",
         );
         ui.add_space(HALF_SPACE);
-        if ui.button("Custom formats …").clicked() {
-            self.custom_formats_window.show = true;
-        }
+        ui.horizontal(|ui| {
+            if ui.button("Color formats …").clicked() {
+                self.custom_formats_window.show = true;
+            }
+            if ui.button("Palette formats …").clicked() {
+                self.palette_formats_window.show = true;
+            }
+        });
     }
 }
 
 /// Fill the values for a color format selection.
 ///
 /// Used to fill both the display and clipboard format selections.
-fn color_format_selection_fill<'a, T: From<DisplayFmtEnum> + PartialEq>(
+fn color_format_selection_fill<'a, T: From<ColorDisplayFmtEnum> + PartialEq>(
     fmt_ref: &mut T,
     customs: impl IntoIterator<Item = &'a String>,
     ui: &mut Ui,
 ) {
     ui.selectable_value(
         fmt_ref,
-        DisplayFmtEnum::Hex.into(),
-        DisplayFmtEnum::Hex.as_ref(),
+        ColorDisplayFmtEnum::Hex.into(),
+        ColorDisplayFmtEnum::Hex.as_ref(),
     );
     ui.selectable_value(
         fmt_ref,
-        DisplayFmtEnum::HexUppercase.into(),
-        DisplayFmtEnum::HexUppercase.as_ref(),
+        ColorDisplayFmtEnum::HexUppercase.into(),
+        ColorDisplayFmtEnum::HexUppercase.as_ref(),
     );
     ui.selectable_value(
         fmt_ref,
-        DisplayFmtEnum::CssRgb.into(),
-        DisplayFmtEnum::CssRgb.as_ref(),
+        ColorDisplayFmtEnum::CssRgb.into(),
+        ColorDisplayFmtEnum::CssRgb.as_ref(),
     );
     ui.selectable_value(
         fmt_ref,
-        DisplayFmtEnum::CssHsl.into(),
-        DisplayFmtEnum::CssHsl.as_ref(),
+        ColorDisplayFmtEnum::CssHsl.into(),
+        ColorDisplayFmtEnum::CssHsl.as_ref(),
     );
     for custom in customs {
         ui.selectable_value(
             fmt_ref,
-            DisplayFmtEnum::Custom(custom.clone()).into(),
+            ColorDisplayFmtEnum::Custom(custom.clone()).into(),
             format!("*{}", custom),
         );
     }
