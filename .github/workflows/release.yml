@@ -1,4 +1,4 @@
-name: release
+#name: release
 
 on:
   push:
@@ -55,23 +55,15 @@ jobs:
     steps:
       - name: Set up Rust
         uses: hecrj/setup-rust-action@v1
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
       - name: Set version
-        id: set_version
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-        run: echo "::set-output name=EPICK_VERSION::${GITHUB_REF#refs/tags/}"
+        run: echo "EPICK_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
       - name: Set version
-        id: set_version_win
         if: matrix.os == 'windows-latest'
-        run: echo "::set-output name=EPICK_VERSION::$(git describe --tags --abbrev=0)"
+        run: echo "EPICK_VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
       - name: Set archive name
-        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-        id: set_name
-        run: echo "::set-output name=EPICK_ARCHIVE::epick-${{ steps.set_version.outputs.EPICK_VERSION}}-${{ matrix.target}}"
-      - name: Set archive name
-        if: matrix.os == 'windows-latest'
-        id: set_name_win
-        run: echo "::set-output name=EPICK_ARCHIVE::epick-${{steps.set_version_win.outputs.EPICK_VERSION}}-${{ matrix.target}}"
+        run: echo "EPICK_ARCHIVE=epick-${{ env.EPICK_VERSION}}-${{ matrix.target}}" >> $GITHUB_ENV
       - name: Install dependencies
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
@@ -94,21 +86,21 @@ jobs:
       - name: Create archives
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         run: |
-          tar -zcvf ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.gz epick
-          tar -Jcvf ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.xz epick
+          tar -zcvf ${{ env.EPICK_ARCHIVE }}.tar.gz epick
+          tar -Jcvf ${{ env.EPICK_ARCHIVE }}.tar.xz epick
       - name: Create archives
         if: matrix.os == 'windows-latest'
         run: |
-          7z a ${{ steps.set_name_win.outputs.EPICK_ARCHIVE }}.zip epick
+          7z a ${{ env.EPICK_ARCHIVE }}.zip epick
       - name: Upload gz
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_name: vv9k/epick
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.gz
-          asset_name: ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.gz
-          tag: ${{ steps.set_version.outputs.EPICK_VERSION }}
+          file: ${{ env.EPICK_ARCHIVE }}.tar.gz
+          asset_name: ${{ env.EPICK_ARCHIVE }}.tar.gz
+          tag: ${{ env.EPICK_VERSION }}
           overwrite: true
       - name: Upload xz
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
@@ -116,9 +108,9 @@ jobs:
         with:
           repo_name: vv9k/epick
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.xz
-          asset_name: ${{ steps.set_name.outputs.EPICK_ARCHIVE }}.tar.xz
-          tag: ${{ steps.set_version.outputs.EPICK_VERSION }}
+          file: ${{ env.EPICK_ARCHIVE }}.tar.xz
+          asset_name: ${{ env.EPICK_ARCHIVE }}.tar.xz
+          tag: ${{ env.EPICK_VERSION }}
           overwrite: true
       - name: Upload zip
         if: matrix.os == 'windows-latest'
@@ -126,9 +118,9 @@ jobs:
         with:
           repo_name: vv9k/epick
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ steps.set_name_win.outputs.EPICK_ARCHIVE }}.zip
-          asset_name: ${{ steps.set_name_win.outputs.EPICK_ARCHIVE }}.zip
-          tag: ${{ steps.set_version_win.outputs.EPICK_VERSION }}
+          file: ${{ env.EPICK_ARCHIVE }}.zip
+          asset_name: ${{ env.EPICK_ARCHIVE }}.zip
+          tag: ${{ env.EPICK_VERSION }}
           overwrite: true
       - name: Install pkger
         if: matrix.os == 'ubuntu-latest'
@@ -147,9 +139,9 @@ jobs:
         with:
           repo_name: vv9k/epick
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: /home/runner/.config/pkger/output/pkger-deb/epick-${{steps.set_version.outputs.EPICK_VERSION}}-0.amd64.deb
-          asset_name: pkger-${{steps.set_version.outputs.EPICK_VERSION}}-0.amd64.deb
-          tag: ${{ steps.set_version.outputs.EPICK_VERSION }}
+          file: /home/runner/.config/pkger/output/pkger-deb/epick-${{env.EPICK_VERSION}}-0.amd64.deb
+          asset_name: pkger-${{env.EPICK_VERSION}}-0.amd64.deb
+          tag: ${{ env.EPICK_VERSION }}
           overwrite: true
       - name: Upload rpm
         if: matrix.os == 'ubuntu-latest'
@@ -157,9 +149,9 @@ jobs:
         with:
           repo_name: vv9k/epick
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: /home/runner/.config/pkger/output/pkger-rpm/epick-${{steps.set_version.outputs.EPICK_VERSION}}-0.x86_64.rpm
-          asset_name: epick-${{steps.set_version.outputs.EPICK_VERSION}}-0.x86_64.rpm
-          tag: ${{ steps.set_version.outputs.EPICK_VERSION }}
+          file: /home/runner/.config/pkger/output/pkger-rpm/epick-${{env.EPICK_VERSION}}-0.x86_64.rpm
+          asset_name: epick-${{env.EPICK_VERSION}}-0.x86_64.rpm
+          tag: ${{ env.EPICK_VERSION }}
           overwrite: true
 
 
