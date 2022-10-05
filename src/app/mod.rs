@@ -20,7 +20,7 @@ use crate::ui::{
 use crate::zoom_picker::ZoomPicker;
 use window::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
 
-use eframe::{CreationContext, Storage};
+use eframe::{CreationContext, Storage, Theme};
 use egui::{
     color::Color32, style::Margin, vec2, Button, CollapsingHeader, CursorIcon, Id, Label, Layout,
     Rgba, RichText, ScrollArea, Ui, Vec2, Visuals,
@@ -160,7 +160,11 @@ impl App {
             zoom_picker: ZoomPicker::default(),
         });
 
-        let prefer_dark = context.integration_info.prefer_dark_mode.unwrap_or(true);
+        let prefer_dark = context
+            .integration_info
+            .system_theme
+            .map(|t| matches!(t, Theme::Dark))
+            .unwrap_or(true);
 
         if let Ok(mut tex_manager) = TEXTURE_MANAGER.write() {
             let mut ctx = FrameCtx {
@@ -338,7 +342,7 @@ impl App {
                 { self.windows.tints.is_open = true }
             );
 
-            ui.with_layout(Layout::right_to_left(), |ui| {
+            ui.with_layout(Layout::right_to_left(eframe::emath::Align::Center), |ui| {
                 if ui
                     .button(icon::HELP)
                     .on_hover_text("Show help")

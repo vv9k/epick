@@ -8,9 +8,9 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-eframe = { version = "0.18", features = ["persistence"] }
-egui = { version = "0.18", features = ["tracing"] }
-epaint = "0.18"
+eframe = { version = "0.19", features = ["persistence"] }
+egui = { version = "0.19", features = ["tracing"] }
+epaint = "0.19"
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9"

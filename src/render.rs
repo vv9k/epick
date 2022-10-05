@@ -76,7 +76,9 @@ impl TextureManager {
                 pixels,
             };
             let image_data = ImageData::Color(color_image);
-            tex_allocator.write().alloc("image".into(), image_data)
+            tex_allocator
+                .write()
+                .alloc("image".into(), image_data, egui::TextureFilter::Linear)
         })
     }
 }
