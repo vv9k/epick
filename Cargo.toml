@@ -44,3 +44,6 @@ core-graphics = {version = "0.22"}
 
 [dev-dependencies]
 tempdir = "0.3"
+
+[profile.release]
+opt-level = 2

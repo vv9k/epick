@@ -27,13 +27,29 @@ build_debug: ./target/debug/$(PROJECT)
 build: ./target/release/$(PROJECT)
 
 
+.PHONY: get_trunk
+get_trunk:
+	cargo install --locked trunk
+
+.PHONY: get_wasm_bindgen
+get_wasm_bindgen:
+	cargo install --locked wasm-bindgen-cli
+
+.PHONY: get_wasm_target
+get_wasm_target:
+	@rustup target add wasm32-unknown-unknown
+
+.PHONY: setup_wasm
+setup_wasm: get_trunk get_wasm_bindgen get_wasm_target
+
+
 .PHONY: start_web
-start_web: build_web
-	@./scripts/start_server.sh
+start_web: setup_wasm
+	trunk serve
 
 
 .PHONY: build_web
-build_web: docs/$(PROJECT)_bg.wasm docs/$(PROJECT).js
+build_web: dist/$(PROJECT)_bg.wasm dist/$(PROJECT).js
 
 
 .PHONY: test
@@ -58,7 +74,7 @@ clean: clean_web
 
 .PHONY: clean_web
 clean_web:
-	@rm -rf docs/$(PROJECT)_bg.wasm docs/$(PROJECT).js
+	@rm -rf dist/$(PROJECT)_bg.wasm dist/$(PROJECT).js
 
 
 ./target/debug/$(PROJECT):
@@ -69,6 +85,6 @@ clean_web:
 	@cargo build --release
 
 
-docs/$(PROJECT)_bg.wasm docs/$(PROJECT).js:
-	@./scripts/build_web.sh
+dist/$(PROJECT)_bg.wasm dist/$(PROJECT).js: setup_wasm
+	@trunk build --release
 

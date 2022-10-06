@@ -2,5 +2,4 @@
 .idea
 .vscode
 .DS_STORE
-docs/epick.js
-docs/epick_bg.wasm
+dist

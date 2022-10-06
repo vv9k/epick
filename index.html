@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
+<!-- Disable zooming: -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<head>
+    <title>epick - Color Picker</title>
+
+    <link data-trunk rel="copy-file" href="assets/sw.js" />
+
+    <style>
+        html {
+            /* Remove touch delay: */
+            touch-action: manipulation;
+        }
+
+        body {
+            /* Light mode background color for what is not covered by the egui canvas,
+            or where the egui canvas is translucent. */
+            background: #909090;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                /* Dark mode background color for what is not covered by the egui canvas,
+                or where the egui canvas is translucent. */
+                background: #404040;
+            }
+        }
+
+        /* Allow canvas to fill entire web page: */
+        html,
+        body {
+            overflow: hidden;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Position canvas in center-top: */
+        canvas {
+            margin-right: auto;
+            margin-left: auto;
+            display: block;
+            position: absolute;
+            top: 0%;
+            left: 50%;
+            transform: translate(-50%, 0%);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- The WASM code will resize this canvas to cover the entire screen -->
+    <canvas id="epick - Color Picker"></canvas>
+
+    <script>
+        // We disable caching during development so that we always view the latest version.
+        if ('serviceWorker' in navigator && window.location.hash !== "#dev") {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js');
+            });
+        }
+    </script>
+</body>
+
+</html>
+

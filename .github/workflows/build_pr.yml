@@ -50,9 +50,5 @@ jobs:
           override: true
       - name: Install dependencies
         run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
-      - name: Install web build dependencies
-        run: cargo install wasm-bindgen-cli
-      - name: Add wasm target
-        run: rustup target add wasm32-unknown-unknown
       - name: Test web build
-        run: ./scripts/build_web.sh
+        run: make build_web

@@ -94,6 +94,7 @@ impl eframe::App for App {
 
             self.display_windows(&mut ctx);
 
+            #[cfg(not(target_arch = "wasm32"))]
             frame.set_window_size(ctx.egui.used_size());
 
             ctx.app.picker.check_for_change();

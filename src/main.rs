@@ -1,11 +1,11 @@
-use eframe::{IconData, NativeOptions};
-use image::{io::Reader as ImageReader, ImageFormat};
-use std::io::Cursor;
-
 const APP_CANVAS_ID: &str = "epick - Color Picker";
 
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
+    use eframe::{IconData, NativeOptions};
+    use image::{io::Reader as ImageReader, ImageFormat};
+    use std::io::Cursor;
+
     const APP_ICON_DATA: &[u8] = include_bytes!("../assets/icon.png");
     const APP_ICON_WIDTH: u32 = 48;
     const APP_ICON_HEIGHT: u32 = APP_ICON_WIDTH;
@@ -51,4 +51,5 @@ fn main() {
         web_options,
         Box::new(|ctx| epick::Epick::init(ctx)),
     )
+    .expect("web started");
 }
