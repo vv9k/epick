@@ -2,11 +2,13 @@ use eframe::{IconData, NativeOptions};
 use image::{io::Reader as ImageReader, ImageFormat};
 use std::io::Cursor;
 
-const APP_ICON_DATA: &[u8] = include_bytes!("../assets/icon.png");
-const APP_ICON_WIDTH: u32 = 48;
-const APP_ICON_HEIGHT: u32 = 48;
+const APP_CANVAS_ID: &str = "epick - Color Picker";
 
+#[cfg(not(target_arch = "wasm32"))]
 fn main() {
+    const APP_ICON_DATA: &[u8] = include_bytes!("../assets/icon.png");
+    const APP_ICON_WIDTH: u32 = 48;
+    const APP_ICON_HEIGHT: u32 = APP_ICON_WIDTH;
     let mut opts = NativeOptions::default();
 
     //pretty_env_logger::init();
@@ -38,9 +40,15 @@ fn main() {
         _ => {}
     }
 
-    eframe::run_native(
-        "epick - Color Picker",
-        opts,
+    eframe::run_native(APP_CANVAS_ID, opts, Box::new(|ctx| epick::Epick::init(ctx)))
+}
+
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    let web_options = eframe::WebOptions::default();
+    eframe::start_web(
+        APP_CANVAS_ID,
+        web_options,
         Box::new(|ctx| epick::Epick::init(ctx)),
     )
 }

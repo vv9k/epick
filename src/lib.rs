@@ -24,6 +24,11 @@ fn save_to_clipboard(text: String) -> Result<(), Error> {
         .context("failed to save to clipboard")
 }
 
+#[cfg(target_arch = "wasm32")]
+fn save_to_clipboard(_text: String) -> Result<(), Error> {
+    Ok(())
+}
+
 #[cfg(not(target_arch = "wasm32"))]
 fn get_timestamp() -> u64 {
     use std::time::{SystemTime, UNIX_EPOCH};
@@ -40,18 +45,4 @@ fn get_timestamp() -> u64 {
 
 fn elapsed(timestamp: u64) -> u64 {
     get_timestamp() - timestamp
-}
-
-#[cfg(target_arch = "wasm32")]
-fn save_to_clipboard(_text: String) -> Result<(), Error> {
-    Ok(())
-}
-
-#[cfg(target_arch = "wasm32")]
-use eframe::wasm_bindgen::{self, prelude::*};
-
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen]
-pub fn start(canvas_id: &str) -> Result<(), eframe::wasm_bindgen::JsValue> {
-    eframe::start_web(canvas_id, Box::new(|ctx| Epick::init(ctx)))
 }
