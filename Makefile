@@ -51,6 +51,9 @@ start_web: setup_wasm
 .PHONY: build_web
 build_web: dist/$(PROJECT)_bg.wasm dist/$(PROJECT).js
 
+.PHONY: build_web_ghpages
+build_web_ghpages: build_web
+	@sed -i 's/epick-/epick\/epick-/g' dist/index.html
 
 .PHONY: test
 test:

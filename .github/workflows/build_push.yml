@@ -50,7 +50,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev
       - name: Test web build
-        run: make build_web
+        run: make build_web_ghpages
       - name: Upload artifacts
         uses: peaceiris/actions-gh-pages@v3
         with:
