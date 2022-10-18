@@ -19,7 +19,7 @@ use nom::{
     Err, IResult, Parser,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::LinkedList;
+use std::fmt::Write;
 use std::num::ParseIntError;
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -38,9 +38,9 @@ impl CustomPaletteFormat {
     ) -> Result<String> {
         let mut s = self.prefix.clone();
         let entry_format = CustomColorFormat::parse(&self.entry_format)?;
-        palette.iter().for_each(|entry| {
-            s.push_str(&entry_format.format_color(entry, ws, illuminant));
-        });
+        for entry in palette.iter() {
+            s.push_str(&entry_format.format_color(entry, ws, illuminant)?);
+        }
         s.push_str(&self.suffix);
         Ok(s)
     }
@@ -62,10 +62,9 @@ impl<'a> CustomColorFormat<'a> {
         color: &Color,
         ws: RgbWorkingSpace,
         illuminant: Illuminant,
-    ) -> String {
+    ) -> Result<String> {
         use ColorSymbol::*;
 
-        let mut stack = LinkedList::new();
         let rgb = color.rgb();
         let cmyk = Cmyk::from(rgb);
         let hsl = Hsl::from(rgb);
@@ -150,18 +149,24 @@ impl<'a> CustomColorFormat<'a> {
                         };
 
                         match digit_format {
-                            Some(
-                                fmt @ (DigitFormat::Hex
-                                | DigitFormat::UppercaseHex
-                                | DigitFormat::Octal
-                                | DigitFormat::Decimal),
-                            ) => {
-                                fmt.format_num(num.abs() as u32, &mut s, &mut stack);
+                            Some(DigitFormat::Decimal) => {
+                                write!(&mut s, "{}", num.abs() as u32)?;
+                            }
+                            Some(DigitFormat::Hex) => {
+                                write!(&mut s, "{:x}", num.abs() as u32)?;
+                            }
+                            Some(DigitFormat::UppercaseHex) => {
+                                write!(&mut s, "{:X}", num.abs() as u32)?;
+                            }
+                            Some(DigitFormat::Octal) => {
+                                write!(&mut s, "{:o}", num.abs() as u32)?;
                             }
                             Some(DigitFormat::Float { precision }) => {
-                                DigitFormat::format_float(num, &mut s, &mut stack, Some(*precision))
+                                write!(&mut s, "{:.*}", *precision as usize, num)?;
                             }
-                            None => DigitFormat::format_float(num, &mut s, &mut stack, None),
+                            None => {
+                                write!(&mut s, "{:.1}", num)?;
+                            }
                         }
                     }
                     Red255 | Green255 | Blue255 => {
@@ -172,18 +177,19 @@ impl<'a> CustomColorFormat<'a> {
                             _ => unreachable!(),
                         } as u32;
 
-                        let fmt = if let Some(fmt) = digit_format {
-                            fmt
-                        } else {
-                            &DigitFormat::Decimal
-                        };
-                        fmt.format_num(num, &mut s, &mut stack);
+                        match digit_format.unwrap_or_default() {
+                            DigitFormat::Decimal => write!(&mut s, "{}", num)?,
+                            DigitFormat::Hex => write!(&mut s, "{:x}", num)?,
+                            DigitFormat::UppercaseHex => write!(&mut s, "{:X}", num)?,
+                            DigitFormat::Octal => write!(&mut s, "{:o}", num)?,
+                            DigitFormat::Float { precision: _ } => write!(&mut s, "{}", num)?,
+                        }
                     }
                 },
             }
         }
 
-        s
+        Ok(s)
     }
 }
 
@@ -235,108 +241,6 @@ enum DigitFormat {
     Octal,
     Decimal,
     Float { precision: u8 },
-}
-
-impl DigitFormat {
-    #[inline]
-    pub fn radix(&self) -> u32 {
-        match &self {
-            DigitFormat::Octal => 8,
-            DigitFormat::Decimal => 10,
-            DigitFormat::Hex => 16,
-            DigitFormat::UppercaseHex => 16,
-            DigitFormat::Float { precision: _ } => 10,
-        }
-    }
-
-    #[inline]
-    fn format_digit(&self, digit: u32) -> Option<char> {
-        let mut ch = std::char::from_digit(digit, self.radix());
-        if matches!(self, DigitFormat::UppercaseHex) {
-            ch = ch.map(|ch| ch.to_ascii_uppercase());
-        }
-        ch
-    }
-
-    #[inline]
-    fn populate_stack(&self, mut num: u32, stack: &mut LinkedList<u32>) {
-        if num == 0 {
-            stack.push_front(num);
-        } else {
-            while num > 0 {
-                stack.push_front(num % self.radix());
-                num /= self.radix();
-            }
-        }
-    }
-
-    #[inline]
-    fn format_num(&self, num: u32, text: &mut String, stack: &mut LinkedList<u32>) {
-        self.populate_stack(num, stack);
-
-        while let Some(num) = stack.pop_front() {
-            if let Some(ch) = self.format_digit(num) {
-                text.push(ch);
-            }
-        }
-    }
-
-    #[inline]
-    fn format_num_count(
-        &self,
-        num: u32,
-        text: &mut String,
-        stack: &mut LinkedList<u32>,
-        digit_count: u8,
-    ) {
-        self.populate_stack(num, stack);
-
-        let mut i = 0;
-        while let Some(num) = stack.pop_front() {
-            if i == digit_count {
-                stack.clear();
-                break;
-            }
-            if let Some(ch) = self.format_digit(num) {
-                text.push(ch);
-            }
-            i += 1;
-        }
-    }
-
-    fn format_float(
-        mut num: f32,
-        text: &mut String,
-        stack: &mut LinkedList<u32>,
-        precision: Option<u8>,
-    ) {
-        if num.is_nan() || num.is_infinite() || num.is_subnormal() {
-            return;
-        }
-        if num.is_sign_negative() {
-            text.push('-');
-        }
-
-        let radix = DigitFormat::Decimal.radix() as f32;
-        num = num.abs();
-
-        DigitFormat::Decimal.format_num(num.trunc() as u32, text, stack);
-        let mut fract = num.fract() * radix;
-
-        while fract.fract() != 0. {
-            fract *= radix;
-        }
-
-        if let Some(precision) = precision {
-            if precision > 0 {
-                text.push('.');
-            }
-            DigitFormat::Decimal.format_num_count(fract as u32, text, stack, precision);
-        } else {
-            text.push('.');
-            DigitFormat::Decimal.format_num(fract as u32, text, stack);
-        }
-    }
 }
 
 impl Default for DigitFormat {
@@ -638,8 +542,9 @@ mod tests {
             ($fmt:literal => $want:literal, $color:expr) => {
                 let color_format = CustomColorFormat::parse($fmt).unwrap();
                 let color = $color;
-                let formatted =
-                    color_format.format_color(&color, RgbWorkingSpace::SRGB, Illuminant::D65);
+                let formatted = color_format
+                    .format_color(&color, RgbWorkingSpace::SRGB, Illuminant::D65)
+                    .unwrap();
                 assert_eq!(formatted, $want);
             };
         }

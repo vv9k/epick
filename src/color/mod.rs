@@ -235,7 +235,7 @@ impl Color {
             ColorFormat::CssHsl { degree_symbol } => self.as_css_hsl(degree_symbol),
             ColorFormat::Custom(fmt) => {
                 if let Ok(fmt) = CustomColorFormat::parse(fmt) {
-                    fmt.format_color(self, ws, illuminant)
+                    fmt.format_color(self, ws, illuminant).unwrap_or_default()
                 } else {
                     self.as_hex()
                 }
