@@ -5,23 +5,12 @@ metadata:
   version: 0.9.0
   description: Color picker for creating harmonic color palettes
   license: GPL-3.0
-  source: https://github.com/vv9k/$RECIPE/archive/refs/tags/$RECIPE_VERSION.tar.gz
-  build_depends:
-    pkger-deb: ['libxcb-render0-dev', 'libxcb-shape0-dev', 'libxcb-xfixes0-dev', 'libxkbcommon-dev']
-    pkger-rpm: ['libxcb-devel', 'libxkbcommon-devel', 'libxcb']
-    all:
-      - curl
-      - gcc
-      - pkg-config
-      - python3
-configure:
-  steps:
-    - cmd: curl -o /tmp/install_rust.sh https://sh.rustup.rs
-    - cmd: sh /tmp/install_rust.sh -y --default-toolchain stable
+  all_images: true
+  source:
+    - epick-0.9.0-x86_64-unknown-linux.tar.gz
+    - assets.tar.gz
 build:
-  working_dir: $PKGER_BLD_DIR/${RECIPE}-$RECIPE_VERSION
-  steps:
-    - cmd: $HOME/.cargo/bin/cargo build --release
+  steps: []
 install:
   steps:
     - cmd: >-
@@ -32,9 +21,9 @@ install:
           usr/share/icons/hicolor/48x48/apps \
           usr/share/icons/hicolor/scalable/apps \
           usr/share/applications
-    - cmd: install -m755 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/target/release/$RECIPE usr/bin/
-    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/LICENSE usr/share/licenses/$RECIPE/LICENSE
-    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/README.md usr/share/doc/$RECIPE/README.md
-    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/assets/icon.png usr/share/icons/hicolor/48x48/apps/$RECIPE.png
-    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/assets/icon.svg usr/share/icons/hicolor/scalable/apps/$RECIPE.svg
-    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE-$RECIPE_VERSION/assets/$RECIPE.desktop usr/share/applications/$RECIPE.desktop
+    - cmd: install -m755 $PKGER_BLD_DIR/$RECIPE/$RECIPE usr/bin/
+    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE/LICENSE usr/share/licenses/$RECIPE/LICENSE
+    - cmd: install -m644 $PKGER_BLD_DIR/$RECIPE/README.md usr/share/doc/$RECIPE/README.md
+    - cmd: install -m644 $PKGER_BLD_DIR/assets/icon.png usr/share/icons/hicolor/48x48/apps/$RECIPE.png
+    - cmd: install -m644 $PKGER_BLD_DIR/assets/icon.svg usr/share/icons/hicolor/scalable/apps/$RECIPE.svg
+    - cmd: install -m644 $PKGER_BLD_DIR/assets/$RECIPE.desktop usr/share/applications/$RECIPE.desktop

@@ -1,5 +1,3 @@
-#name: release
-
 on:
   push:
     branches:
@@ -40,7 +38,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [linux, windows-msvc]
         include:
         - build: linux
           os: ubuntu-latest
@@ -56,14 +53,18 @@ jobs:
       - name: Set up Rust
         uses: hecrj/setup-rust-action@v1
       - uses: actions/checkout@v3
-      - name: Set version
+      - name: Set version Unix
+        run: echo "EPICK_VERSION=$GITHUB_REF_NAME" >> $GITHUB_ENV
         if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
-        run: echo "EPICK_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-      - name: Set version
+      - name: Set archive name Unix
+        run: echo "EPICK_ARCHIVE=epick-${{ env.EPICK_VERSION }}-${{ matrix.target }}" >> $GITHUB_ENV
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+      - name: Set version Windows
+        run: echo "EPICK_VERSION=$env:GITHUB_REF_NAME" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
-        run: echo "EPICK_VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
-      - name: Set archive name
-        run: echo "EPICK_ARCHIVE=epick-${{ env.EPICK_VERSION}}-${{ matrix.target}}" >> $GITHUB_ENV
+      - name: Set archive name Windows
+        run: echo "EPICK_ARCHIVE=epick-$env:EPICK_VERSION-${{ matrix.target }}" >> $env:GITHUB_ENV
+        if: matrix.os == 'windows-latest'
       - name: Install dependencies
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev libxkbcommon-dev libssl-dev
@@ -125,11 +126,16 @@ jobs:
       - name: Install pkger
         if: matrix.os == 'ubuntu-latest'
         run: |
-          curl -LO https://github.com/vv9k/pkger/releases/download/0.8.0/pkger-0.8.0-0.amd64.deb
-          sudo dpkg -i pkger-0.8.0-0.amd64.deb
+          curl -LO https://github.com/vv9k/pkger/releases/download/0.10.0/pkger-0.10.0-0.amd64.deb
+          sudo dpkg -i pkger-0.10.0-0.amd64.deb
           /usr/bin/pkger init
           mkdir -p $HOME/.config/pkger/recipes/epick
           cp pkger.yml $HOME/.config/pkger/recipes/epick/recipe.yaml
+      - name: Copy prebuilt archive
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          cp ${{ env.EPICK_ARCHIVE }}.tar.gz $HOME/.config/pkger/recipes/epick/
+          tar zcvf $HOME/.config/pkger/recipes/epick/assets.tar.gz assets
       - name: Build RPM and DEB
         if: matrix.os == 'ubuntu-latest'
         run: /usr/bin/pkger build -s deb -s rpm -- epick
