@@ -508,7 +508,10 @@ impl App {
 
         self.zoom_picker.display(ctx, ui);
         ui.add_space(SPACE);
-        self.display_harmonies(ctx, ui);
+
+        if ctx.app.settings.harmony_display_box {
+            self.display_harmonies(ctx, ui);
+        }
 
         ScrollArea::vertical()
             .id_source("picker scroll")

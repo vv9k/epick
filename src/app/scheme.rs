@@ -138,6 +138,10 @@ impl App {
                     &mut ctx.app.settings.harmony_display_color_label,
                     "Display color labels",
                 );
+                ui.checkbox(
+                    &mut ctx.app.settings.harmony_display_box,
+                    "Display color box",
+                );
             });
     }
 

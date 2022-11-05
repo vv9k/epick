@@ -161,6 +161,9 @@ pub struct Settings {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_false")]
     pub harmony_display_color_label: bool,
+    #[serde(default = "enabled")]
+    #[serde(skip_serializing_if = "is_true")]
+    pub harmony_display_box: bool,
     /// Automatically copy the picked color to the clipboard
     #[serde(default)]
     #[serde(skip_serializing_if = "is_false")]
@@ -197,6 +200,7 @@ impl Default for Settings {
             harmony_layout: HarmonyLayout::default(),
             harmony_color_size: DEFAULT_COLOR_SIZE,
             harmony_display_color_label: false,
+            harmony_display_box: true,
             auto_copy_picked_color: false,
             pixels_per_point: DEFAULT_PIXELS_PER_POINT,
         }
