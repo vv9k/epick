@@ -299,9 +299,13 @@ impl<'frame> FrameCtx<'frame> {
         self.egui.set_style(style);
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn set_window_size(&mut self, size: egui::Vec2) {
         if let Some(frame) = &mut self.frame {
             frame.set_window_size(size);
         }
     }
+
+    #[cfg(target_arch = "wasm32")]
+    pub fn set_window_size(&mut self, _: egui::Vec2) {}
 }
