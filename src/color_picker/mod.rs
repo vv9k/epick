@@ -20,7 +20,17 @@ macro_rules! slider {
                 $it.check_for_change();
             }
             $ui.label(format!("{}: ", $label));
-            $ui.add(DragValue::new(&mut $it.sliders.$field).clamp_range($range));
+            $ui.add(DragValue::new(&mut $it.sliders.$field));
+    };
+    (int $it:ident, $ui:ident, $field:ident, $label:literal, $range:expr, $($tt:tt)+) => {
+            let resp = slider_1d::color(&mut $ui, &mut $it.sliders.$field, $range, $($tt)+).on_hover_text($label);
+            if resp.changed() {
+                $it.check_for_change();
+            }
+            $ui.label(format!("{}: ", $label));
+            let mut it = $it.sliders.$field as u32;
+            $ui.add(DragValue::new(&mut it));
+            $it.sliders.$field = it as f32;
     };
 }
 
@@ -299,17 +309,17 @@ impl ColorPicker {
                 Grid::new("RGB sliders")
                     .spacing((8., 8.))
                     .show(ui, |mut ui| {
-                        slider!(self, ui, r, "red", U8_MIN..=U8_MAX, |mut r| {
+                        slider!(int self, ui, r, "red", U8_MIN..=U8_MAX, |mut r| {
                             r /= U8_MAX;
                             Rgb::new(r, opaque.g(), opaque.b()).into()
                         });
                         ui.end_row();
-                        slider!(self, ui, g, "green", U8_MIN..=U8_MAX, |mut g| {
+                        slider!(int self, ui, g, "green", U8_MIN..=U8_MAX, |mut g| {
                             g /= U8_MAX;
                             Rgb::new(opaque.r(), g, opaque.b()).into()
                         });
                         ui.end_row();
-                        slider!(self, ui, b, "blue", U8_MIN..=U8_MAX, |mut b| {
+                        slider!(int self, ui, b, "blue", U8_MIN..=U8_MAX, |mut b| {
                             b /= U8_MAX;
                             Rgb::new(opaque.r(), opaque.g(), b).into()
                         });

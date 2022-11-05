@@ -1,5 +1,6 @@
 #
 - Add a way to scale the UI in the settings
+- Display RGB slider values in 0-255 range as integers rather than floats
 
 # 0.9.0
 - Change button layout in palette view
