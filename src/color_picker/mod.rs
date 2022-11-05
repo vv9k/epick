@@ -5,26 +5,22 @@ use crate::color::{
     U8_MAX, U8_MIN,
 };
 use crate::math;
-use crate::ui::{slider_1d, slider_2d, SPACE};
+use crate::ui::{slider_1d, slider_2d};
 use sliders::ColorSliders;
 
-use egui::{color::Hsva, DragValue};
+use egui::{color::Hsva, DragValue, Grid};
 use egui::{CollapsingHeader, Ui};
 use serde::{Deserialize, Serialize};
 use std::mem;
 
 macro_rules! slider {
     ($it:ident, $ui:ident, $field:ident, $label:literal, $range:expr, $($tt:tt)+) => {
-        $ui.add_space(SPACE);
-        $ui.horizontal(|mut ui| {
-            let resp = slider_1d::color(&mut ui, &mut $it.sliders.$field, $range, $($tt)+).on_hover_text($label);
+            let resp = slider_1d::color(&mut $ui, &mut $it.sliders.$field, $range, $($tt)+).on_hover_text($label);
             if resp.changed() {
                 $it.check_for_change();
             }
-            ui.add_space(SPACE);
-            ui.label(format!("{}: ", $label));
-            ui.add(DragValue::new(&mut $it.sliders.$field).clamp_range($range));
-        });
+            $ui.label(format!("{}: ", $label));
+            $ui.add(DragValue::new(&mut $it.sliders.$field).clamp_range($range));
     };
 }
 
@@ -300,18 +296,25 @@ impl ColorPicker {
         CollapsingHeader::new("RGB")
             .default_open(false)
             .show(ui, |ui| {
-                slider!(self, ui, r, "red", U8_MIN..=U8_MAX, |mut r| {
-                    r /= U8_MAX;
-                    Rgb::new(r, opaque.g(), opaque.b()).into()
-                });
-                slider!(self, ui, g, "green", U8_MIN..=U8_MAX, |mut g| {
-                    g /= U8_MAX;
-                    Rgb::new(opaque.r(), g, opaque.b()).into()
-                });
-                slider!(self, ui, b, "blue", U8_MIN..=U8_MAX, |mut b| {
-                    b /= U8_MAX;
-                    Rgb::new(opaque.r(), opaque.g(), b).into()
-                });
+                Grid::new("RGB sliders")
+                    .spacing((8., 8.))
+                    .show(ui, |mut ui| {
+                        slider!(self, ui, r, "red", U8_MIN..=U8_MAX, |mut r| {
+                            r /= U8_MAX;
+                            Rgb::new(r, opaque.g(), opaque.b()).into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, g, "green", U8_MIN..=U8_MAX, |mut g| {
+                            g /= U8_MAX;
+                            Rgb::new(opaque.r(), g, opaque.b()).into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, b, "blue", U8_MIN..=U8_MAX, |mut b| {
+                            b /= U8_MAX;
+                            Rgb::new(opaque.r(), opaque.g(), b).into()
+                        });
+                        ui.end_row();
+                    });
             });
     }
 
@@ -320,22 +323,30 @@ impl ColorPicker {
         CollapsingHeader::new("CMYK")
             .default_open(false)
             .show(ui, |ui| {
-                slider!(self, ui, c, "cyan", 0. ..=100., |mut c| {
-                    c /= 100.;
-                    Cmyk::new(c, opaque.m(), opaque.y(), opaque.k()).into()
-                });
-                slider!(self, ui, m, "magenta", 0. ..=100., |mut m| {
-                    m /= 100.;
-                    Cmyk::new(opaque.c(), m, opaque.y(), opaque.k()).into()
-                });
-                slider!(self, ui, y, "yellow", 0. ..=100., |mut y| {
-                    y /= 100.;
-                    Cmyk::new(opaque.c(), opaque.m(), y, opaque.k()).into()
-                });
-                slider!(self, ui, k, "key", 0. ..=100., |mut k| {
-                    k /= 100.;
-                    Cmyk::new(opaque.c(), opaque.m(), opaque.y(), k).into()
-                });
+                Grid::new("CMYK sliders")
+                    .spacing((8., 8.))
+                    .show(ui, |mut ui| {
+                        slider!(self, ui, c, "cyan", 0. ..=100., |mut c| {
+                            c /= 100.;
+                            Cmyk::new(c, opaque.m(), opaque.y(), opaque.k()).into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, m, "magenta", 0. ..=100., |mut m| {
+                            m /= 100.;
+                            Cmyk::new(opaque.c(), m, opaque.y(), opaque.k()).into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, y, "yellow", 0. ..=100., |mut y| {
+                            y /= 100.;
+                            Cmyk::new(opaque.c(), opaque.m(), y, opaque.k()).into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, k, "key", 0. ..=100., |mut k| {
+                            k /= 100.;
+                            Cmyk::new(opaque.c(), opaque.m(), opaque.y(), k).into()
+                        });
+                        ui.end_row();
+                    });
             });
     }
 
@@ -344,19 +355,25 @@ impl ColorPicker {
         CollapsingHeader::new("HSV")
             .default_open(false)
             .show(ui, |ui| {
-                slider!(self, ui, hue, "hue", 0. ..=360., |mut h| {
-                    h /= 360.;
-                    Hsv::new(h, opaque.s(), opaque.v()).into()
-                });
-                slider!(self, ui, sat, "saturation", 0. ..=100., |mut s| {
-                    s /= 100.;
-                    Hsv::new(opaque.h(), s, opaque.v()).into()
-                });
-                slider!(self, ui, val, "value", 0. ..=100., |mut v| {
-                    v /= 100.;
-                    Hsv::new(opaque.h(), opaque.s(), v).into()
-                });
-                ui.add_space(SPACE);
+                Grid::new("HSV sliders")
+                    .spacing((8., 8.))
+                    .show(ui, |mut ui| {
+                        slider!(self, ui, hue, "hue", 0. ..=360., |mut h| {
+                            h /= 360.;
+                            Hsv::new(h, opaque.s(), opaque.v()).into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, sat, "saturation", 0. ..=100., |mut s| {
+                            s /= 100.;
+                            Hsv::new(opaque.h(), s, opaque.v()).into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, val, "value", 0. ..=100., |mut v| {
+                            v /= 100.;
+                            Hsv::new(opaque.h(), opaque.s(), v).into()
+                        });
+                        ui.end_row();
+                    });
                 slider_2d::color(
                     ui,
                     &mut self.sliders.sat,
@@ -377,18 +394,25 @@ impl ColorPicker {
         CollapsingHeader::new("HSL")
             .default_open(false)
             .show(ui, |ui| {
-                slider!(self, ui, hsl_h, "hue", 0. ..=360., |mut h| {
-                    h /= 360.;
-                    Hsl::new(h, opaque.s(), opaque.l()).into()
-                });
-                slider!(self, ui, hsl_s, "saturation", 0. ..=100., |mut s| {
-                    s /= 100.;
-                    Hsl::new(opaque.h(), s, opaque.l()).into()
-                });
-                slider!(self, ui, hsl_l, "light", 0. ..=100., |mut l| {
-                    l /= 100.;
-                    Hsl::new(opaque.h(), opaque.s(), l).into()
-                });
+                Grid::new("HSL sliders")
+                    .spacing((8., 8.))
+                    .show(ui, |mut ui| {
+                        slider!(self, ui, hsl_h, "hue", 0. ..=360., |mut h| {
+                            h /= 360.;
+                            Hsl::new(h, opaque.s(), opaque.l()).into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, hsl_s, "saturation", 0. ..=100., |mut s| {
+                            s /= 100.;
+                            Hsl::new(opaque.h(), s, opaque.l()).into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, hsl_l, "light", 0. ..=100., |mut l| {
+                            l /= 100.;
+                            Hsl::new(opaque.h(), opaque.s(), l).into()
+                        });
+                        ui.end_row();
+                    });
             });
     }
 
@@ -398,21 +422,28 @@ impl ColorPicker {
         CollapsingHeader::new("Luv")
             .default_open(false)
             .show(ui, |ui| {
-                slider!(self, ui, luv_l, "light", 0. ..=100., |l| {
-                    Xyz::from(Luv::new(l, opaque.u(), opaque.v()))
-                        .to_rgb(ws)
-                        .into()
-                });
-                slider!(self, ui, luv_u, "u", -134. ..=220., |u| {
-                    Xyz::from(Luv::new(opaque.l(), u, opaque.v()))
-                        .to_rgb(ws)
-                        .into()
-                });
-                slider!(self, ui, luv_v, "v", -140. ..=122., |v| {
-                    Xyz::from(Luv::new(opaque.l(), opaque.u(), v))
-                        .to_rgb(ws)
-                        .into()
-                });
+                Grid::new("Luv sliders")
+                    .spacing((8., 8.))
+                    .show(ui, |mut ui| {
+                        slider!(self, ui, luv_l, "light", 0. ..=100., |l| {
+                            Xyz::from(Luv::new(l, opaque.u(), opaque.v()))
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, luv_u, "u", -134. ..=220., |u| {
+                            Xyz::from(Luv::new(opaque.l(), u, opaque.v()))
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, luv_v, "v", -140. ..=122., |v| {
+                            Xyz::from(Luv::new(opaque.l(), opaque.u(), v))
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                    });
             });
     }
 
@@ -422,21 +453,28 @@ impl ColorPicker {
         CollapsingHeader::new("LCH(uv)")
             .default_open(false)
             .show(ui, |ui| {
-                slider!(self, ui, lch_uv_l, "light", 0. ..=100., |l| {
-                    Xyz::from(LchUV::new(l, opaque.c(), opaque.h()))
-                        .to_rgb(ws)
-                        .into()
-                });
-                slider!(self, ui, lch_uv_c, "c", 0. ..=270., |c| {
-                    Xyz::from(LchUV::new(opaque.l(), c, opaque.h()))
-                        .to_rgb(ws)
-                        .into()
-                });
-                slider!(self, ui, lch_uv_h, "h", 0. ..=360., |h| {
-                    Xyz::from(LchUV::new(opaque.l(), opaque.c(), h))
-                        .to_rgb(ws)
-                        .into()
-                });
+                Grid::new("LCH(uv) sliders")
+                    .spacing((8., 8.))
+                    .show(ui, |mut ui| {
+                        slider!(self, ui, lch_uv_l, "light", 0. ..=100., |l| {
+                            Xyz::from(LchUV::new(l, opaque.c(), opaque.h()))
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, lch_uv_c, "c", 0. ..=270., |c| {
+                            Xyz::from(LchUV::new(opaque.l(), c, opaque.h()))
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, lch_uv_h, "h", 0. ..=360., |h| {
+                            Xyz::from(LchUV::new(opaque.l(), opaque.c(), h))
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                    });
             });
     }
 
@@ -450,24 +488,31 @@ impl ColorPicker {
         CollapsingHeader::new("Lab")
             .default_open(false)
             .show(ui, |ui| {
-                slider!(self, ui, lab_l, "light", 0. ..=100., |l| {
-                    Lab::new(l, opaque.a(), opaque.b())
-                        .to_xyz(ref_white)
-                        .to_rgb(ws)
-                        .into()
-                });
-                slider!(self, ui, lab_a, "a", -128. ..=127., |a| {
-                    Lab::new(opaque.l(), a, opaque.b())
-                        .to_xyz(ref_white)
-                        .to_rgb(ws)
-                        .into()
-                });
-                slider!(self, ui, lab_b, "b", -128. ..=127., |b| {
-                    Lab::new(opaque.l(), opaque.a(), b)
-                        .to_xyz(ref_white)
-                        .to_rgb(ws)
-                        .into()
-                });
+                Grid::new("Lab sliders")
+                    .spacing((8., 8.))
+                    .show(ui, |mut ui| {
+                        slider!(self, ui, lab_l, "light", 0. ..=100., |l| {
+                            Lab::new(l, opaque.a(), opaque.b())
+                                .to_xyz(ref_white)
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, lab_a, "a", -128. ..=127., |a| {
+                            Lab::new(opaque.l(), a, opaque.b())
+                                .to_xyz(ref_white)
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, lab_b, "b", -128. ..=127., |b| {
+                            Lab::new(opaque.l(), opaque.a(), b)
+                                .to_xyz(ref_white)
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                    });
             });
     }
 
@@ -482,24 +527,31 @@ impl ColorPicker {
         CollapsingHeader::new("LCH(ab)")
             .default_open(false)
             .show(ui, |ui| {
-                slider!(self, ui, lch_ab_l, "light", 0. ..=100., |l| {
-                    LchAB::new(l, opaque.c(), opaque.h())
-                        .to_xyz(ref_white)
-                        .to_rgb(ws)
-                        .into()
-                });
-                slider!(self, ui, lch_ab_c, "c", 0. ..=270., |c| {
-                    LchAB::new(opaque.l(), c, opaque.h())
-                        .to_xyz(ref_white)
-                        .to_rgb(ws)
-                        .into()
-                });
-                slider!(self, ui, lch_ab_h, "h", 0. ..=360., |h| {
-                    LchAB::new(opaque.l(), opaque.c(), h)
-                        .to_xyz(ref_white)
-                        .to_rgb(ws)
-                        .into()
-                });
+                Grid::new("LCH(ab) sliders")
+                    .spacing((8., 8.))
+                    .show(ui, |mut ui| {
+                        slider!(self, ui, lch_ab_l, "light", 0. ..=100., |l| {
+                            LchAB::new(l, opaque.c(), opaque.h())
+                                .to_xyz(ref_white)
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, lch_ab_c, "c", 0. ..=270., |c| {
+                            LchAB::new(opaque.l(), c, opaque.h())
+                                .to_xyz(ref_white)
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                        slider!(self, ui, lch_ab_h, "h", 0. ..=360., |h| {
+                            LchAB::new(opaque.l(), opaque.c(), h)
+                                .to_xyz(ref_white)
+                                .to_rgb(ws)
+                                .into()
+                        });
+                        ui.end_row();
+                    });
             });
     }
 }
