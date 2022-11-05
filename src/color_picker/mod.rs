@@ -29,8 +29,11 @@ macro_rules! slider {
             }
             $ui.label(format!("{}: ", $label));
             let mut it = $it.sliders.$field as u32;
+            let it_copy = it;
             $ui.add(DragValue::new(&mut it));
-            $it.sliders.$field = it as f32;
+            if it != it_copy {
+                $it.sliders.$field = it as f32;
+            }
     };
 }
 
