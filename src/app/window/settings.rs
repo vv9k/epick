@@ -5,6 +5,7 @@ use crate::app::{
 use crate::color::{
     ChromaticAdaptationMethod, ColorHarmony, Illuminant, PaletteFormat, RgbWorkingSpace,
 };
+use crate::context::FrameCtx;
 use crate::settings::{ColorDisplayFmtEnum, Settings};
 use crate::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
 
@@ -48,16 +49,16 @@ impl SettingsWindow {
         self.message = None;
     }
 
-    pub fn display(&mut self, app_ctx: &mut AppCtx, ctx: &egui::Context) {
+    pub fn display(&mut self, ctx: &mut FrameCtx<'_>) {
         if self.show {
-            let offset = ctx.style().spacing.slider_width * WINDOW_X_OFFSET;
+            let offset = ctx.egui.style().spacing.slider_width * WINDOW_X_OFFSET;
             let mut show = true;
-            let is_dark_mode = ctx.style().visuals.dark_mode;
+            let is_dark_mode = ctx.egui.style().visuals.dark_mode;
             Window::new("settings")
                 .frame(window::default_frame(is_dark_mode))
                 .open(&mut show)
                 .default_pos((offset, WINDOW_Y_OFFSET))
-                .show(ctx, |ui| {
+                .show(ctx.egui, |ui| {
                     window::apply_default_style(ui, is_dark_mode);
                     if let Some(err) = &self.error {
                         ui.colored_label(Color32::RED, err);
@@ -66,21 +67,32 @@ impl SettingsWindow {
                         ui.colored_label(Color32::GREEN, msg);
                     }
 
-                    self.color_formats(app_ctx, ui);
+                    self.color_formats(ctx.app, ui);
                     ui.add_space(HALF_SPACE);
-                    self.rgb_working_space(app_ctx, ui);
+                    self.rgb_working_space(ctx.app, ui);
                     ui.add_space(HALF_SPACE);
-                    self.illuminant(app_ctx, ui);
+                    self.illuminant(ctx.app, ui);
                     ui.add_space(HALF_SPACE);
-                    self.chromatic_adaptation_method(app_ctx, ui);
+                    self.chromatic_adaptation_method(ctx.app, ui);
                     ui.add_space(HALF_SPACE);
-                    self.color_harmony(app_ctx, ui);
+                    self.color_harmony(ctx.app, ui);
                     ui.add_space(HALF_SPACE);
-                    ui.checkbox(&mut app_ctx.settings.cache_colors, "Cache colors");
+                    ui.checkbox(&mut ctx.app.settings.cache_colors, "Cache colors");
                     ui.add_space(DOUBLE_SPACE);
-                    self.color_spaces(app_ctx, ui);
+                    self.color_spaces(ctx.app, ui);
                     ui.add_space(SPACE);
-                    self.save_settings_btn(app_ctx, ui);
+
+                    #[cfg(not(target_arch = "wasm32"))]
+                    ui.horizontal(|ui| {
+                        ui.label("UI Scale");
+                        let mut ppp = ctx.app.settings.pixels_per_point;
+                        let rsp = ui.add(egui::Slider::new(&mut ppp, 0.25..=3.0));
+                        if !rsp.dragged() {
+                            ctx.app.settings.pixels_per_point = ppp;
+                        }
+                    });
+
+                    self.save_settings_btn(ctx.app, ui);
                 });
 
             if !show {

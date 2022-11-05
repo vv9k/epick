@@ -11,7 +11,7 @@ use crate::keybinding::{default_keybindings, KeyBindings};
 use crate::render::{render_gradient, TextureManager};
 use crate::save_to_clipboard;
 use crate::screen_size::ScreenSize;
-use crate::settings;
+use crate::settings::{self, DEFAULT_PIXELS_PER_POINT};
 use crate::ui::{
     colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP},
     colors::*,
@@ -74,6 +74,7 @@ impl eframe::App for App {
                 app: &mut app_ctx,
                 egui: ctx,
                 tex_manager: &mut tex_manager,
+                frame: Some(frame),
             };
             ctx.egui.output().cursor_icon = ctx.app.cursor_icon;
 
@@ -81,6 +82,8 @@ impl eframe::App for App {
             if ctx.app.screen_size != screen_size {
                 ctx.set_styles(screen_size);
             }
+            ctx.egui
+                .set_pixels_per_point(ctx.app.settings.pixels_per_point);
 
             ctx.app.check_settings_change();
 
@@ -95,7 +98,7 @@ impl eframe::App for App {
             self.display_windows(&mut ctx);
 
             #[cfg(not(target_arch = "wasm32"))]
-            frame.set_window_size(ctx.egui.used_size());
+            ctx.set_window_size(ctx.egui.used_size());
 
             ctx.app.picker.check_for_change();
 
@@ -172,6 +175,7 @@ impl App {
                 app: &mut app_ctx,
                 egui: &context.egui_ctx,
                 tex_manager: &mut tex_manager,
+                frame: None,
             };
 
             ctx.app.load_palettes(context.storage);
@@ -197,6 +201,13 @@ impl App {
             .insert(0, "Firacode".to_owned());
 
         context.egui_ctx.set_fonts(fonts);
+
+        if app_ctx.settings.pixels_per_point == DEFAULT_PIXELS_PER_POINT {
+            app_ctx.settings.pixels_per_point = context
+                .integration_info
+                .native_pixels_per_point
+                .unwrap_or(DEFAULT_PIXELS_PER_POINT);
+        }
 
         CONTEXT.try_insert(RwLock::new(app_ctx)).unwrap();
 
@@ -390,7 +401,7 @@ impl App {
     }
 
     fn display_windows(&mut self, ctx: &mut FrameCtx<'_>) {
-        self.windows.settings.display(ctx.app, ctx.egui);
+        self.windows.settings.display(ctx);
         self.windows.settings.custom_formats_window.display(
             &mut ctx.app.settings,
             ctx.egui,

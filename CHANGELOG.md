@@ -1,3 +1,6 @@
+#
+- Add a way to scale the UI in the settings
+
 # 0.9.0
 - Change button layout in palette view
 - Bring back ability to select color by primary clicking it
