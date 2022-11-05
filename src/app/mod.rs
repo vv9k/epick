@@ -15,7 +15,7 @@ use crate::settings::{self, DEFAULT_PIXELS_PER_POINT};
 use crate::ui::{
     colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP},
     colors::*,
-    dark_visuals, icon, light_visuals, DOUBLE_SPACE, SPACE,
+    dark_visuals, icon, light_visuals, DOUBLE_SPACE, HALF_SPACE, SPACE,
 };
 use crate::zoom_picker::ZoomPicker;
 use window::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
@@ -475,45 +475,53 @@ impl App {
         });
 
         ui.horizontal(|ui| {
-            ui.label("Current color: ");
-            if ui
-                .button(icon::COPY)
-                .on_hover_text("Copy color to clipboard")
-                .on_hover_cursor(CursorIcon::Alias)
-                .clicked()
-            {
-                if let Err(e) =
-                    save_to_clipboard(ctx.app.clipboard_color(&ctx.app.picker.current_color))
-                {
-                    append_global_error(format!("Failed to save color to clipboard - {}", e));
-                }
+            ui.add_space(HALF_SPACE);
+            if ctx.app.settings.harmony_display_box {
+                self.display_harmonies(ctx, ui);
             }
-            if ui
-                .button(icon::ADD)
-                .on_hover_text(ADD_DESCR)
-                .on_hover_cursor(CursorIcon::Copy)
-                .clicked()
-            {
-                ctx.app.add_cur_color();
-            }
-        });
-        let cb = ColorBox::builder()
-            .size((CURRENT_COLOR_BOX_SIZE, CURRENT_COLOR_BOX_SIZE))
-            .color(ctx.app.picker.current_color)
-            .label(true)
-            .hover_help(COLORBOX_PICK_TOOLTIP)
-            .border(true)
-            .build();
-        ui.horizontal(|ui| {
-            cb.display(ctx, ui);
+            ui.vertical(|ui| {
+                ui.horizontal(|ui| {
+                    ui.label("Current color: ");
+                    if ui
+                        .button(icon::COPY)
+                        .on_hover_text("Copy color to clipboard")
+                        .on_hover_cursor(CursorIcon::Alias)
+                        .clicked()
+                    {
+                        if let Err(e) = save_to_clipboard(
+                            ctx.app.clipboard_color(&ctx.app.picker.current_color),
+                        ) {
+                            append_global_error(format!(
+                                "Failed to save color to clipboard - {}",
+                                e
+                            ));
+                        }
+                    }
+                    if ui
+                        .button(icon::ADD)
+                        .on_hover_text(ADD_DESCR)
+                        .on_hover_cursor(CursorIcon::Copy)
+                        .clicked()
+                    {
+                        ctx.app.add_cur_color();
+                    }
+                });
+                let cb = ColorBox::builder()
+                    .size((CURRENT_COLOR_BOX_SIZE, CURRENT_COLOR_BOX_SIZE))
+                    .color(ctx.app.picker.current_color)
+                    .label(true)
+                    .hover_help(COLORBOX_PICK_TOOLTIP)
+                    .border(true)
+                    .build();
+                ui.horizontal(|ui| {
+                    cb.display(ctx, ui);
+                });
+
+                self.zoom_picker.display(ctx, ui);
+            });
         });
 
-        self.zoom_picker.display(ctx, ui);
         ui.add_space(SPACE);
-
-        if ctx.app.settings.harmony_display_box {
-            self.display_harmonies(ctx, ui);
-        }
 
         ScrollArea::vertical()
             .id_source("picker scroll")
