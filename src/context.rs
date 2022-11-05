@@ -253,6 +253,7 @@ pub struct FrameCtx<'frame> {
     pub app: &'frame mut AppCtx,
     pub egui: &'frame egui::Context,
     pub tex_manager: &'frame mut TextureManager,
+    pub frame: Option<&'frame mut eframe::Frame>,
 }
 
 impl<'frame> FrameCtx<'frame> {
@@ -296,5 +297,11 @@ impl<'frame> FrameCtx<'frame> {
         let mut style = (*self.egui.style()).clone();
         style.spacing.slider_width = slider_size / 2.;
         self.egui.set_style(style);
+    }
+
+    pub fn set_window_size(&mut self, size: egui::Vec2) {
+        if let Some(frame) = &mut self.frame {
+            frame.set_window_size(size);
+        }
     }
 }
