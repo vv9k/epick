@@ -511,7 +511,7 @@ impl App {
         ScrollArea::vertical()
             .id_source("picker scroll")
             .show(ui, |ui| {
-                self.harmonies(ctx, ui);
+                self.harmonies_header(ctx, ui);
                 self.sliders(ctx, ui);
                 self.hex_input(ctx, ui);
                 let mut available_space = ui.available_size_before_wrap();
