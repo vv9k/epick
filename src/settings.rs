@@ -166,11 +166,16 @@ pub struct Settings {
     #[serde(skip_serializing_if = "is_false")]
     pub auto_copy_picked_color: bool,
     #[serde(default = "default_pixels_per_point")]
+    #[serde(skip_serializing_if = "is_default_pixels_per_point")]
     pub pixels_per_point: f32,
 }
 
 fn default_pixels_per_point() -> f32 {
     DEFAULT_PIXELS_PER_POINT
+}
+
+fn is_default_pixels_per_point(ppp: &f32) -> bool {
+    *ppp == DEFAULT_PIXELS_PER_POINT
 }
 
 impl Default for Settings {
