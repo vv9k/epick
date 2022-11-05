@@ -67,6 +67,8 @@ impl SettingsWindow {
                         ui.colored_label(Color32::GREEN, msg);
                     }
 
+                    self.ui_scale_slider(ctx.app, ui);
+                    ui.add_space(HALF_SPACE);
                     self.color_formats(ctx.app, ui);
                     ui.add_space(HALF_SPACE);
                     self.rgb_working_space(ctx.app, ui);
@@ -81,16 +83,6 @@ impl SettingsWindow {
                     ui.add_space(DOUBLE_SPACE);
                     self.color_spaces(ctx.app, ui);
                     ui.add_space(SPACE);
-
-                    #[cfg(not(target_arch = "wasm32"))]
-                    ui.horizontal(|ui| {
-                        ui.label("UI Scale");
-                        let mut ppp = ctx.app.settings.pixels_per_point;
-                        let rsp = ui.add(egui::Slider::new(&mut ppp, 0.25..=3.0));
-                        if !rsp.dragged() {
-                            ctx.app.settings.pixels_per_point = ppp;
-                        }
-                    });
 
                     self.save_settings_btn(ctx.app, ui);
                 });
@@ -386,6 +378,18 @@ impl SettingsWindow {
             }
             if ui.button("Palette formats …").clicked() {
                 self.palette_formats_window.show = true;
+            }
+        });
+    }
+
+    fn ui_scale_slider(&mut self, app_ctx: &mut AppCtx, ui: &mut Ui) {
+        #[cfg(not(target_arch = "wasm32"))]
+        ui.horizontal(|ui| {
+            ui.label("UI Scale");
+            let mut ppp = app_ctx.settings.pixels_per_point;
+            let rsp = ui.add(egui::Slider::new(&mut ppp, 0.25..=3.0));
+            if !rsp.dragged() {
+                app_ctx.settings.pixels_per_point = ppp;
             }
         });
     }
