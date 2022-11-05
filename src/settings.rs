@@ -11,6 +11,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+pub const DEFAULT_PIXELS_PER_POINT: f32 = 1.0;
+
 pub fn load_global(_storage: Option<&dyn eframe::Storage>) -> Option<Settings> {
     #[cfg(target_arch = "wasm32")]
     if let Some(storage) = _storage {
@@ -163,6 +165,12 @@ pub struct Settings {
     #[serde(default)]
     #[serde(skip_serializing_if = "is_false")]
     pub auto_copy_picked_color: bool,
+    #[serde(default = "default_pixels_per_point")]
+    pub pixels_per_point: f32,
+}
+
+fn default_pixels_per_point() -> f32 {
+    DEFAULT_PIXELS_PER_POINT
 }
 
 impl Default for Settings {
@@ -185,6 +193,7 @@ impl Default for Settings {
             harmony_color_size: DEFAULT_COLOR_SIZE,
             harmony_display_color_label: false,
             auto_copy_picked_color: false,
+            pixels_per_point: DEFAULT_PIXELS_PER_POINT,
         }
     }
 }

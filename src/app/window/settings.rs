@@ -81,7 +81,17 @@ impl SettingsWindow {
                     ui.add_space(DOUBLE_SPACE);
                     self.color_spaces(ctx.app, ui);
                     ui.add_space(SPACE);
-                    self.save_settings_btn(app_ctx, ui);
+
+                    ui.horizontal(|ui| {
+                        ui.label("UI Scale");
+                        let mut ppp = ctx.app.settings.pixels_per_point;
+                        let rsp = ui.add(egui::Slider::new(&mut ppp, 0.25..=3.0));
+                        if !rsp.dragged() {
+                            ctx.app.settings.pixels_per_point = ppp;
+                        }
+                    });
+
+                    self.save_settings_btn(ctx.app, ui);
                 });
 
             if !show {
