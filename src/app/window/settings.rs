@@ -82,6 +82,7 @@ impl SettingsWindow {
                     self.color_spaces(ctx.app, ui);
                     ui.add_space(SPACE);
 
+                    #[cfg(not(target_arch = "wasm32"))]
                     ui.horizontal(|ui| {
                         ui.label("UI Scale");
                         let mut ppp = ctx.app.settings.pixels_per_point;
