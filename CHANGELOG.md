@@ -3,6 +3,7 @@
 - Display RGB slider values in 0-255 range as integers rather than floats
 - Move harmonies box outside of the harmonies header
 - Add a way to hide the harmonies color box
+- Increase the default size of current color and color under cursor box
 
 # 0.9.0
 - Change button layout in palette view

@@ -39,6 +39,8 @@ pub static CONTEXT: OnceCell<RwLock<AppCtx>> = OnceCell::new();
 pub static TEXTURE_MANAGER: Lazy<RwLock<TextureManager>> =
     Lazy::new(|| RwLock::new(TextureManager::default()));
 
+pub const CURRENT_COLOR_BOX_SIZE: f32 = 40.0;
+
 #[derive(Copy, Clone, Debug, Deserialize, Serialize)]
 pub enum CentralPanelTab {
     Picker,
@@ -496,7 +498,7 @@ impl App {
             }
         });
         let cb = ColorBox::builder()
-            .size((25., 25.))
+            .size((CURRENT_COLOR_BOX_SIZE, CURRENT_COLOR_BOX_SIZE))
             .color(ctx.app.picker.current_color)
             .label(true)
             .hover_help(COLORBOX_PICK_TOOLTIP)

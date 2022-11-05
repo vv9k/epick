@@ -1,4 +1,5 @@
 #![allow(unused_imports)]
+use crate::app::CURRENT_COLOR_BOX_SIZE;
 use crate::context::FrameCtx;
 use crate::display_picker::{self, DisplayPickerExt};
 use crate::error::append_global_error;
@@ -70,7 +71,7 @@ impl ZoomPicker {
                     self.zoom_picker_impl(ctx, ui, picker);
                 });
                 let cb = ColorBox::builder()
-                    .size((25., 25.))
+                    .size((CURRENT_COLOR_BOX_SIZE, CURRENT_COLOR_BOX_SIZE))
                     .color(color)
                     .label(true)
                     .hover_help(COLORBOX_PICK_TOOLTIP)
