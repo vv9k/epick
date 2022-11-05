@@ -7,7 +7,6 @@ use crate::{
     ui::{
         colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP},
         layout::HarmonyLayout,
-        DOUBLE_SPACE,
     },
 };
 
@@ -139,10 +138,160 @@ impl App {
                     &mut ctx.app.settings.harmony_display_color_label,
                     "Display color labels",
                 );
-                ui.add_space(DOUBLE_SPACE);
-
-                self.display_harmonies(ctx, ui);
             });
+    }
+
+    pub fn display_harmonies(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
+        let color_size = ctx.app.settings.harmony_color_size;
+        let gradient_size = vec2(color_size * 4., color_size * 2.);
+        let dbl_width = vec2(color_size * 2., color_size);
+        let dbl_width_third_height = vec2(color_size * 2., color_size * 2. / 3.);
+        let dbl_height_third_width = vec2(color_size * 2. / 3., color_size * 2.);
+        let dbl_height = vec2(color_size, color_size * 2.);
+        let half_height = vec2(color_size, color_size * 1. / 2.);
+        let half_width = vec2(color_size * 1. / 2., color_size);
+
+        let display_labels = ctx.app.settings.harmony_display_color_label;
+        let color = ctx.app.picker.current_color;
+        match ctx.app.settings.harmony {
+            ColorHarmony::Complementary => {
+                let compl = color.complementary();
+                Grid::new("complementary").spacing((0., 0.)).show(ui, |ui| {
+                    match ctx.app.settings.harmony_layout {
+                        HarmonyLayout::Square => {
+                            cb(color, display_labels, None, ctx, ui);
+                            cb(compl, display_labels, None, ctx, ui);
+                        }
+                        HarmonyLayout::Stacked => {
+                            cb(color, display_labels, Some(dbl_width), ctx, ui);
+                            ui.end_row();
+                            cb(compl, display_labels, Some(dbl_width), ctx, ui);
+                        }
+                        HarmonyLayout::Line => {
+                            cb(color, display_labels, Some(dbl_height), ctx, ui);
+                            cb(compl, display_labels, Some(dbl_height), ctx, ui);
+                        }
+                        HarmonyLayout::Gradient => {
+                            let gradient = Gradient::from_colors([color, compl]);
+                            ui.vertical(|ui| {
+                                self.gradient_box(ctx, &gradient, gradient_size, ui, false);
+                            });
+                        }
+                    }
+                    ui.end_row();
+                });
+            }
+            ColorHarmony::Triadic => {
+                let tri = color.triadic();
+                Grid::new("triadic").spacing((0., 0.)).show(ui, |ui| {
+                    let c1 = tri.0;
+                    let c2 = tri.1;
+                    self.three_colors_in_layout(
+                        color,
+                        c1,
+                        c2,
+                        dbl_width_third_height,
+                        dbl_height_third_width,
+                        display_labels,
+                        ctx,
+                        ui,
+                    );
+                });
+            }
+            ColorHarmony::Tetradic => {
+                let tetr = color.tetradic();
+                Grid::new("tetradic").spacing((0., 0.)).show(ui, |ui| {
+                    let c1 = tetr.0;
+                    let c2 = tetr.1;
+                    let c3 = tetr.2;
+                    self.four_colors_in_layout(
+                        color,
+                        c1,
+                        c2,
+                        c3,
+                        half_height,
+                        half_width,
+                        display_labels,
+                        ctx,
+                        ui,
+                    );
+                });
+            }
+            ColorHarmony::Analogous => {
+                let an = color.analogous();
+                Grid::new("analogous").spacing((0., 0.)).show(ui, |ui| {
+                    let c1 = an.0;
+                    let c2 = an.1;
+                    self.three_colors_in_layout(
+                        color,
+                        c1,
+                        c2,
+                        dbl_width_third_height,
+                        dbl_height_third_width,
+                        display_labels,
+                        ctx,
+                        ui,
+                    );
+                });
+            }
+            ColorHarmony::SplitComplementary => {
+                let sc = color.split_complementary();
+                Grid::new("split-complementary")
+                    .spacing((0., 0.))
+                    .show(ui, |ui| {
+                        let c1 = sc.0;
+                        let c2 = sc.1;
+                        self.three_colors_in_layout(
+                            color,
+                            c1,
+                            c2,
+                            dbl_width_third_height,
+                            dbl_height_third_width,
+                            display_labels,
+                            ctx,
+                            ui,
+                        );
+                    });
+            }
+            ColorHarmony::Square => {
+                let s = color.square();
+                Grid::new("square").spacing((0., 0.)).show(ui, |ui| {
+                    let c1 = s.0;
+                    let c2 = s.1;
+                    let c3 = s.2;
+                    self.four_colors_in_layout(
+                        color,
+                        c1,
+                        c2,
+                        c3,
+                        half_height,
+                        half_width,
+                        display_labels,
+                        ctx,
+                        ui,
+                    );
+                });
+            }
+            ColorHarmony::Monochromatic => {
+                let mono = color.monochromatic();
+                Grid::new("monochromatic").spacing((0., 0.)).show(ui, |ui| {
+                    let c1 = mono.0;
+                    let c2 = mono.1;
+                    let c3 = mono.2;
+                    self.four_colors_in_layout(
+                        color,
+                        c1,
+                        c2,
+                        c3,
+                        half_height,
+                        half_width,
+                        display_labels,
+                        ctx,
+                        ui,
+                    );
+                });
+            }
+        }
     }
 
     fn harmony_layout_combobox(&self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
@@ -304,159 +453,6 @@ impl App {
                 ui.vertical(|ui| {
                     let gradient = Gradient::from_colors([c1, c2, c3, c4]);
                     self.gradient_box(ctx, &gradient, gradient_size, ui, false);
-                });
-            }
-        }
-    }
-
-    fn display_harmonies(&mut self, ctx: &mut FrameCtx<'_>, ui: &mut Ui) {
-        let color_size = ctx.app.settings.harmony_color_size;
-        let gradient_size = vec2(color_size * 4., color_size * 2.);
-        let dbl_width = vec2(color_size * 2., color_size);
-        let dbl_width_third_height = vec2(color_size * 2., color_size * 2. / 3.);
-        let dbl_height_third_width = vec2(color_size * 2. / 3., color_size * 2.);
-        let dbl_height = vec2(color_size, color_size * 2.);
-        let half_height = vec2(color_size, color_size * 1. / 2.);
-        let half_width = vec2(color_size * 1. / 2., color_size);
-
-        let display_labels = ctx.app.settings.harmony_display_color_label;
-        let color = ctx.app.picker.current_color;
-        match ctx.app.settings.harmony {
-            ColorHarmony::Complementary => {
-                let compl = color.complementary();
-                Grid::new("complementary").spacing((0., 0.)).show(ui, |ui| {
-                    match ctx.app.settings.harmony_layout {
-                        HarmonyLayout::Square => {
-                            cb(color, display_labels, None, ctx, ui);
-                            cb(compl, display_labels, None, ctx, ui);
-                        }
-                        HarmonyLayout::Stacked => {
-                            cb(color, display_labels, Some(dbl_width), ctx, ui);
-                            ui.end_row();
-                            cb(compl, display_labels, Some(dbl_width), ctx, ui);
-                        }
-                        HarmonyLayout::Line => {
-                            cb(color, display_labels, Some(dbl_height), ctx, ui);
-                            cb(compl, display_labels, Some(dbl_height), ctx, ui);
-                        }
-                        HarmonyLayout::Gradient => {
-                            let gradient = Gradient::from_colors([color, compl]);
-                            ui.vertical(|ui| {
-                                self.gradient_box(ctx, &gradient, gradient_size, ui, false);
-                            });
-                        }
-                    }
-                    ui.end_row();
-                });
-            }
-            ColorHarmony::Triadic => {
-                let tri = color.triadic();
-                Grid::new("triadic").spacing((0., 0.)).show(ui, |ui| {
-                    let c1 = tri.0;
-                    let c2 = tri.1;
-                    self.three_colors_in_layout(
-                        color,
-                        c1,
-                        c2,
-                        dbl_width_third_height,
-                        dbl_height_third_width,
-                        display_labels,
-                        ctx,
-                        ui,
-                    );
-                });
-            }
-            ColorHarmony::Tetradic => {
-                let tetr = color.tetradic();
-                Grid::new("tetradic").spacing((0., 0.)).show(ui, |ui| {
-                    let c1 = tetr.0;
-                    let c2 = tetr.1;
-                    let c3 = tetr.2;
-                    self.four_colors_in_layout(
-                        color,
-                        c1,
-                        c2,
-                        c3,
-                        half_height,
-                        half_width,
-                        display_labels,
-                        ctx,
-                        ui,
-                    );
-                });
-            }
-            ColorHarmony::Analogous => {
-                let an = color.analogous();
-                Grid::new("analogous").spacing((0., 0.)).show(ui, |ui| {
-                    let c1 = an.0;
-                    let c2 = an.1;
-                    self.three_colors_in_layout(
-                        color,
-                        c1,
-                        c2,
-                        dbl_width_third_height,
-                        dbl_height_third_width,
-                        display_labels,
-                        ctx,
-                        ui,
-                    );
-                });
-            }
-            ColorHarmony::SplitComplementary => {
-                let sc = color.split_complementary();
-                Grid::new("split-complementary")
-                    .spacing((0., 0.))
-                    .show(ui, |ui| {
-                        let c1 = sc.0;
-                        let c2 = sc.1;
-                        self.three_colors_in_layout(
-                            color,
-                            c1,
-                            c2,
-                            dbl_width_third_height,
-                            dbl_height_third_width,
-                            display_labels,
-                            ctx,
-                            ui,
-                        );
-                    });
-            }
-            ColorHarmony::Square => {
-                let s = color.square();
-                Grid::new("square").spacing((0., 0.)).show(ui, |ui| {
-                    let c1 = s.0;
-                    let c2 = s.1;
-                    let c3 = s.2;
-                    self.four_colors_in_layout(
-                        color,
-                        c1,
-                        c2,
-                        c3,
-                        half_height,
-                        half_width,
-                        display_labels,
-                        ctx,
-                        ui,
-                    );
-                });
-            }
-            ColorHarmony::Monochromatic => {
-                let mono = color.monochromatic();
-                Grid::new("monochromatic").spacing((0., 0.)).show(ui, |ui| {
-                    let c1 = mono.0;
-                    let c2 = mono.1;
-                    let c3 = mono.2;
-                    self.four_colors_in_layout(
-                        color,
-                        c1,
-                        c2,
-                        c3,
-                        half_height,
-                        half_width,
-                        display_labels,
-                        ctx,
-                        ui,
-                    );
                 });
             }
         }

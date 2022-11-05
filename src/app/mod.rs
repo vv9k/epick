@@ -471,6 +471,7 @@ impl App {
                 true
             }
         });
+
         ui.horizontal(|ui| {
             ui.label("Current color: ");
             if ui
@@ -506,8 +507,9 @@ impl App {
         });
 
         self.zoom_picker.display(ctx, ui);
-
         ui.add_space(SPACE);
+        self.display_harmonies(ctx, ui);
+
         ScrollArea::vertical()
             .id_source("picker scroll")
             .show(ui, |ui| {
