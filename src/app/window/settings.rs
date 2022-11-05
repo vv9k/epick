@@ -19,6 +19,8 @@ use std::fs;
 
 use crate::app::window::{CustomFormatsWindow, PaletteFormatsWindow};
 
+const UI_SCALE_RANGE: std::ops::RangeInclusive<f32> = 0.25..=5.0;
+
 #[derive(Debug, Default)]
 pub struct SettingsWindow {
     pub show: bool,
@@ -387,7 +389,7 @@ impl SettingsWindow {
         ui.horizontal(|ui| {
             ui.label("UI Scale");
             let mut ppp = app_ctx.settings.pixels_per_point;
-            let rsp = ui.add(egui::Slider::new(&mut ppp, 0.25..=3.0));
+            let rsp = ui.add(egui::Slider::new(&mut ppp, UI_SCALE_RANGE));
             if !rsp.dragged() {
                 app_ctx.settings.pixels_per_point = ppp;
             }
