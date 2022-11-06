@@ -297,7 +297,7 @@ mod tests {
 
     #[test]
     fn loads_settings() {
-        let tmp = tempdir::TempDir::new("settings-test").unwrap();
+        let tmp = tempfile::TempDir::new("settings-test").unwrap();
         let settings_str = r#"color_display_format: !custom rgb
 color_clipboard_format: null
 palette_clipboard_format: HexList
