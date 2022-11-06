@@ -192,8 +192,8 @@ impl ZoomPicker {
         if let Some(window) = self.picker_window {
             let cursor_pos = picker.get_cursor_pos().unwrap_or_default();
             match picker.get_screenshot(
-                (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET) as i32,
-                (cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET) as i32,
+                (cursor_pos.0 - ZOOM_IMAGE_X_OFFSET),
+                (cursor_pos.1 - ZOOM_IMAGE_Y_OFFSET),
                 (ZOOM_WIN_WIDTH as f32 / ZOOM_SCALE) as i32,
                 (ZOOM_WIN_HEIGHT as f32 / ZOOM_SCALE) as i32,
             ) {
@@ -220,8 +220,8 @@ impl ZoomPicker {
             }
             if let Err(e) = picker.move_window(
                 window,
-                (cursor_pos.0 + ZOOM_WIN_OFFSET) as i32,
-                (cursor_pos.1 + ZOOM_WIN_OFFSET) as i32,
+                (cursor_pos.0 + ZOOM_WIN_OFFSET),
+                (cursor_pos.1 + ZOOM_WIN_OFFSET),
                 ZOOM_WIN_WIDTH as i32,
                 ZOOM_WIN_HEIGHT as i32,
             ) {

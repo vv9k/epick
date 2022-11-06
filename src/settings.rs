@@ -30,7 +30,7 @@ pub fn load_global(_storage: Option<&dyn eframe::Storage>) -> Option<Settings> {
     if let Some(config_dir) = Settings::dir("epick") {
         let path = config_dir.join(Settings::FILE_NAME);
 
-        if let Ok(settings) = Settings::load(&path) {
+        if let Ok(settings) = Settings::load(path) {
             return Some(settings);
         }
     }

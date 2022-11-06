@@ -156,8 +156,8 @@ impl App {
             if ctx.app.sidepanel.edit_palette_name {
                 let mut edit_name = current_palette.name.clone();
                 let width = (edit_name.len() * Self::NAME_MULTIPLIER)
-                    .max(Self::NAME_MIN_WIDTH)
-                    .min(Self::NAME_MAX_WIDTH) as f32;
+                    .clamp(Self::NAME_MAX_WIDTH, Self::NAME_MIN_WIDTH)
+                    as f32;
                 let resp = egui::TextEdit::singleline(&mut edit_name)
                     .desired_width(width)
                     .show(ui);

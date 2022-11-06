@@ -127,7 +127,7 @@ impl ExportWindow {
                                 let p = PathBuf::from(&self.path);
                                 let filename =
                                     format!("{}.{}", &palette.name, self.format.extension());
-                                if let Err(e) = fs::write(p.join(&filename), generated_palette) {
+                                if let Err(e) = fs::write(p.join(filename), generated_palette) {
                                     self.export_status = Err(e.to_string());
                                 } else {
                                     self.export_status = Ok("export succesful".to_string());

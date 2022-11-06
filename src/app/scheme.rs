@@ -363,6 +363,7 @@ impl App {
             });
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn three_colors_in_layout(
         &mut self,
         c1: Color,
@@ -409,6 +410,7 @@ impl App {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn four_colors_in_layout(
         &mut self,
         c1: Color,
