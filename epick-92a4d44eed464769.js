@@ -1334,15 +1334,15 @@ function getImports() {
         const ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper1977 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper1845 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 638, __wbg_adapter_28);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper1979 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper1847 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 638, __wbg_adapter_31);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper2045 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper1913 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 663, __wbg_adapter_34);
         return addHeapObject(ret);
     };
@@ -1381,7 +1381,7 @@ function initSync(module) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('epick-4e64f4bc505ca3f5_bg.wasm', import.meta.url);
+        input = new URL('epick-92a4d44eed464769_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
