@@ -1,21 +1,22 @@
 #![cfg(unix)]
 use std::borrow::Cow;
 
-use crate::color::Color;
-use crate::display_picker::DisplayPicker;
+use crate::{color::Color, display_picker::DisplayPicker};
 use anyhow::{Context, Result};
 use egui::Color32;
 use image::{imageops, ImageBuffer, Rgba};
-use x11rb::connection::Connection;
-use x11rb::cursor::Handle as CursorHandle;
-use x11rb::image::Image;
-use x11rb::protocol::xproto::{
-    Arc, AtomEnum, ConfigureWindowAux, ConnectionExt, CreateGCAux, CreateWindowAux, EventMask,
-    Gcontext, Gravity, PropMode, Screen, Window, WindowClass,
+use x11rb::{
+    connection::Connection,
+    cursor::Handle as CursorHandle,
+    image::Image,
+    protocol::xproto::{
+        Arc, AtomEnum, ConfigureWindowAux, ConnectionExt, CreateGCAux, CreateWindowAux, EventMask,
+        Gcontext, Gravity, PropMode, Screen, Window, WindowClass,
+    },
+    resource_manager::Database,
+    rust_connection::RustConnection,
+    wrapper::ConnectionExt as _,
 };
-use x11rb::resource_manager::Database;
-use x11rb::rust_connection::RustConnection;
-use x11rb::wrapper::ConnectionExt as _;
 
 pub fn resize_image<'a>(img: &'a Image, scale: f32) -> Image<'a> {
     let data = img.data();

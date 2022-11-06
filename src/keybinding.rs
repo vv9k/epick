@@ -1,5 +1,4 @@
-use crate::context::FrameCtx;
-use crate::save_to_clipboard;
+use crate::{context::FrameCtx, save_to_clipboard};
 
 use std::collections::HashMap;
 

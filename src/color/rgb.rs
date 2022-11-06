@@ -1,9 +1,12 @@
 #![allow(clippy::many_single_char_names)]
-use crate::color::hsv::Hsv;
-use crate::color::{CIEColor, Cmyk, Color, Hsl, Xyz, CIE_E, CIE_K, U8_MAX};
-use crate::math::Matrix1x3;
-use egui::color::{Hsva, HsvaGamma};
-use egui::{Color32, Rgba};
+use crate::{
+    color::{hsv::Hsv, CIEColor, Cmyk, Color, Hsl, Xyz, CIE_E, CIE_K, U8_MAX},
+    math::Matrix1x3,
+};
+use egui::{
+    color::{Hsva, HsvaGamma},
+    Color32, Rgba,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize)]
@@ -305,8 +308,10 @@ impl From<Rgb> for Matrix1x3 {
 
 #[cfg(test)]
 mod tests {
-    use crate::color::{Cmyk, Hsv, Rgb};
-    use crate::math::eq_f32;
+    use crate::{
+        color::{Cmyk, Hsv, Rgb},
+        math::eq_f32,
+    };
 
     #[test]
     fn rgb_scaled_init() {

@@ -3,8 +3,7 @@ use crate::app::{
     KEYBINDINGS,
 };
 
-use egui::RichText;
-use egui::{Label, Window};
+use egui::{Label, RichText, Window};
 
 #[derive(Debug, Default)]
 pub struct HelpWindow {

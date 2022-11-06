@@ -1,7 +1,8 @@
 #![allow(clippy::many_single_char_names)]
-use crate::color::rgb::Rgb;
-use crate::color::{CIEColor, Cmyk, Color, Hsl, Xyz};
-use crate::math;
+use crate::{
+    color::{rgb::Rgb, CIEColor, Cmyk, Color, Hsl, Xyz},
+    math,
+};
 use egui::color::{Color32, Hsva, Rgba};
 use serde::{Deserialize, Serialize};
 

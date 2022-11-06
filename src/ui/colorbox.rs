@@ -1,8 +1,6 @@
-use crate::color::Color;
-use crate::context::FrameCtx;
-use crate::render::render_color;
-use crate::save_to_clipboard;
-use crate::ui::color_tooltip;
+use crate::{
+    color::Color, context::FrameCtx, render::render_color, save_to_clipboard, ui::color_tooltip,
+};
 
 use egui::Ui;
 

@@ -1,15 +1,19 @@
-use crate::color::{
-    ChromaticAdaptationMethod, ColorFormat, ColorHarmony, CustomPaletteFormat, Illuminant,
-    PaletteFormat, RgbWorkingSpace,
+use crate::{
+    color::{
+        ChromaticAdaptationMethod, ColorFormat, ColorHarmony, CustomPaletteFormat, Illuminant,
+        PaletteFormat, RgbWorkingSpace,
+    },
+    ui::layout::HarmonyLayout,
 };
-use crate::ui::layout::HarmonyLayout;
 
 use anyhow::{Context, Result};
 use eframe::Storage;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 pub const DEFAULT_PIXELS_PER_POINT: f32 = 1.0;
 
@@ -289,10 +293,12 @@ impl ColorDisplayFmtEnum {
 
 #[cfg(test)]
 mod tests {
-    use crate::color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace};
-    use crate::math::eq_f32;
-    use crate::settings::{Settings, DEFAULT_COLOR_SIZE};
-    use crate::ui::layout::HarmonyLayout;
+    use crate::{
+        color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, RgbWorkingSpace},
+        math::eq_f32,
+        settings::{Settings, DEFAULT_COLOR_SIZE},
+        ui::layout::HarmonyLayout,
+    };
     use std::fs;
 
     #[test]

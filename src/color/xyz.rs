@@ -1,9 +1,10 @@
-use crate::color::chromatic_adaptation::ChromaticAdaptationMethod;
-use crate::color::illuminant::Illuminant;
-use crate::color::rgb::Rgb;
-use crate::color::xyy::xyY;
-use crate::color::{working_space::RgbWorkingSpace, CIEColor, LchUV, Luv, CIE_E, CIE_K};
-use crate::math::{Matrix1x3, Matrix3};
+use crate::{
+    color::{
+        chromatic_adaptation::ChromaticAdaptationMethod, illuminant::Illuminant, rgb::Rgb,
+        working_space::RgbWorkingSpace, xyy::xyY, CIEColor, LchUV, Luv, CIE_E, CIE_K,
+    },
+    math::{Matrix1x3, Matrix3},
+};
 
 use serde::{Deserialize, Serialize};
 

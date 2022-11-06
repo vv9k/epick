@@ -1,13 +1,13 @@
-use crate::app::{
-    window::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
-    AppCtx,
+use crate::{
+    app::{
+        window::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
+        AppCtx,
+    },
+    color::{ChromaticAdaptationMethod, ColorHarmony, Illuminant, PaletteFormat, RgbWorkingSpace},
+    context::FrameCtx,
+    settings::{ColorDisplayFmtEnum, Settings},
+    ui::{DOUBLE_SPACE, HALF_SPACE, SPACE},
 };
-use crate::color::{
-    ChromaticAdaptationMethod, ColorHarmony, Illuminant, PaletteFormat, RgbWorkingSpace,
-};
-use crate::context::FrameCtx;
-use crate::settings::{ColorDisplayFmtEnum, Settings};
-use crate::ui::{DOUBLE_SPACE, HALF_SPACE, SPACE};
 
 use egui::{Color32, ComboBox, Ui, Window};
 use std::fmt::Display;

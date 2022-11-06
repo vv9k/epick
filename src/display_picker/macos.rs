@@ -1,12 +1,15 @@
-use crate::color::{Color, Rgb};
-use crate::display_picker::DisplayPicker;
+use crate::{
+    color::{Color, Rgb},
+    display_picker::DisplayPicker,
+};
 
 use anyhow::{Error, Result};
-use core_graphics::base::CGFloat;
-use core_graphics::display::{CGDirectDisplayID, CGGetDisplaysWithRect, CGPoint, CGRect, CGSize};
-use core_graphics::sys::{CGEventRef, CGEventSourceRef, CGImageRef};
-use objc::runtime::Object;
-use objc::{class, msg_send, rc::autoreleasepool, sel, sel_impl};
+use core_graphics::{
+    base::CGFloat,
+    display::{CGDirectDisplayID, CGGetDisplaysWithRect, CGPoint, CGRect, CGSize},
+    sys::{CGEventRef, CGEventSourceRef, CGImageRef},
+};
+use objc::{class, msg_send, rc::autoreleasepool, runtime::Object, sel, sel_impl};
 use std::ptr::null;
 
 #[link(name = "CoreGraphics", kind = "framework")]

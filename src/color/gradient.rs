@@ -1,6 +1,8 @@
 use crate::color::Color;
-use egui::color::{Color32, Rgba};
-use egui::lerp;
+use egui::{
+    color::{Color32, Rgba},
+    lerp,
+};
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Gradient(pub Vec<Color32>);

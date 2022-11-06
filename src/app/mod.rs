@@ -4,20 +4,22 @@ mod scheme;
 mod sidepanel;
 pub mod window;
 
-use crate::color::{Color, ColorHarmony, Gradient};
-use crate::context::{AppCtx, FrameCtx};
-use crate::error::{append_global_error, DisplayError, ERROR_STACK};
-use crate::keybinding::{default_keybindings, KeyBindings};
-use crate::render::{render_gradient, TextureManager};
-use crate::save_to_clipboard;
-use crate::screen_size::ScreenSize;
-use crate::settings::{self, DEFAULT_PIXELS_PER_POINT};
-use crate::ui::{
-    colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP},
-    colors::*,
-    dark_visuals, icon, light_visuals, DOUBLE_SPACE, HALF_SPACE, SPACE,
+use crate::{
+    color::{Color, ColorHarmony, Gradient},
+    context::{AppCtx, FrameCtx},
+    error::{append_global_error, DisplayError, ERROR_STACK},
+    keybinding::{default_keybindings, KeyBindings},
+    render::{render_gradient, TextureManager},
+    save_to_clipboard,
+    screen_size::ScreenSize,
+    settings::{self, DEFAULT_PIXELS_PER_POINT},
+    ui::{
+        colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP},
+        colors::*,
+        dark_visuals, icon, light_visuals, DOUBLE_SPACE, HALF_SPACE, SPACE,
+    },
+    zoom_picker::ZoomPicker,
 };
-use crate::zoom_picker::ZoomPicker;
 use window::{ExportWindow, HelpWindow, HuesWindow, SettingsWindow, ShadesWindow, TintsWindow};
 
 use eframe::{CreationContext, Storage, Theme};

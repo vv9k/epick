@@ -1,11 +1,10 @@
 use crate::color::Gradient;
 
-use egui::color::Color32;
 use egui::{
-    pos2, ColorImage, CursorIcon, ImageButton, ImageData, Rect, Response, TextureId, Ui, Vec2,
+    color::Color32, pos2, ColorImage, CursorIcon, ImageButton, ImageData, Rect, Response,
+    TextureId, Ui, Vec2,
 };
-use std::collections::HashMap;
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 pub type TextureAllocator = Option<Arc<egui::mutex::RwLock<epaint::TextureManager>>>;
 

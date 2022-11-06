@@ -2,28 +2,29 @@
 
 use std::ptr::null;
 
-use crate::color::Color;
-use crate::display_picker::DisplayPicker;
+use crate::{color::Color, display_picker::DisplayPicker};
 use anyhow::{Context, Error, Result};
 use egui::Color32;
 use windows::{
     core::PCWSTR,
-    Win32::Foundation::{HINSTANCE, LPARAM, LRESULT, POINT, WPARAM},
-    Win32::Graphics::Gdi::{
-        BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, GetDC, GetPixel, Rectangle,
-        ReleaseDC, SelectObject, SetStretchBltMode, StretchBlt, UpdateWindow, CLR_INVALID,
-        COLORONCOLOR, HBITMAP, HDC, SRCCOPY,
-    },
-    Win32::System::LibraryLoader::GetModuleHandleW,
-    Win32::UI::WindowsAndMessaging::{
-        CreateWindowExW, DefWindowProcW, DestroyWindow, GetCursorPos, GetDesktopWindow, MoveWindow,
-        RegisterClassExW, ShowWindow, WNDCLASSEXW,
+    Win32::{
+        Foundation::{HINSTANCE, LPARAM, LRESULT, POINT, WPARAM},
+        Graphics::Gdi::{
+            BitBlt, CreateCompatibleBitmap, CreateCompatibleDC, DeleteDC, GetDC, GetPixel,
+            Rectangle, ReleaseDC, SelectObject, SetStretchBltMode, StretchBlt, UpdateWindow,
+            CLR_INVALID, COLORONCOLOR, HBITMAP, HDC, SRCCOPY,
+        },
+        System::LibraryLoader::GetModuleHandleW,
+        UI::WindowsAndMessaging::{
+            CreateWindowExW, DefWindowProcW, DestroyWindow, GetCursorPos, GetDesktopWindow,
+            MoveWindow, RegisterClassExW, ShowWindow, WNDCLASSEXW,
+        },
     },
 };
 
-pub use windows::{
-    Win32::Foundation::HWND,
-    Win32::UI::WindowsAndMessaging::{
+pub use windows::Win32::{
+    Foundation::HWND,
+    UI::WindowsAndMessaging::{
         SHOW_WINDOW_CMD, SW_SHOWDEFAULT, WINDOW_EX_STYLE, WINDOW_STYLE, WS_BORDER, WS_POPUP,
     },
 };

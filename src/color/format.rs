@@ -4,23 +4,18 @@ use crate::color::{
 };
 
 use anyhow::{Error, Result};
-use nom::character::complete::digit1;
-use nom::combinator::{map_res, opt};
-use nom::error::FromExternalError;
-use nom::multi::many0;
-use nom::sequence::tuple;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
-    character::complete::{char, space0},
-    combinator::map,
-    error::{ErrorKind, ParseError},
-    sequence::{delimited, preceded},
+    character::complete::{char, digit1, space0},
+    combinator::{map, map_res, opt},
+    error::{ErrorKind, FromExternalError, ParseError},
+    multi::many0,
+    sequence::{delimited, preceded, tuple},
     Err, IResult, Parser,
 };
 use serde::{Deserialize, Serialize};
-use std::fmt::Write;
-use std::num::ParseIntError;
+use std::{fmt::Write, num::ParseIntError};
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct CustomPaletteFormat {
@@ -505,10 +500,10 @@ fn parse_color_format(i: &str) -> IResult<&str, CustomColorFormat, ColorParseErr
 
 #[cfg(test)]
 mod tests {
-    use crate::color::format::{
-        ColorField, ColorSymbol, CustomColorFormat, DigitFormat, FormatToken,
+    use crate::color::{
+        format::{ColorField, ColorSymbol, CustomColorFormat, DigitFormat, FormatToken},
+        Color, Illuminant, Rgb, RgbWorkingSpace,
     };
-    use crate::color::{Color, Illuminant, Rgb, RgbWorkingSpace};
     macro_rules! field {
         ($sym:tt) => {
             FormatToken::Color(ColorField {

@@ -1,11 +1,13 @@
 #![allow(unused_imports)]
-use crate::app::CURRENT_COLOR_BOX_SIZE;
-use crate::context::FrameCtx;
-use crate::display_picker::{self, DisplayPickerExt};
-use crate::error::append_global_error;
-use crate::ui::{
-    colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP},
-    icon,
+use crate::{
+    app::CURRENT_COLOR_BOX_SIZE,
+    context::FrameCtx,
+    display_picker::{self, DisplayPickerExt},
+    error::append_global_error,
+    ui::{
+        colorbox::{ColorBox, COLORBOX_PICK_TOOLTIP},
+        icon,
+    },
 };
 
 use egui::{Button, CursorIcon, Ui};

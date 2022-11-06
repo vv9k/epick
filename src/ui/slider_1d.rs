@@ -1,6 +1,5 @@
 use crate::color::Color;
-use eframe::egui::epaint::Mesh;
-use eframe::egui::{lerp, remap_clamp, Shape, Stroke};
+use eframe::egui::{epaint::Mesh, lerp, remap_clamp, Shape, Stroke};
 use egui::{pos2, vec2, Color32, CursorIcon, Response, Sense, Ui};
 use std::ops::{Neg, RangeInclusive};
 

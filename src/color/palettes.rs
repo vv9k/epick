@@ -2,8 +2,10 @@ use crate::color::NamedPalette;
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
-use std::fs;
-use std::path::{Path, PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Palettes {

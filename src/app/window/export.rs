@@ -1,12 +1,12 @@
-use crate::app::window::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET};
-use crate::color::{NamedPalette, PaletteFormat};
-use crate::context::FrameCtx;
+use crate::{
+    app::window::{self, WINDOW_X_OFFSET, WINDOW_Y_OFFSET},
+    color::{NamedPalette, PaletteFormat},
+    context::FrameCtx,
+};
 
 use anyhow::Result;
-use egui::color::Color32;
-use egui::{ComboBox, CursorIcon, Window};
-use std::path::PathBuf;
-use std::{env, fs};
+use egui::{color::Color32, ComboBox, CursorIcon, Window};
+use std::{env, fs, path::PathBuf};
 
 #[cfg(not(target_arch = "wasm32"))]
 use egui::TextEdit;

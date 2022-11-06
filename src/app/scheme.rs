@@ -10,8 +10,7 @@ use crate::{
     },
 };
 
-use egui::{vec2, Grid, Slider, Ui, Vec2};
-use egui::{CollapsingHeader, ComboBox, Window};
+use egui::{vec2, CollapsingHeader, ComboBox, Grid, Slider, Ui, Vec2, Window};
 
 macro_rules! scheme_window_impl {
     ($title:literal, $self:ident, $ctx:ident, $win:ident, $size_field:ident, $colors:expr) => {{

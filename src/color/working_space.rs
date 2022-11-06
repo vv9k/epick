@@ -1,6 +1,8 @@
 #![allow(dead_code)]
-use crate::color::{illuminant::Illuminant, xyY, Rgb};
-use crate::math::{Matrix1x3, Matrix3};
+use crate::{
+    color::{illuminant::Illuminant, xyY, Rgb},
+    math::{Matrix1x3, Matrix3},
+};
 
 use serde::{Deserialize, Serialize};
 

@@ -1,9 +1,9 @@
 use egui::color::{Color32, Hsva, Rgba};
 
-use crate::color::hsv::Hsv;
-use crate::color::rgb::Rgb;
-use crate::color::{CIEColor, Color, Hsl, Xyz};
-use crate::math;
+use crate::{
+    color::{hsv::Hsv, rgb::Rgb, CIEColor, Color, Hsl, Xyz},
+    math,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Default, Debug, PartialEq, Deserialize, Serialize)]
